@@ -25,6 +25,6 @@
     </script>
     <script data-main='@routes.Assets.at("main/main.js")' type='text/javascript' src='@routes.WebJarAssets.requirejs()'></script>
   </head>
-  <body data-bind="css: {navigationOpened: settings.app.navigationOpened, navigationSneak: navigation.sneak, panelOpened: settings.app.panelOpened}, attr: { 'data-shape': settings.app.panelShape }">
+  <body data-bind="css: {navigationOpened: navigation.navigationOpened, navigationSneak: navigation.sneak, panelOpened: panel.panelOpened}, attr: { 'data-shape': panel.panelShape }">
   </body>
 </html>

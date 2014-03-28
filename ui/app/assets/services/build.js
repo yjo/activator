@@ -5,10 +5,10 @@
 define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './sbt', 'commons/markers', './connection'],
     function(ko, settings, Log, utils, events, sbt, markers, Connection){
 
-  settings.register("build.rerunOnBuild", true);
-  settings.register("build.retestOnSuccessfulBuild", false);
-  settings.register("build.automaticResetInspect", true);
-  settings.register("build.recompileOnChange", true);
+  var rerunOnBuild = settings.observable("build.rerunOnBuild", true);
+  var retestOnSuccessfulBuild = settings.observable("build.retestOnSuccessfulBuild", false);
+  var automaticResetInspect = settings.observable("build.automaticResetInspect", true);
+  var recompileOnChange = settings.observable("build.recompileOnChange", true);
 
   var Error = utils.Class({
     init: function(fields) {
@@ -137,7 +137,7 @@ define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils',
         return event.type == 'FilesChanged';
       },
       function(event) {
-        if (settings.build.recompileOnChange()) {
+        if (recompileOnChange()) {
           if (app.hasPlay()) {
             debug && console.log("files changed but it's a Play app so not recompiling.")
             log.info("Some of your files may have changed; reload in the browser or click \"Start compiling\" above to recompile.")
@@ -490,7 +490,7 @@ define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils',
 
       debug && console.log("Compile succeeded - marking need to reload main class info");
       self.reloadMainClassPending(true);
-      if (settings.build.rerunOnBuild()) {
+      if (rerunOnBuild()) {
         debug && console.log("Restarting due to completed compile");
         self.doRestart();
       } else {
@@ -687,7 +687,7 @@ define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils',
       self.activeTask(taskId);
     },
     doRun: function() {
-      if (settings.build.automaticResetInspect()) {
+      if (automaticResetInspect()) {
         Connection.reset();
       }
 
@@ -810,7 +810,7 @@ define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils',
       this.haveActiveTask = ko.computed(function() {
         return self.activeTask() != "";
       }, this);
-      this.rerunOnBuild = settings.build.retestOnSuccessfulBuild;
+      this.rerunOnBuild = retestOnSuccessfulBuild;
       this.restartPending = ko.observable(false);
       this.lastTaskFailed = ko.observable(false);
       // Rollup results.
@@ -1165,7 +1165,7 @@ define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils',
           return "Launching application (click to stop)";
         else if (run.status() == Status.FAILED)
           return "Application failed to start or was killed (click to re-run)";
-        else if (settings.build.rerunOnBuild())
+        else if (rerunOnBuild())
           return "Application stopped (will auto-run when build completes)";
         else
           return "Application stopped (click to run it)";
@@ -1179,10 +1179,10 @@ define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils',
     // not auto run. Not sure whether this will
     // work out nicely but let's try it.
     if (isTaskActive('run')) {
-      settings.build.rerunOnBuild(false);
+      rerunOnBuild(false);
       stopTask('run');
     } else {
-      settings.build.rerunOnBuild(true);
+      rerunOnBuild(true);
       startTask('run');
     }
   };
@@ -1215,7 +1215,13 @@ define(['webjars!knockout', 'commons/settings', 'services/log', 'commons/utils',
     // is that they are fragile and side-effecty.
     compile: compile,
     run: run,
-    test: test
+    test: test,
+    settings: {
+      rerunOnBuild: rerunOnBuild,
+      retestOnSuccessfulBuild: retestOnSuccessfulBuild,
+      automaticResetInspect: automaticResetInspect,
+      recompileOnChange: recompileOnChange
+    }
   });
 
   return build;

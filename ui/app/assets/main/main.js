@@ -49,8 +49,7 @@ var core = [
   'main/router',
   'main/pluginapi',
   'main/keyboard',
-  'main/omnisearch',
-  'main/navigation'
+  'main/omnisearch'
 ]
 
 require(vendors, function($, ko) {

@@ -13,5 +13,5 @@ define(['text!./notifications.html', 'webjars!knockout', 'commons/widget', 'comm
     }
   });
 
-  return Notifications;
+  return new Notifications();
 });

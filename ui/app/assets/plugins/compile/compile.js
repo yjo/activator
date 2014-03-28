@@ -27,7 +27,7 @@ define(['text!./compile.html', 'main/plugins', 'main/pluginapi', 'services/build
       // TODO get rid of per-plugin status
       self.status = ko.observable(api.STATUS_DEFAULT);
       // aliased here so our html template can find it
-      self.recompileOnChange = settings.build.recompileOnChange;
+      self.recompileOnChange = build.settings.recompileOnChange;
       self.update = function(parameters){
       };
       self.startStopButtonClicked = function(self) {
