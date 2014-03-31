@@ -1,8 +1,8 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./compile.html', 'main/plugins', 'services/build', 'commons/settings', 'css!./compile.css', "widgets/navigation/menu"],
-  function(template, plugins, build, settings, LogView) {
+define(['text!./compile.html', 'main/plugins', 'services/build', 'css!./compile.css', "widgets/navigation/menu"],
+  function(template, plugins, build, LogView) {
 
     var STATUS_DEFAULT = 'default';
     var STATUS_BUSY = 'busy';

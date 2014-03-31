@@ -22,14 +22,14 @@ define([
     Dark: 'ace/theme/solarized_dark',
     Light: 'ace/theme/solarized_light'
   };
-  settings.register("editor.theme", "Dark");
-  settings.register("editor.fontSize", "12");
-  editor.setTheme(aceThemes[settings.editor.theme()]);
-  editor.setFontSize(settings.editor.fontSize());
-  settings.editor.theme.subscribe(function(v) {
+  var theme = settings.observable("editor.theme", "Dark");
+  var fontSize = settings.observable("editor.fontSize", "12");
+  editor.setTheme(aceThemes[theme()]);
+  editor.setFontSize(fontSize());
+  theme.subscribe(function(v) {
     editor.setTheme(aceThemes[v])
   });
-  settings.editor.fontSize.subscribe(function(v) {
+  fontSize.subscribe(function(v) {
     editor.setFontSize(v)
   });
 
@@ -124,5 +124,8 @@ define([
 
     }
   };
-  return {};
+  return {
+    theme: theme,
+    fontSize: fontSize
+  };
 });
