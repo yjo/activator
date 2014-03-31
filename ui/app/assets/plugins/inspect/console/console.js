@@ -1,11 +1,11 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./console.html', 'css!./console.css', 'main/pluginapi', 'services/connection', './overview', './entity/actors', './entity/actor', './entity/requests', './entity/request', 'commons/utils', './entity/deviations', './entity/deviation'],
-  function(template, css, api, Connection, Overview, Actors, Actor, Requests, Request, Utils, Deviations, Deviation) {
+define(['text!./console.html', 'css!./console.css', 'commons/utils', 'commons/widget', 'services/connection', './overview', './entity/actors', './entity/actor', './entity/requests', './entity/request', 'commons/utils', './entity/deviations', './entity/deviation'],
+  function(template, css, utils, Widget, Connection, Overview, Actors, Actor, Requests, Request, Utils, Deviations, Deviation) {
 
 
-  var Console = api.Class(api.Widget, {
+  var Console = utils.Class(Widget, {
     id: 'console-widget',
     template: template,
     init: function(args) {

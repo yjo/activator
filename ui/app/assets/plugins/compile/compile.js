@@ -1,8 +1,12 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./compile.html', 'main/plugins', 'main/pluginapi', 'services/build', 'commons/settings', 'css!./compile.css', "widgets/navigation/menu"],
-  function(template, plugins, api, build, settings, LogView) {
+define(['text!./compile.html', 'main/plugins', 'services/build', 'commons/settings', 'css!./compile.css', "widgets/navigation/menu"],
+  function(template, plugins, build, settings, LogView) {
+
+    var STATUS_DEFAULT = 'default';
+    var STATUS_BUSY = 'busy';
+    var STATUS_ERROR = 'error;'
 
     var CompileState = (function(){
       var self = {};
@@ -25,7 +29,7 @@ define(['text!./compile.html', 'main/plugins', 'main/pluginapi', 'services/build
       });
 
       // TODO get rid of per-plugin status
-      self.status = ko.observable(api.STATUS_DEFAULT);
+      self.status = ko.observable(STATUS_DEFAULT);
       // aliased here so our html template can find it
       self.recompileOnChange = build.settings.recompileOnChange;
       self.update = function(parameters){

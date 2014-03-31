@@ -2,13 +2,11 @@
  Copyright (C) 2014 Typesafe, Inc <http://typesafe.com>
  */
 define([
-  'commons/settings',
   'widgets/header/header',
   'widgets/navigation/navigation',
   'widgets/layout/layout',
   'widgets/panels/panels'
 ], function(
-  settings,
   header,
   navigation,
   layout,

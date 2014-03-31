@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['main/plugins', 'text!./home.html', './files', './browse', './view', './openIn', 'css!./code.css', 'main/keyboard', "widgets/navigation/menu"],
+define(['main/plugins', 'text!./home.html', './files', './browse', './view', './openIn', 'css!./code.css', 'main/keyboard', "widgets/navigation/menu", 'widgets/editor/acebinding'],
     function(plugins, template, files, Browser, Viewer, openIn, css, keyboard) {
 
   var CodeState = (function(){

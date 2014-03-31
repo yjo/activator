@@ -1,8 +1,8 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['services/build', 'main/model', 'text!./run.html', 'main/pluginapi', 'css!./run.css', "widgets/navigation/menu"],
-    function(build, model, template, api, LogView, css){
+define(['services/build', 'text!./run.html', 'css!./run.css', "widgets/navigation/menu"],
+    function(build, template, LogView, css){
 
   var RunState = (function(){
     var self = {};

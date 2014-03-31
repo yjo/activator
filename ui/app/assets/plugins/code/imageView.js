@@ -1,9 +1,9 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(["text!./viewImage.html", 'main/pluginapi'], function(template, api){
+define(["text!./viewImage.html", 'commons/utils', 'commons/widget'], function(template, utils, Widget){
 
-  var ImageView = api.Class(api.Widget, {
+  var ImageView = utils.Class(Widget, {
     id: 'code-image-view',
     template: template,
     init: function(args) {

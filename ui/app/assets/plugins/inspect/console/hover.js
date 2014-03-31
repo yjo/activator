@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['main/pluginapi'], function(api) {
+define(function() {
 
 
   var offset = { 'left': 2, 'top': 2, 'right': 10, 'bottom': 15 };
