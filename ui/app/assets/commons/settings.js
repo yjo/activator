@@ -42,17 +42,20 @@ define(function() {
     observable: (function() {
       var all = {};
       return function(label, def) {
-        // If you have en ERROR here, might be your localstorage that are compromised;
-        if (!all[label]) {
-          var stored = JSON.parse(window.localStorage.getItem(label));
-          var value = stored !== null ? stored : def;
-          all[label] = ko.observable(value);
-          debug && console.debug("[SETTINGS]:", label, value);
-          all[label].subscribe(function(newValue) {
-            window.localStorage[label] = JSON.stringify(newValue);
-          });
+        try {
+          if (!all[label]) {
+            var stored = JSON.parse(window.localStorage.getItem(label));
+            var value = stored !== null ? stored : def;
+            all[label] = ko.observable(value);
+            debug && console.debug("[SETTINGS]:", label, value);
+            all[label].subscribe(function(newValue) {
+              window.localStorage[label] = JSON.stringify(newValue);
+            });
+          }
+          return all[label];
+        } catch (e) {
+          throw "Your localStorage may be compromised, remove them to continue: "+e
         }
-        return all[label];
       }
     }())
   }
