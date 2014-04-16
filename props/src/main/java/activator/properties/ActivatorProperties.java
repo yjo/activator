@@ -231,4 +231,13 @@ public class ActivatorProperties {
       return true;
     }
   }
+
+  public static boolean ACTIVATOR_PROXY_DEBUG() {
+    try {
+      return Boolean.parseBoolean(lookupOr("activator.proxyDebug", "false"));
+    } catch(Exception e){
+      System.err.println("Warning: bad value for activator.proxyDebug: " + e.getMessage());
+      return false;
+    }
+  }
 }

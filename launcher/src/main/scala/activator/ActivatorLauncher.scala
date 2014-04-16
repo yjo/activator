@@ -14,7 +14,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
-import java.net.Authenticator.RequestorType
 import java.awt.Desktop
 
 /** Expose for SBT launcher support. */
@@ -107,37 +106,33 @@ class ActivatorLauncher extends AppMain {
 
       val maybeProxyConnection = (sys.props.get("http.proxyHost"), sys.props.get("http.proxyPort")) match {
         case (Some(proxyHost), Some(proxyPort)) =>
+          if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Proxy host:port " + proxyHost + ":" + proxyPort)
           val proxy = new java.net.Proxy(java.net.Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort.toInt))
 
           // proxy auth handling
 
-          def maybeOriginalAuthenticator: Option[Authenticator] = {
+          def originalAuthenticator: Option[Authenticator] = {
             try {
               val f = classOf[Authenticator].getDeclaredField("theAuthenticator")
               f.setAccessible(true)
               Some(f.get(null).asInstanceOf[Authenticator])
             } catch {
-              case _: Throwable => None
+              case t: Throwable => None
             }
           }
 
-          // only create a new authenticator if there isn't one already
-          val maybeNewAuthenticator = for {
-            proxyUser <- sys.props.get("http.proxyUser")
-            proxyPassword <- sys.props.get("http.proxyPassword")
-            if maybeOriginalAuthenticator.isEmpty
-          } yield new Authenticator() {
-            override def getPasswordAuthentication: PasswordAuthentication =
-              if (getRequestorType == RequestorType.PROXY)
-                new PasswordAuthentication(proxyUser, proxyPassword.toCharArray)
-              else
-                null
+          originalAuthenticator match {
+            case Some(auth) if auth != null && auth.getClass.getName == "activator.ActivatorProxyAuthenticator" =>
+              if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Reusing existing ActivatorProxyAuthenticator")
+            // nothing needed - carry on
+            case originalAuthenticator =>
+              if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Creating new instance of ActivatorProxyAuthenticator")
+              Authenticator.setDefault(new ActivatorProxyAuthenticator(originalAuthenticator))
           }
-
-          maybeNewAuthenticator.map(Authenticator.setDefault)
 
           latestUrl.openConnection(proxy)
         case _ =>
+          if (ACTIVATOR_PROXY_DEBUG()) System.out.println("No proxy information found - using plain connection")
           latestUrl.openConnection()
       }
 
@@ -148,16 +143,16 @@ class ActivatorLauncher extends AppMain {
       }
       // we don't want to wait too long
       val timeout = 4000 // milliseconds
-
       connection.setConnectTimeout(timeout)
       connection.setReadTimeout(timeout)
       connection.connect()
+      if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Connected to remote connection")
 
       val in = connection.getInputStream()
       val reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")))
-
       val line = try {
         slurpIntoSingleLine(reader)
+        if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Single line slurped")
       } finally {
         reader.close()
       }
@@ -290,7 +285,6 @@ object RebootToSbt {
         System.err.println("WARNING:  Could not read build.properties file.  Defaulting sbt version to " + SBT_DEFAULT_VERSION + ".  \n  Reason: " + e.getMessage)
         SBT_DEFAULT_VERSION
     }
-
   }
 }
 // Helper class to make using ApplicationID in xsbti easier.
@@ -303,3 +297,27 @@ case class ApplicationID(
   crossVersioned: Boolean = false,
   crossVersionedValue: xsbti.CrossValue = xsbti.CrossValue.Disabled,
   classpathExtra: Array[java.io.File] = Array.empty) extends xsbti.ApplicationID
+
+class ActivatorProxyAuthenticator(original: Option[Authenticator]) extends Authenticator {
+  protected override lazy val getPasswordAuthentication: PasswordAuthentication = {
+    def originalAuthentication: Option[PasswordAuthentication] =
+      if (isProxyAuthentication) {
+        for {
+          u <- sys.props.get("http.proxyUser")
+          p <- sys.props.get("http.proxyPassword")
+        } yield new PasswordAuthentication(u, p.toCharArray)
+      } else None
+
+    originalAuthentication match {
+      case Some(pwdAuth) =>
+        if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Proxy user and password length: " + pwdAuth.getUserName + " - " + pwdAuth.getPassword.length)
+        Authenticator.setDefault(this)
+        pwdAuth
+      case None =>
+        Authenticator.setDefault(original.getOrElse(null))
+        null
+    }
+  }
+
+  private def isProxyAuthentication: Boolean = getRequestorType == Authenticator.RequestorType.PROXY
+}

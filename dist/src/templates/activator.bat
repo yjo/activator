@@ -13,7 +13,7 @@ set "var1=%~1"
 if defined var1 (
   if "%var1%"=="help" (
     echo.
-    echo Usage: activator <command>
+    echo Usage: activator [command]
     echo.
     echo Commands:
     echo ui               Start the Activator UI
