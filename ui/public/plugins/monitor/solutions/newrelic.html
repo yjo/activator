@@ -1,26 +1,36 @@
-<div id="monitor-holder">
-  <header>
-    <h1>New Relic</h1>
-  </header>
-  <div data-bind="visible: needProvision()">
-    <ul>
-      <li data-bind="css: downloadClass"><a data-bind="click: provisionNewRelic">Download the New Relic Agent</a></li>
-      <li data-bind="css: developerKeyClass">Provide your developer key
-        <ol>
-          <li><a data-bind="click: loginOrSignup">Login</a> or <a data-bind="click: loginOrSignup">sign up</a></li>
-          <li>Get your license key from the application setup screen:<br/>
-            <img src="/public/plugins/monitor/solutions/newrelic/LicenseKey.png">
-          </li>
-          <li>Enter it here:<input type="text" id="licenseKey" data-bind="value: licenseKey, valueUpdate: 'input'"/><input type="button" id="saveKey" data-bind="click: saveLicenseKey" value="save"/>
-            <span data-bind="visible: licenseKeyInvalid()">License key invalid: 40 characters [0-9a-z] only</span>
-          </li>
-        </ol>
-      </li>
-    </ul>
-  </div>
-  <div data-bind="visible: !needProvision()">
-    All done!
-    <p>The New Relic Agent has been provisioned and your license key information recorded.  Now go an enable New Relic monitoring on your Play applications!</p>
-    <input type="button" data-bind="click: resetKey" value="reset">
-  </div>
-</div>
+<header>
+  <a href="#monitor/" class="change">Change provider</a>
+  <img src="/public/images/monitor/newrelic.png">
+</header>
+<section class="warning">
+  Beware that distant monitoring disables the local inspector.
+</section>
+<section class="activate">
+
+  <!-- ko if: needProvision -->
+  <h2>Install New Relic's agent</h2>
+  <p>The agent is a jar file that will extract the data locally and send the informations to New Relic servers in order to perform the analytics. We can download it and add it you your application for you.</p>
+  <p>
+    <button class="button big install" data-bind="click: provisionNewRelic">Install</button>
+    <span data-bind="visible: downloading">Downloading... (<span data-bind="text: downloading"></span>%)</span>
+  </p>
+  <h2>Enter your licence key</h2>
+  <p>To get your licence key, you need to <a href="https://www.newrelic.com/typesafe" target="_blank">Login or Signup</a> to your New Relic account fist. Then your licence key is available in the application setup screen (<a href="/public/plugins/monitor/solutions/newrelic/LicenseKey.png" target="_blank">see this screenshot</a>)</p>
+  <p>
+    <input type="text" id="licenseKey" data-bind="value: licenseKey, valueUpdate: 'input'"/>
+    <button class="button" data-bind="click: saveLicenseKey">Save</button>
+  </p>
+  <!-- /ko -->
+  <!-- ko ifnot: needProvision-->
+  <h2>Activate monitoring</h2>
+  <p>
+    <input type="checkbox" id="activateMonitoring" class="switch-input">
+    <label class="switch" for="activateMonitoring">
+      <span class="outer"><span class="inner"></span></span>
+        Activate monitoring
+    </label>
+  </p>
+  <p><button data-bind="click: resetKey">Reset key</button></p>
+  <!-- /ko -->
+</section>
+<section class="error" data-bind="visible: error, text: error"></section>

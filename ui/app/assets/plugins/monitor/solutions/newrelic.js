@@ -51,6 +51,11 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
           return !newrelic.validKey.test(key);
         }, this);
       }
+
+        // TODO provide download feed back
+        this.downloading = ko.observable(10);
+        // TODO provide true errors
+        this.error = ko.observable("Can not download the agent.");
     });
 
     return NewRelic;

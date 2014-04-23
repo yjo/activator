@@ -44,6 +44,11 @@
           <a href="#monitor" data-bind="isActiveUrl: '#monitor'">Monitor <span class="working"
             data-bind="visible: build.activity.monitoring"></span></a>
         </dd>
+        <dt>Deliver</dt>
+        <dd>
+          <a data-bind="attr: { href: '#monitor' }, isActiveUrl: '#monitor'">Monitor</a>
+          <!-- <a data-bind="attr: { href: '#deploy' }, isActiveUrl: '#deploy'">Deploy</a> -->
+        </dd>
       </dl>
       <div id="typesafe">
         <a href="http://typesafe.com" target="_blank" class="website">

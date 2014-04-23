@@ -1,8 +1,56 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['main/pluginapi', 'text!./monitor.html', 'text!./monitorWidget.html', 'css!./monitor.css', './solutions/newrelic', './solutions/appdynamics'],
-  function(api, template, widgetTemplate, css, NewRelic, AppDynamics){
+define([
+  'main/plugins',
+  'main/pluginapi',
+  'text!./monitor.html',
+  'text!./monitorWidget.html',
+  './solutions/newrelic',
+  './solutions/appdynamics',
+  'css!./monitor.css'
+], function(
+  plugins,
+  api,
+  template,
+  widgetTemplate,
+  NewRelic,
+  AppDynamics,
+  css
+){
+
+// define([
+//   "main/plugins",
+//   "text!./monitor.html",
+//   "css!./monitor",
+//   "widgets/navigation/menu"
+// ], function(
+//   plugins,
+//   template
+// ) {
+
+//   var MonitorState = {
+//     provider: ko.observable({
+//       name: "Rew Relic",
+//       logo: "/public/images/monitor/newrelic.png",
+//       installed: false
+//     })
+//   }
+
+//   return {
+//     render: function(url) {
+//       var $monitor = $(template)[0];
+//       ko.applyBindings(MonitorState, $monitor);
+//       return $monitor;
+//     },
+
+//     route: plugins.memorizeUrl(function(url, breadcrumb) {
+//       // not used yet
+//     })
+//   }
+
+// });
+
 
     var MonitorWidget = api.Class(api.Widget, {
       id: 'monitor-widget',
@@ -28,20 +76,24 @@ define(['main/pluginapi', 'text!./monitor.html', 'text!./monitorWidget.html', 'c
     });
 
     var MonitorState = {
-      monitorWidget: new MonitorWidget()
+      monitorWidget: new MonitorWidget(),
+      provider: ko.observable()
+
     };
 
     return {
       render: function() {
-        var monitor = $(template)[0];
-        ko.applyBindings(MonitorState, monitor);
-        return monitor;
+        var $monitor = $(template)[0];
+        ko.applyBindings(MonitorState, $monitor);
+        return $monitor;
       },
-      route: function(url, breadcrumb) {
+      route: plugins.memorizeUrl(function(url, breadcrumb) {
         if (url.parameters == undefined || url.parameters.length == 0) {
-          url.parameters = ["newrelic"];
+          MonitorState.provider(null);
+        } else {
+          MonitorState.provider(url.parameters[0]);
         }
         MonitorState.monitorWidget.route(url.parameters);
-      }
+      })
     }
   });

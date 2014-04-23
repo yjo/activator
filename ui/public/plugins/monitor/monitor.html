@@ -1,3 +1,6 @@
+<article class="monitor fullpage">
+
+<!-- 
 <article class="monitor oneColumnAndMenu">
   <nav class="menu">
     <header>
@@ -12,5 +15,36 @@
       </li>
     </ul>
   </nav>
-  <section data-bind="snapView: monitorWidget"></section>
+ -->
+
+  <!-- ko ifnot: provider -->
+  <div class="providers">
+    <aside>
+      <h2>Typesafe subscription</h2>
+      <p>Discover the Developer subscription to get support you can depend on.</p>
+      <a href="http://typesafe.com/how/subscription" target="_blank" class="button">VISIT TYPESAFE.COM</a>
+    </aside>
+    <header>
+      <h1>Monitor</h1>
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+      consequat.</p>
+    </header>
+    <section class="warning">
+      Monitoring is only available for Play applications.
+    </section>
+    <section class="choose">
+      <h4>Choose a provider</h4>
+      <p id="providers">
+        <a class="soon"><img src="/public/images/monitor/appdynamics.png"></a>
+        <a href="#monitor/newrelic"><img src="/public/images/monitor/newrelic.png"></a>
+      </ul>
+    </section>
+  </div>
+  <!-- /ko -->
+
+  <!-- ko if: provider -->
+  <div class="provider" data-bind="snapView: monitorWidget"></div>
+  <!-- /ko -->
 </article>
