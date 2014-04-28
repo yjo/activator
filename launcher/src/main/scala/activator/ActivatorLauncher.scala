@@ -151,8 +151,9 @@ class ActivatorLauncher extends AppMain {
       val in = connection.getInputStream()
       val reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")))
       val line = try {
-        slurpIntoSingleLine(reader)
-        if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Single line slurped")
+        val line = slurpIntoSingleLine(reader)
+        if (ACTIVATOR_PROXY_DEBUG()) System.out.println("Server version information: " + line)
+        line
       } finally {
         reader.close()
       }
