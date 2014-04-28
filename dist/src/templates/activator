@@ -125,11 +125,20 @@ get_mem_opts () {
   (( $perm > 256 )) || perm=256
   (( $perm < 1024 )) || perm=1024
 
-  if [[ "$java_version" < "1.8" ]]; then
-    memopts="-XX:PermSize=64M -XX:MaxPermSize=${perm}m"
+  # default is to set memory options but this can be overridden by code section below
+  memopts="-Xms${mem}m -Xmx${mem}m"
+  extmemopts="-XX:PermSize=64m -XX:MaxPermSize=${perm}m"
+
+  if [[ "${java_opts}" == *-Xmx* ]] || [[ "${java_opts}" == *-Xms* ]] || [[ "${java_opts}" == *-XX:MaxPermSize* ]] || [[ "${java_opts}" == *-XX:ReservedCodeCacheSize* ]]; then
+    # if we detect any of these settings in ${java_opts} we need to NOT output our settings.
+    # The reason is the Xms/Xmx, if they don't line up, cause errors.
+     memopts=""
+     extmemopts=""
+  elif [[ "${java_version}" > "1.8" ]]; then
+    extmemopts=""
   fi
 
-  echo "-Xms${mem}m -Xmx${mem}m $memopts"
+  echo "${memopts} ${extmemopts}"
 }
 require_arg () {
   local type="$1"
@@ -203,11 +212,12 @@ run() {
     addJava "-Djline.terminal=jline.UnixTerminal"
     addJava "-Dsbt.cygwin=true"
   fi
+
   # run sbt
   execRunner "$java_cmd" \
     "-Dactivator.home=$(make_url "$activator_home")" \
     $(get_mem_opts $app_mem) \
-    ${java_opts} \
+    ${java_opts[@]} \
     ${java_args[@]} \
     -jar "$app_launcher" \
     "${app_commands[@]}" \
@@ -241,20 +251,24 @@ Usage: $script_name <command> [options]
   Options:
   -v | -verbose      Make this runner chattier
   -d | -debug        Set sbt log level to debug
-  -mem    <integer>  Set memory options (default: $sbt_mem, which is $(get_mem_opts $sbt_mem))
+  -mem <integer>     Set memory options (default: $sbt_mem, which is $(get_mem_opts $sbt_mem))
   -jvm-debug <port>  Turn on JVM debugging, open at the given port.
 
   # java version (default: java from PATH, currently $(java -version 2>&1 | grep version))
   -java-home <path>  Alternate JAVA_HOME
 
   # jvm options and output control
-  JAVA_OPTS          Environment variable, if unset uses "$java_opts"
   -Dkey=val          Pass -Dkey=val directly to the java runtime
   -J-X               Pass option -X directly to the java runtime
                      (-J is stripped)
 
+  # environment variables (read from context)
+  JAVA_OPTS          Environment variable, if unset uses ""
+  SBT_OPTS           Environment variable, if unset uses ""
+  ACTIVATOR_OPTS     Environment variable, if unset uses ""
+
 In the case of duplicated or conflicting options, the order above
-shows precedence: JAVA_OPTS lowest, command line options highest.
+shows precedence: environment variables lowest, command line options highest.
 EOM
 }
 
@@ -271,6 +285,7 @@ ${{template_declares}}
 declare -r app_launcher="${activator_home}/activator-launch-${app_version}.jar"
 declare -r script_name=activator
 declare -r java_cmd=$(get_java_cmd)
+declare -r java_opts=( "${ACTIVATOR_OPTS[@]}" "${SBT_OPTS[@]}" "${JAVA_OPTS[@]}" "${java_opts[@]}" )
 userhome="$HOME"
 if is_cygwin; then
   # cygwin sets home to something f-d up, set to real windows homedir

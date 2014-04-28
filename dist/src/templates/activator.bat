@@ -13,13 +13,18 @@ set "var1=%~1"
 if defined var1 (
   if "%var1%"=="help" (
     echo.
-    echo Usage: activator [command]
+    echo Usage activator [command]
     echo.
     echo Commands:
     echo ui               Start the Activator UI
     echo new [name] [template-id]  Create a new project with [name] using template [template-id]
     echo list-templates   Print all available template names
     echo help             Print this message
+    echo.
+    echo Environment variables ^(read from context^):
+    echo JAVA_OPTS        Environment variable, if unset uses ""
+    echo SBT_OPTS         Environment variable, if unset uses ""
+    echo ACTIVATOR_OPTS   Environment variable, if unset uses ""
     echo.
     goto :end
   )
