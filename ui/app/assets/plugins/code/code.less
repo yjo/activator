@@ -8,7 +8,6 @@
 	.list {
     li {
       position: relative;
-      font-family: icons;
     }
     a {
       .cover();
@@ -20,6 +19,9 @@
 		li.folder:before {
 			content: "\1F4C1";
 		}
+    li:before {
+      font-family: icons;
+    }
 		li.hidden:before {
 			opacity: .5;
 		}
@@ -128,7 +130,7 @@ div.file-contents {
   padding: 1em;
 }
 .file-contents span {
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .code-control-bar {

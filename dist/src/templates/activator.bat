@@ -8,7 +8,30 @@
 @setlocal enabledelayedexpansion
 
 @echo off
+
+set "var1=%~1"
+if defined var1 (
+  if "%var1%"=="help" (
+    echo.
+    echo Usage activator [command]
+    echo.
+    echo Commands:
+    echo ui               Start the Activator UI
+    echo new [name] [template-id]  Create a new project with [name] using template [template-id]
+    echo list-templates   Print all available template names
+    echo help             Print this message
+    echo.
+    echo Environment variables ^(read from context^):
+    echo JAVA_OPTS        Environment variable, if unset uses ""
+    echo SBT_OPTS         Environment variable, if unset uses ""
+    echo ACTIVATOR_OPTS   Environment variable, if unset uses ""
+    echo.
+    goto :end
+  )
+)
+
 if "%ACTIVATOR_HOME%"=="" set "ACTIVATOR_HOME=%~dp0"
+
 set ERROR_CODE=0
 ${{template_declares}}
 set ACTIVATOR_LAUNCH_JAR=activator-launch-%APP_VERSION%.jar
@@ -56,7 +79,7 @@ for /F %%j in ('"%_JAVACCMD%" -version 2^>^&1') do (
   if %%~j==javac set JAVACINSTALLED=1
 )
 
-rem BAT has no logiclal or, so we do it OLD SCHOOL! Oppan Redmond Style
+rem BAT has no logical or, so we do it OLD SCHOOL! Oppan Redmond Style
 set JAVAOK=true
 if not defined JAVAINSTALLED set JAVAOK=false
 if not defined JAVACINSTALLED set JAVAOK=false
@@ -80,6 +103,27 @@ if "%JAVAOK%"=="false" (
   exit /B 1
 )
 
+rem Check what Java version is being used to determine what memory options to use
+for /f "tokens=3" %%g in ('java -version 2^>^&1 ^| findstr /i "version"') do (
+    set JAVA_VERSION=%%g
+)
+
+rem Strips away the " characters
+set JAVA_VERSION=%JAVA_VERSION:"=%
+
+rem TODO Check if there are existing mem settings in JAVA_OPTS/CFG_OPTS and use those instead of the below
+for /f "delims=. tokens=1-3" %%v in ("%JAVA_VERSION%") do (
+    set MAJOR=%%v
+    set MINOR=%%w
+    set BUILD=%%x
+
+    set PERM_SIZE=
+    if "%MINOR%" LSS "8" (
+      set PERM_SIZE=-XX:PermSize=64M -XX:MaxPermSize=256M
+    )
+
+    set MEM_OPTS=%PERM_SIZE%
+ )
 
 rem We use the value of the JAVA_OPTS environment variable if defined, rather than the config.
 set _JAVA_OPTS=%JAVA_OPTS%
@@ -100,7 +144,7 @@ rem We don't even bother with UNC paths.
 set JAVA_FRIENDLY_HOME_1=/!ACTIVATOR_HOME:\=/!
 set JAVA_FRIENDLY_HOME=/!JAVA_FRIENDLY_HOME_1: =%%20!
 
-"%_JAVACMD%" %_JAVA_OPTS% -XX:PermSize=64M -XX:MaxPermSize=256M %ACTIVATOR_OPTS% "-Dactivator.home=%JAVA_FRIENDLY_HOME%" -jar "%ACTIVATOR_HOME%\%ACTIVATOR_LAUNCH_JAR%" %CMDS%
+"%_JAVACMD%" %MEM_OPTS% %ACTIVATOR_OPTS% %SBT_OPTS% %_JAVA_OPTS% "-Dactivator.home=%JAVA_FRIENDLY_HOME%" -jar "%ACTIVATOR_HOME%\%ACTIVATOR_LAUNCH_JAR%" %CMDS%
 if ERRORLEVEL 1 goto error
 goto end
 

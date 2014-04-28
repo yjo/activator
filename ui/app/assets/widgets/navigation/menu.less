@@ -38,7 +38,7 @@
     height: 40px;
     line-height: 40px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     color: @slate-ltr;
   }
@@ -53,6 +53,9 @@
     li {
       padding: 5px 0 5px 20px;
       border-bottom: none;
+      p {
+        .ellipsis();
+      }
     }
   }
   .links {

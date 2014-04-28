@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
 */
+@import "/public/fonts/font-faces.css";
 
 @import "../commons/_reset";
 @import "../commons/_base";
@@ -13,13 +14,8 @@ html, body {
 body {
   background: @grey;
   color: @grey-dkr;
-  font: 500 14px "Helvetica Neue", "Helvetica", sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font: 13px "Open Sans", sans-serif;
   overflow: hidden;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;   
   cursor: default;
 }
 
@@ -29,11 +25,7 @@ button {
 }
 
 h1, h2, h3, h4, h5, h6, dt {
-  font-family: "HelveticaNeue-CondensedBold", "Open Sans Condensed", "Helvetica", sans-serif;
-  font-weight: bold;
-  font-stretch: condensed;
-  letter-spacing: -0.03em;
-  font-weight: 700;
+  .title();
 }
 
 a {

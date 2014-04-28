@@ -10,86 +10,137 @@ import java.io.File
 import sbt.complete.{ Parser, Parsers }
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import akka.actor.ActorSystem
-import java.util.concurrent.TimeoutException
+import activator.cache.{ TemplateMetadata, TemplateCache }
+import scala.util.control.NonFatal
 
-object ActivatorCli {
+object ActivatorCli extends ActivatorCliHelper {
+  case class ProjectInfo(projectName: String = "N/A", templateName: String = "N/A", file: Option[File] = None)
+
   def apply(configuration: AppConfiguration): Int = try withContextClassloader {
-    System.out.println()
-    val name = getApplicationName()
-
-    val system = ActorSystem("default")
-
-    val defaultDuration = Duration(system.settings.config.getMilliseconds("activator.timeout"), MILLISECONDS)
-
-    val projectDir = new File(name).getAbsoluteFile
-    // Ok, now we load the template cache...
-
-    implicit val timeout = akka.util.Timeout(defaultDuration)
-
-    // Create our default cache
     // TODO - move this into a common shared location between CLI and GUI.
-    val cache = UICacheHelper.makeDefaultCache(system)
-    // Get all possible names.
-    // TODO - Drive this whole thing through futures, if we feel SAUCY enough, rather than waiting for results.
-    System.out.println()
-    System.out.println("Fetching the latest list of templates...")
-    System.out.println()
-    val metadata = try {
-      Await.result(cache.metadata, defaultDuration)
-    } catch {
-      case e: TimeoutException =>
-        // fall back to just using whatever we have in the local cache
-        System.out.println()
-        System.out.println("Could not fetch the updated list of templates.  Using the local cache.")
-        System.out.println("Check your proxy settings or increase the timeout.  For more details see:\nhttp://typesafe.com/activator/docs")
-        System.out.println()
+    val cache = UICacheHelper.makeDefaultCache(ActivatorCliHelper.system)
+    val metadata = TemplateHandler.downloadTemplates(cache, ActivatorCliHelper.defaultDuration)
 
-        val localOnlyCache = UICacheHelper.makeLocalOnlyCache(ActorSystem("fallback"))
-        Await.result(localOnlyCache.metadata, defaultDuration)
+    val possible = metadata.map(_.name).toSeq.distinct
+    val featured = metadata.filter(_.featured)
+    val suggestedSeeds = featured.filter(_.tags.contains("seed")).map(_.name).toSeq.distinct
+    val suggested = if (suggestedSeeds.nonEmpty) suggestedSeeds else featured.map(_.name).toSeq.distinct
+
+    def validateTemplateName(tNameOption: Option[String]): Option[String] = {
+      val validated = {
+        if (tNameOption.isEmpty) {
+          System.err.println("Please enter a template name.")
+          None
+        } else {
+          tNameOption flatMap { tName =>
+            if (metadata.exists(_.name == tName)) {
+              Some(tName)
+            } else {
+              System.err.println(s"Template name '${tName}' wasn't found in the template catalog.")
+              None
+            }
+          }
+        }
+      }
+
+      if (validated.isEmpty) {
+        System.err.println(s"Try these template names: ${suggested.mkString(", ")}")
+        System.err.println(s"or see all templates at http://typesafe.com/activator/templates or with 'activator list-templates'")
+      }
+
+      validated
     }
-    val templateNames = metadata.map(_.name).toSeq.distinct
-    System.out.println()
-    System.out.println(s"The new application will be created in ${projectDir.getAbsolutePath}")
-    System.out.println()
-    val templateName = getTemplateName(templateNames)
-    // Check validity, and check for direct match first
-    val template = (metadata.find(_.name == templateName) orElse
-      metadata.find(_.name.toLowerCase contains templateName.toLowerCase))
-    template match {
-      case Some(t) =>
-        System.out.println(s"""OK, application "$name" is being created using the "${t.name}" template.""")
-        System.out.println()
-        import scala.concurrent.ExecutionContext.Implicits.global
 
-        // record stats in parallel while we are cloning
-        val statsRecorded = TemplatePopularityContest.recordClonedIgnoringErrors(t.name)
+    def getTemplateName(): Option[String] = {
+      val tNameOption = try TemplateHandler.getTemplateName(possible, suggested)
+      catch {
+        case NonFatal(e) =>
+          None
+      }
 
-        // TODO - Is this duration ok?
-        Await.result(
-          cloneTemplate(
-            cache,
-            t.id,
-            projectDir,
-            Some(name),
-            filterMetadata = !t.templateTemplate,
-            additionalFiles = UICacheHelper.scriptFilesForCloning),
-          Duration(5, MINUTES))
-        printUsage(name, projectDir)
-
-        // don't wait too long on this remote call, we ignore the
-        // result anyway; just don't want to exit the JVM too soon.
-        Await.result(statsRecorded, Duration(5, SECONDS))
-
-        0
-      case _ =>
-        sys.error("Could not find template with name: $templateName")
+      validateTemplateName(tNameOption)
     }
-  } catch {
-    case e: Exception =>
-      System.err.println(e.getMessage)
-      e.printStackTrace()
-      1
+
+    // Handling input based on length (yes, it is brittle to do argument parsing like this...):
+    // length = 2 : "new" and "project name" => generate project automatically, but query for template to use
+    // length = 3 : "new", "project name" and "template name" => generate project and template automatically
+    // length != (2 || 3) : query for both project name and template
+    val projectInfo =
+      configuration.arguments().length match {
+        case 2 =>
+          val pName = configuration.arguments()(1)
+          createFile(pName) match {
+            case f @ Some(_) =>
+              (for (tName <- getTemplateName) yield ProjectInfo(
+                projectName = pName,
+                templateName = tName,
+                file = f)) getOrElse ProjectInfo()
+            case None => ProjectInfo()
+          }
+        case 3 =>
+          val pName = configuration.arguments()(1)
+          validateTemplateName(Some(configuration.arguments()(2))) map { tName =>
+            ProjectInfo(
+              projectName = pName,
+              templateName = tName,
+              file = createFile(pName))
+          } getOrElse ProjectInfo()
+        case _ =>
+          (for (tName <- getTemplateName()) yield {
+            val pName = getApplicationName(tName)
+            createFile(pName) match {
+              case f @ Some(_) =>
+                ProjectInfo(
+                  projectName = pName,
+                  templateName = tName,
+                  file = f)
+              case None => ProjectInfo()
+            }
+          }) getOrElse ProjectInfo()
+      }
+
+    val result = for {
+      f <- projectInfo.file
+      t <- TemplateHandler.findTemplate(metadata, projectInfo.templateName)
+    } yield generateProjectTemplate(t, projectInfo.templateName, projectInfo.projectName, cache, f)
+
+    result.getOrElse(1)
+  }
+
+  private def createFile(name: String): Option[File] = {
+    val file = new File(name)
+    if (!file.exists()) Some(file.getAbsoluteFile)
+    else {
+      System.err.println(s"There already is a project with name: $name. Either remove the existing project or create one with a unique name. ")
+      None
+    }
+  }
+
+  private def generateProjectTemplate(template: TemplateMetadata, tName: String, pName: String, cache: TemplateCache, projectDir: File): Int = {
+    System.out.println(s"""OK, application "$pName" is being created using the "${template.name}" template.""")
+    System.out.println()
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    // record stats in parallel while we are cloning
+    val statsRecorded = TemplatePopularityContest.recordClonedIgnoringErrors(template.name)
+
+    // TODO - Is this duration ok?
+    Await.result(
+      cloneTemplate(
+        cache,
+        template.id,
+        projectDir,
+        Some(pName),
+        filterMetadata = !template.templateTemplate,
+        additionalFiles = UICacheHelper.scriptFilesForCloning),
+      Duration(5, MINUTES))
+
+    printUsage(pName, projectDir)
+
+    // don't wait too long on this remote call, we ignore the
+    // result anyway; just don't want to exit the JVM too soon.
+    Await.result(statsRecorded, Duration(5, SECONDS))
+    0
   }
 
   private def printUsage(name: String, dir: File): Unit = {
@@ -105,39 +156,17 @@ object ActivatorCli {
                            |""".stripMargin)
   }
 
-  private def getApplicationName(): String = {
-    System.out.println("Enter an application name")
+  private def getApplicationName(default: String): String = {
+    System.out.println(s"Enter a name for your application (just press enter for '${default}')")
     val appNameParser: Parser[String] = {
       import Parser._
       import Parsers._
       token(any.* map { _ mkString "" }, "<application name>")
     }
 
-    readLine(appNameParser) filterNot (_.isEmpty) getOrElse sys.error("No application name specified.")
+    readLine(appNameParser) map (_.trim) filterNot (_.isEmpty) getOrElse default
   }
 
-  private def getTemplateName(possible: Seq[String]): String = {
-    val templateNameParser: Parser[String] = {
-      import Parser._
-      import Parsers._
-      token(any.* map { _ mkString "" }, "<template name>").examples(possible.toSet, false)
-    }
-    System.out.println("Browse the list of templates: http://typesafe.com/activator/templates")
-    System.out.println("Enter a template name, or hit tab to see a list")
-    readLine(templateNameParser) filterNot (_.isEmpty) getOrElse sys.error("No template name specified.")
-  }
-
-  /** Uses SBT complete library to read user input with a given auto-completing parser. */
-  private def readLine[U](parser: Parser[U], prompt: String = "> ", mask: Option[Char] = None): Option[U] = {
-    val reader = new sbt.FullReader(None, parser)
-    reader.readLine(prompt, mask) flatMap { line =>
-      val parsed = Parser.parse(line, parser)
-      parsed match {
-        case Right(value) => Some(value)
-        case Left(e) => None
-      }
-    }
-  }
   def withContextClassloader[A](f: => A): A = {
     val current = Thread.currentThread
     val old = current.getContextClassLoader

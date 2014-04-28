@@ -10,7 +10,7 @@
           <span class="icon" data-bind="visible: haveActiveTask">&#x25a0;</span>
           <span data-bind="text: startStopLabel"></span>
         </span>
-        <span class="restart button groupMid" data-bind="enable: haveActiveTask() && !restartPending(), click: restartButtonClicked"><span class="icon">&#x27f3;</span>Restart</span>
+        <span class="restart button groupMid" data-bind="enable: haveActiveTask() && !restartPending(), click: restartButtonClicked">Restart</span>
       </div>
     </div>
     <ul class="list">
@@ -29,7 +29,7 @@
           <input type="radio" name="mainClass" data-bind="value: $data, checked: $parent.currentMainClass, attr: {id: $data}"  class="radio-input">
           <label class="radio" data-bind="attr: { for: $data }">
             <span class="outer"><span class="inner"></span></span>
-            <span data-bind="text: $data"></span>
+            <p data-bind="text: $data, attr: {title: $data}"></p>
           </label>
         </li>
         <!-- /ko -->

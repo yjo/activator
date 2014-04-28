@@ -254,6 +254,7 @@ object TheActivatorBuild extends Build {
         "junit" % "junit" % "3.8.1",
         "com.jcraft" % "jsch" % "0.1.44-1",
         "jline" % "jline" % "0.9.94",
+        "org.scala-lang" % "jline" % "2.10.3",
         "com.typesafe.akka" % "akka-slf4j_2.10" % "2.2.0",
         "com.typesafe.akka" % "akka-contrib_2.10" % "2.2.3"
       ),

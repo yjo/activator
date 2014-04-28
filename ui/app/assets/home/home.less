@@ -2,24 +2,21 @@
  * Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
 
+// @import "/public/fonts/font-faces.css";
 @import '../commons/_reset.less';
 @import '../commons/_base.less';
 
 
 .title(){
-  font-family: "HelveticaNeue-CondensedBold", "Open Sans Condensed", "Helvetica", sans-serif;
-  font-weight: bold;
-  font-stretch: condensed;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 body {
-  font: 13px "Helvetica Neue", sans-serif;
+  font: 13px "Open Sans", sans-serif;
   background: @slate url("/public/images/home.svg") no-repeat;
   background-size: cover;
   color: #D3D9DF;
-  -webkit-font-smoothing: antialiased;
 }
 html, body {
   overflow: auto;
@@ -44,7 +41,7 @@ h2 {
   background: #fff;
   color: #333;
   font-size: 15px;
-  font-weight: bold;
+  font-weight: 600;
   border-bottom: 1px solid #D8D8D8;
   &:before {
     content: "↓";
@@ -55,13 +52,13 @@ h2 {
 }
 
 h3 {
-  font-family: HelveticaNeue-CondensedBold, "Helvetica Neue", sans-serif;
+  .title();
   font-size: 30px;
   color: #28353F;
 }
 
 h4 {
-  font-family: HelveticaNeue-CondensedBold, "Helvetica Neue", sans-serif;
+  .title();
   font-size: 15px;
   color: #28353F;
 }
@@ -167,7 +164,7 @@ section {
   left: 5%;
   right: 36%;
   article {
-    top: 80px;
+    top: 40px;
     border-top: 1px solid #ddd;
   }
   li.template {
@@ -182,7 +179,7 @@ section {
     }
     &.featured {
       font-size: 17px;
-      font-weight: 700;
+      font-weight: 600;
       color: #333;
       &:before {
         content: "★";
@@ -232,7 +229,7 @@ article {
     cursor: pointer;
     h3, h3 a {
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 600;
       color: #333;
     }
     p {
@@ -316,7 +313,6 @@ article {
       margin: 10px;
       font-size: 18px;
       color: #627886;
-      font-weight: 700;
       &:before {
         display: inline-block;
         width: 24px;
@@ -432,15 +428,6 @@ form {
   }
 }
 
-#templateList {
-  width: 50%;
-  position: absolute;
-  background: #f5f5f5;
-  top: 40px;
-  left: 0;
-  bottom: 0;
-}
-
 #newAppForm {
   .list-container {
     position: absolute;
@@ -493,9 +480,6 @@ form {
 }
 
 #openAppLocationBrowser, #newAppLocationBrowser {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
   .current {
     padding: 10px; 
     background: white;
@@ -535,7 +519,7 @@ form {
       display: block;
     }
     .name {
-      font-family: HelveticaNeue-CondensedBold, "Helvetica Neue", sans-serif;
+      .title();
       font-size: 14px;
       color: #28353F;
     }
@@ -556,7 +540,7 @@ form {
 
   header {
     background: #53cdec;
-    font-family: "HelveticaNeue-CondensedBold", "Open Sans Condensed", "Helvetica", sans-serif;
+    .title();
     font-size: 22px;
     color: #fff;
     line-height: 40px;
@@ -570,7 +554,7 @@ form {
         border-bottom: 1px solid #e9ecef;
       > a {
         padding: 15px 20px;
-        font-family: "HelveticaNeue-CondensedBold", "Open Sans Condensed", "Helvetica", sans-serif;
+        .title();
         font-size: 18px;
         display: block;
         background: url(/public/images/arrow.png) 350px center no-repeat;
@@ -592,7 +576,7 @@ form {
   .feedback {
     background: #ddf5fb;
     padding: 5px 20px;
-    font-weight: bold;
+    font-weight: 600;
     a {
       color: #53cdec;
     }
@@ -823,4 +807,37 @@ form {
   right: 15px;
   bottom: 15px;
   color: #ffffff;
+}
+
+
+.tabs {
+  overflow: hidden;
+  h2 {
+    width: 50%;
+    float: left;
+    color: #666;
+    cursor: pointer;
+    text-align: center;
+    border-left: 1px solid #eee;
+    border-bottom: 3px solid #ccc;
+    &.active {
+      color: @blue-text;
+      border-bottom: 3px solid @blue;
+    }
+    &:before {
+      content: none;
+    }
+  }
+}
+
+#templateList {
+  .list {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-top: 1px solid #ddd;
+    overflow: auto;
+  }
 }
