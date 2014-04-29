@@ -517,24 +517,16 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
         case x @ NewRelicRequest.Provision =>
           val sink = context.actorOf(Props(new ProvisioningSink(log => new ProvisioningSinkUnderlying(log))))
           askNewRelic[Provisioned](monitor.NewRelic.Provision(sink), x,
-            f => s"Failed to provision New Relic: ${f.getMessage}") {
-              r => produce(toJson(x.response))
-            }
+            f => s"Failed to provision New Relic: ${f.getMessage}")(_ => produce(toJson(x.response)))
         case x @ NewRelicRequest.Available =>
           askNewRelic[AvailableResponse](monitor.NewRelic.Available, x,
-            f => s"Failed New Relic availability check: ${f.getMessage}") {
-              r => produce(toJson(x.response(r.result)))
-            }
+            f => s"Failed New Relic availability check: ${f.getMessage}")(r => produce(toJson(x.response(r.result))))
         case x @ NewRelicRequest.EnableProject(key, name) =>
           askNewRelic[ProjectEnabled](monitor.NewRelic.EnableProject(config.location, key, name), x,
-            f => s"Failed to enable project[${config.location}] for New Relic: ${f.getMessage}") {
-              r => produce(toJson(x.response))
-            }
+            f => s"Failed to enable project[${config.location}] for New Relic: ${f.getMessage}")(_ => produce(toJson(x.response)))
         case x @ NewRelicRequest.IsProjectEnabled =>
           askNewRelic[IsProjectEnabledResult](monitor.NewRelic.IsProjectEnabled(config.location), x,
-            f => s"Failed check if New Relic enabled: ${f.getMessage}") {
-              r => produce(toJson(x.response(r.result)))
-            }
+            f => s"Failed check if New Relic enabled: ${f.getMessage}")(r => produce(toJson(x.response(r.result))))
       }
     }
 
