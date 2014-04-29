@@ -21,6 +21,7 @@ import scala.concurrent.duration._
 import scala.util.{ Success, Failure }
 import play.api.Play
 import scala.concurrent.ExecutionContext
+import scala.reflect.ClassTag
 
 sealed trait AppRequest
 
@@ -494,45 +495,52 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
   }
 
   class AppSocketActor(newRelicActor: ActorRef) extends WebSocketActor[JsValue] with ActorLogging {
+
     import WebSocketActor.timeout
+
+    def askNewRelic[T <: monitor.NewRelic.Response](msg: monitor.NewRelic.Request, omsg: NewRelicRequest.Request, onFailure: Throwable => String)(body: T => Unit)(implicit tag: ClassTag[T]): Unit = {
+      newRelicActor.ask(msg).mapTo[monitor.NewRelic.Response].onComplete {
+        case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(omsg.error(r.message)))
+        case Success(`tag`(r)) => body(r)
+        case Success(r: monitor.NewRelic.Response) =>
+          log.error(s"Unexpected response from request: $msg got: $r expected: ${tag.toString()}")
+        case Failure(f) =>
+          val errorMsg = onFailure(f)
+          log.error(f, errorMsg)
+          produce(toJson(omsg.error(errorMsg)))
+      }
+    }
+
+    def handleNewRelicRequest(in: NewRelicRequest.Request): Unit = {
+      import monitor.NewRelic._
+      in match {
+        case x @ NewRelicRequest.Provision =>
+          val sink = context.actorOf(Props(new ProvisioningSink(log => new ProvisioningSinkUnderlying(log))))
+          askNewRelic[Provisioned](monitor.NewRelic.Provision(sink), x,
+            f => s"Failed to provision New Relic: ${f.getMessage}") {
+              r => produce(toJson(x.response))
+            }
+        case x @ NewRelicRequest.Available =>
+          askNewRelic[AvailableResponse](monitor.NewRelic.Available, x,
+            f => s"Failed New Relic availability check: ${f.getMessage}") {
+              r => produce(toJson(x.response(r.result)))
+            }
+        case x @ NewRelicRequest.EnableProject(key, name) =>
+          askNewRelic[ProjectEnabled](monitor.NewRelic.EnableProject(config.location, key, name), x,
+            f => s"Failed to enable project[${config.location}] for New Relic: ${f.getMessage}") {
+              r => produce(toJson(x.response))
+            }
+        case x @ NewRelicRequest.IsProjectEnabled =>
+          askNewRelic[IsProjectEnabledResult](monitor.NewRelic.IsProjectEnabled(config.location), x,
+            f => s"Failed check if New Relic enabled: ${f.getMessage}") {
+              r => produce(toJson(x.response(r.result)))
+            }
+      }
+    }
+
     override def onMessage(json: JsValue): Unit = {
       json match {
-        case NewRelicRequest(m) => m match {
-          case x @ NewRelicRequest.Provision =>
-            val sink = context.actorOf(Props(new ProvisioningSink(log => new ProvisioningSinkUnderlying(log))))
-            newRelicActor.ask(monitor.NewRelic.Provision(sink)).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.Provisioned) => produce(toJson(x.response))
-              case Failure(f) =>
-                log.error(f, s"Failed to provision New Relic: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed to provision New Relic: ${f.getMessage}")))
-            }
-          case x @ NewRelicRequest.Available =>
-            newRelicActor.ask(monitor.NewRelic.Available).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.AvailableResponse) => produce(toJson(x.response(r.result)))
-              case Failure(f) =>
-                log.error(f, s"Failed New Relic availability check: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed New Relic availability check: ${f.getMessage}")))
-            }
-          case x @ NewRelicRequest.EnableProject(key, name) =>
-            newRelicActor.ask(monitor.NewRelic.EnableProject(config.location, key, name)).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.ProjectEnabled) => produce(toJson(x.response))
-              case Failure(f) =>
-                log.error(f, s"Failed to provision New Relic: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed to provision New Relic: ${f.getMessage}")))
-            }
-          case x @ NewRelicRequest.IsProjectEnabled =>
-            newRelicActor.ask(monitor.NewRelic.IsProjectEnabled(config.location)).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.IsProjectEnabledResult) => produce(toJson(x.response(r.result)))
-              case Failure(f) =>
-                log.error(f, s"Failed check if New Relic enabled: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed check if New Relic enabled: ${f.getMessage}")))
-            }
-
-        }
+        case NewRelicRequest(m) => handleNewRelicRequest(m)
         case InspectRequest(m) => for (cActor <- consoleActor) cActor ! HandleRequest(json)
         case WebSocketActor.Ping(ping) => produce(WebSocketActor.Pong(ping.cookie))
         case _ => log.info("unhandled message on web socket: {}", json)
