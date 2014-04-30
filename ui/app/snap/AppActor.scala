@@ -495,10 +495,7 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
   }
 
   class AppSocketActor(newRelicActor: ActorRef) extends WebSocketActor[JsValue] with ActorLogging {
-<<<<<<< HEAD
 
-=======
->>>>>>> Basic support for using New Relic
     import WebSocketActor.timeout
 
     def askNewRelic[T <: monitor.NewRelic.Response](msg: monitor.NewRelic.Request, omsg: NewRelicRequest.Request, onFailure: Throwable => String)(body: T => Unit)(implicit tag: ClassTag[T]): Unit = {
@@ -535,46 +532,7 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
 
     override def onMessage(json: JsValue): Unit = {
       json match {
-<<<<<<< HEAD
         case NewRelicRequest(m) => handleNewRelicRequest(m)
-=======
-        case NewRelicRequest(m) => m match {
-          case x @ NewRelicRequest.Provision =>
-            val sink = context.actorOf(Props(new ProvisioningSink(log => new ProvisioningSinkUnderlying(log))))
-            newRelicActor.ask(monitor.NewRelic.Provision(sink)).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.Provisioned) => produce(toJson(x.response))
-              case Failure(f) =>
-                log.error(f, s"Failed to provision New Relic: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed to provision New Relic: ${f.getMessage}")))
-            }
-          case x @ NewRelicRequest.Available =>
-            newRelicActor.ask(monitor.NewRelic.Available).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.AvailableResponse) => produce(toJson(x.response(r.result)))
-              case Failure(f) =>
-                log.error(f, s"Failed New Relic availability check: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed New Relic availability check: ${f.getMessage}")))
-            }
-          case x @ NewRelicRequest.EnableProject(key, name) =>
-            newRelicActor.ask(monitor.NewRelic.EnableProject(config.location, key, name)).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.ProjectEnabled) => produce(toJson(x.response))
-              case Failure(f) =>
-                log.error(f, s"Failed to provision New Relic: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed to provision New Relic: ${f.getMessage}")))
-            }
-          case x @ NewRelicRequest.IsProjectEnabled =>
-            newRelicActor.ask(monitor.NewRelic.IsProjectEnabled(config.location)).onComplete {
-              case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(x.error(r.message)))
-              case Success(r: monitor.NewRelic.IsProjectEnabledResult) => produce(toJson(x.response(r.result)))
-              case Failure(f) =>
-                log.error(f, s"Failed check if New Relic enabled: ${f.getMessage}")
-                produce(toJson(x.error(s"Failed check if New Relic enabled: ${f.getMessage}")))
-            }
-
-        }
->>>>>>> Basic support for using New Relic
         case InspectRequest(m) => for (cActor <- consoleActor) cActor ! HandleRequest(json)
         case WebSocketActor.Ping(ping) => produce(WebSocketActor.Pong(ping.cookie))
         case _ => log.info("unhandled message on web socket: {}", json)

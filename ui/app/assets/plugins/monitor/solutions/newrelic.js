@@ -32,11 +32,6 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
             newrelic.provision()
           }
         };
-        this.loginOrSignup = function () {
-          if (this.developerKeyEnabled()) {
-            window.open('https://www.newrelic.com/typesafe','_blank');
-          }
-        };
         this.saveLicenseKey = function () {
           if (this.developerKeyEnabled() && !this.licenseKeyInvalid()) {
             newrelic.licenseKey(this.licenseKey());
@@ -50,12 +45,12 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
           var key = this.licenseKey();
           return !newrelic.validKey.test(key);
         }, this);
-      }
 
         // TODO provide download feed back
         this.downloading = ko.observable(10);
         // TODO provide true errors
         this.error = ko.observable("Can not download the agent.");
+      }
     });
 
     return NewRelic;

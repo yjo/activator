@@ -41,12 +41,11 @@
           <a href="#inspect" data-bind="isActiveUrl: '#inspect'">Inspect <span class="working"
             data-bind="visible: build.activity.inspecting"></span><span class="counter"
             data-bind="text: build.errors.inspect().length, visible: build.errors.inspect().length > 0"></span></a>
-          <a href="#monitor" data-bind="isActiveUrl: '#monitor'">Monitor <span class="working"
-            data-bind="visible: build.activity.monitoring"></span></a>
         </dd>
         <dt>Deliver</dt>
         <dd>
-          <a data-bind="attr: { href: '#monitor' }, isActiveUrl: '#monitor'">Monitor</a>
+          <a href="#monitor" data-bind="isActiveUrl: '#monitor'">Monitor <span class="working"
+            data-bind="visible: build.activity.monitoring"></span></a>
           <!-- <a data-bind="attr: { href: '#deploy' }, isActiveUrl: '#deploy'">Deploy</a> -->
         </dd>
       </dl>
