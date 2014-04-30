@@ -28,9 +28,8 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
           return enabled ? "enabled" : "disabled";
         }, this);
         this.provisionDownloadSubscription = ko.observable(null);
-        this.provisionObserver = ko.observable();
         this.downloading = ko.observable("Hello");
-        this.provisionObserver.subscribe(function(value) {
+        this.provisionObserver = function(value) {
           console.log(value);
           if (value.type == "provisioningError") {
             var message = "Error provisioning New Relic: "+value.message
@@ -62,7 +61,7 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
             newrelic.cancelObserveProvision(this.provisionDownloadSubscription());
             this.provisionDownloadSubscription(null);
           }
-        });
+        };
         this.error = ko.observable();
         this.provisionNewRelic = function () {
           if (this.downloadEnabled()) {
