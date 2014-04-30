@@ -33,6 +33,19 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
         console.log("message: "+JSON.stringify(message,null,2));
         streams.send(message);
       };
+      self.observeProvision = function(observable) {
+        return streams.subscribe({
+          filter: function(event) {
+            return event.response == 'ProvisioningStatus';
+          },
+          handler: function (event) {
+            observable(event);
+          }
+        });
+      };
+      self.cancelObserveProvision = function(o) {
+        streams.unsubscribe(o);
+      };
       self.available = ko.observable("checking");
       streams.subscribe({
         filter: function(event) {

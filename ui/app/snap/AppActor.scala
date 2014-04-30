@@ -462,35 +462,66 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
     }
   }
 
-  class ProvisioningSinkUnderlying(log: LoggingAdapter) {
+  case class ProvisioningSinkState(progress: Int = 0)
+
+  class ProvisioningSinkUnderlying(log: LoggingAdapter, produce: JsValue => Unit) {
     import monitor.Provisioning._
-    def onMessage(status: Status, sender: ActorRef, self: ActorRef, context: ActorContext): Unit = status match {
-      case ProvisioningError(message, exception) =>
+    def onMessage(state: ProvisioningSinkState, status: Status, sender: ActorRef, self: ActorRef, context: ActorContext): ProvisioningSinkState = status match {
+      case x @ ProvisioningError(message, exception) =>
+        produce(toJson(x))
         log.error(exception, message)
         context stop self
-      case Downloading(url) =>
+        state
+      case x @ Downloading(url) =>
+        produce(toJson(x))
         log.info(s"Downloading $url")
-      case Progress(Left(value)) =>
+        state
+      case x @ Progress(Left(value)) =>
         log.info(s"... progress: $value bytes downloaded")
-      case Progress(Right(value)) =>
+        val p = state.progress
+        if ((value / 100000) != p) {
+          produce(toJson(x))
+          state.copy(progress = value / 100000)
+        } else state
+      case x @ Progress(Right(value)) =>
         log.info(s"... progress: $value% complete")
-      case DownloadComplete(url) =>
+        val p = state.progress
+        if ((value.toInt / 10) != p) {
+          log.info(s"... call produce: ${value.toInt % 10} ==? $p")
+          produce(toJson(x))
+          state.copy(progress = value.toInt / 10)
+        } else state
+      case x @ DownloadComplete(url) =>
+        produce(toJson(x))
         log.info(s"Downloaded $url")
-      case Validating =>
+        state
+      case x @ Validating =>
+        produce(toJson(x))
         log.info("... validating")
-      case Extracting =>
+        state
+      case x @ Extracting =>
+        produce(toJson(x))
         log.info("... extracting")
-      case Complete =>
+        state
+      case x @ Complete =>
+        produce(toJson(x))
         log.info("Provisioning complete")
         context stop self
+        state
     }
   }
 
-  class ProvisioningSink(underlyingBuilder: LoggingAdapter => ProvisioningSinkUnderlying) extends Actor with ActorLogging {
+  class ProvisioningSink(init: ProvisioningSinkState,
+    underlyingBuilder: LoggingAdapter => ProvisioningSinkUnderlying) extends Actor with ActorLogging {
     val underlying = underlyingBuilder(log)
     import monitor.Provisioning._
     override def receive: Receive = {
-      case x: Status => underlying.onMessage(x, sender, self, context)
+      var state = init
+
+      {
+        case x: Status =>
+          state = underlying.onMessage(state, x, sender, self, context)
+      }
     }
   }
 
@@ -515,7 +546,7 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
       import monitor.NewRelic._
       in match {
         case x @ NewRelicRequest.Provision =>
-          val sink = context.actorOf(Props(new ProvisioningSink(log => new ProvisioningSinkUnderlying(log))))
+          val sink = context.actorOf(Props(new ProvisioningSink(ProvisioningSinkState(), log => new ProvisioningSinkUnderlying(log, produce))))
           askNewRelic[Provisioned](monitor.NewRelic.Provision(sink), x,
             f => s"Failed to provision New Relic: ${f.getMessage}")(_ => produce(toJson(x.response)))
         case x @ NewRelicRequest.Available =>

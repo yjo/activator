@@ -27,8 +27,46 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
           this.developerKeyEnabled(enabled);
           return enabled ? "enabled" : "disabled";
         }, this);
+        this.provisionDownloadSubscription = ko.observable(null);
+        this.provisionObserver = ko.observable();
+        this.downloading = ko.observable("Hello");
+        this.provisionObserver.subscribe(function(value) {
+          console.log(value);
+          if (value.type == "provisioningError") {
+            var message = "Error provisioning New Relic: "+value.message
+            this.downloading(message);
+            this.error(message);
+          } else if (value.type == "downloading") {
+            this.downloading("downloading: "+value.url);
+          } else if (value.type == "progress") {
+            var message = "";
+            if (value.percent) {
+              message = value.percent.toFixed(2)+"%";
+            } else {
+              message = value.bytes+" bytes";
+            }
+            this.downloading(message);
+          } else if (value.type == "downloadComplete") {
+            this.downloading("download complete");
+          } else if (value.type == "validating") {
+            this.downloading("validating");
+          } else if (value.type == "extracting") {
+            this.downloading("extracting");
+          } else if (value.type == "complete") {
+            this.downloading("complete");
+          } else {
+            this.downloading("UNKNOWN STATE!!!");
+          }
+
+          if (value.type == "complete" || value.type == "provisioningError") {
+            newrelic.cancelObserveProvision(this.provisionDownloadSubscription());
+            this.provisionDownloadSubscription(null);
+          }
+        });
+        this.error = ko.observable();
         this.provisionNewRelic = function () {
           if (this.downloadEnabled()) {
+            this.provisionDownloadSubscription(newrelic.observeProvision(this.provisionObserver));
             newrelic.provision()
           }
         };
@@ -45,11 +83,6 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
           var key = this.licenseKey();
           return !newrelic.validKey.test(key);
         }, this);
-
-        // TODO provide download feed back
-        this.downloading = ko.observable(10);
-        // TODO provide true errors
-        this.error = ko.observable("Can not download the agent.");
       }
     });
 
