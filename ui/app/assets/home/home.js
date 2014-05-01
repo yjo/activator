@@ -9,8 +9,8 @@ require.config({
   // hack for now due to problem loading plugin loaders from a plugin loader
   map: {
     '*': {
-      'css': '../../webjars/require-css/0.0.7/css',
-      'text': '../../webjars/requirejs-text/2.0.10/text'
+      'css': '../lib/require-css/css',
+      'text': '../lib/requirejs-text/text'
     }
   },
   paths: {
@@ -25,8 +25,8 @@ require.config({
 require([
   // Vendors
   'webjars!knockout',
-  '../../webjars/requirejs-text/2.0.10/text',
-  '../../webjars/require-css/0.0.7/css',
+  '../lib/requirejs-text/text',
+  '../lib/require-css/css',
   'webjars!jquery',
   'commons/visibility'
 ],function(ko) {

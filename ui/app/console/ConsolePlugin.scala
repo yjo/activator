@@ -5,7 +5,7 @@ package console
 
 import play.api.{ Logger, Plugin, Application }
 import com.typesafe.config.{ ConfigFactory, Config }
-import akka.actor.{ PoisonPill, ActorRef, Props, ActorSystem }
+import akka.actor.{ PoisonPill, ActorRef, ActorSystem }
 import scala.util.control.NonFatal
 import activator.analytics.analyzer.AnalyzerManager
 import com.typesafe.trace.ReceiveMain
@@ -22,15 +22,17 @@ class ConsolePlugin(app: Application) extends Plugin {
     require(env eq null)
     env = ConsolePluginEnvironment(app.configuration.underlying)
     // TODO -> disable not used analyzers
-    ReceiveMain.main(Array())
-    AnalyzerManager.create(config)
+    // TODO - disabled until tracing supports and have been build based on 2.3.x
+    //ReceiveMain.main(Array())
+    //AnalyzerManager.create(config)
   }
 
   override def onStop(): Unit = {
     try {
       require(env ne null)
-      AnalyzerManager.delete()
-      ReceiveMain.shutdownReceiver()
+      // TODO - disabled until tracing supports and have been build based on 2.3.x
+      //AnalyzerManager.delete()
+      //ReceiveMain.shutdownReceiver()
       env.close()
     } finally {
       env = null

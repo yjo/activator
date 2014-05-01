@@ -2,17 +2,11 @@
  * Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
 require.config({
-  baseUrl:  '/public',
-  // hack for now due to problem loading plugin loaders from a plugin loader
-  map: {
-    '*': {
-      'css': '../../webjars/require-css/0.0.7/css',
-      'text': '../../webjars/requirejs-text/2.0.10/text'
-    }
-  },
   paths: {
     jquery: 'vendors/jquery',
-    ko: 'vendors/knockout-3.0.0'
+    ko: 'vendors/knockout',
+    css: '../lib/require-css/css',
+    text: '../lib/requirejs-text/text'
   }
 });
 
@@ -20,8 +14,8 @@ var vendors = [
   'webjars!jquery',
   'webjars!knockout',
   'commons/visibility',
-  '../../webjars/requirejs-text/2.0.10/text',
-  '../../webjars/require-css/0.0.7/css'
+  '../lib/requirejs-text/text',
+  '../lib/require-css/css'
 ]
 
 var commons = [

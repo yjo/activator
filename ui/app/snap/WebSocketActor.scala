@@ -16,6 +16,7 @@ import console.ConsolePlugin
 import console.ClientController.InitializeCommunication
 import JsonHelper._
 import play.api.libs.json.Json._
+import play.api.mvc.Result
 
 private case object Ack
 
@@ -267,15 +268,15 @@ object WebSocketActor {
    *  Note: This method is a convenience, and most likely needs tweaking
    *  as we use more websockets.
    */
-  def create[T](system: ActorSystem, creator: => WebSocketActor[T], name: String)(implicit fm: FrameFormatter[T]): WebSocket[T] = WebSocketUtil.socketCSRFCheck {
-    WebSocket.async[T] { request =>
+  def create[T](system: ActorSystem, creator: => WebSocketActor[T], name: String)(implicit fm: FrameFormatter[T]): WebSocket[T, T] = WebSocketUtil.socketCSRFCheck {
+    WebSocket.tryAccept[T] { request =>
       val wsActor = system.actorOf(Props(creator), name = name)
       import system.dispatcher
       (wsActor ? GetWebSocket).map {
         case snap.WebSocketAlreadyUsed =>
           throw new RuntimeException("can only connect to websocket actor once.")
         case whatever => whatever
-      }.mapTo[(Iteratee[T, _], Enumerator[T])].map { streams =>
+      }.mapTo[Either[play.api.mvc.Result, (play.api.libs.iteratee.Iteratee[T, _], play.api.libs.iteratee.Enumerator[T])]].map { streams =>
         Logger.info("WebSocket streams created")
         streams
       }

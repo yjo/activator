@@ -1,6 +1,8 @@
 import sbt._
 import ActivatorBuild._
 import Dependencies._
+import play.PlayImport.PlayKeys
+import com.typesafe.sbt.less.Import.LessKeys
 import Packaging.localRepoArtifacts
 import com.typesafe.sbt.S3Plugin._
 import com.typesafe.sbt.SbtNativePackager.Universal
@@ -25,7 +27,7 @@ object TheActivatorBuild extends Build {
       sys.props("activator.home") = fixFileForURIish(bd.getAbsoluteFile)
       bd
     }
-  ) ++ play.Project.intellijCommandSettings
+  )
 
   val root = (
     Project("root", file("."))  // TODO - Oddities with clean..
@@ -103,15 +105,16 @@ object TheActivatorBuild extends Build {
     dependsOnRemote(
       webjarsPlay3, requirejs, jquery, knockout, ace, requireCss, requireText, keymage, commonsIo, mimeUtil, activatorAnalytics,
       sbtLauncherInterface % "provided",
-      sbtrcRemoteController % "compile;test->test",
+      sbtRcRemoteController % "compile;test->test",
       // Here we hack our probes into the UI project.
       sbtrcProbe13 % "sbtprobes->default(compile)",
       sbtshimUiInterface13 % "sbtprobes->default(compile)"
     )
     dependsOn(props, uiCommon)
-    settings(play.Project.playDefaultPort := 8888)
+    settings(PlayKeys.playDefaultPort := 8888)
+    settings(LessKeys.verbose := true)
     settings(Keys.initialize ~= { _ => sys.props("scalac.patmat.analysisBudget") = "512" })
-    settings(Keys.libraryDependencies ++= Seq("com.typesafe.akka" % "akka-testkit_2.10" % "2.2.0" % "test", Dependencies.specs2 % "test"))
+    settings(Keys.libraryDependencies ++= Seq(Dependencies.akkaTestkit % "test", Dependencies.specs2 % "test"))
     // set up debug props for forked tests
     settings(configureSbtTest(Keys.test): _*)
     settings(configureSbtTest(Keys.testOnly): _*)
@@ -170,7 +173,7 @@ object TheActivatorBuild extends Build {
   lazy val it = (
       ActivatorProject("integration-tests")
       settings(integration.settings:_*)
-      dependsOnRemote(sbtLauncherInterface, sbtIo210, sbtrcRemoteController)
+      dependsOnRemote(sbtLauncherInterface, sbtIo210, sbtRcRemoteController)
       dependsOn(props)
       settings(
         org.sbtidea.SbtIdeaPlugin.ideaIgnoreModule := true,
@@ -209,12 +212,11 @@ object TheActivatorBuild extends Build {
 
         // base dependencies
         "org.scala-sbt" % "sbt" % Dependencies.sbtVersion,
-        "org.scala-sbt" % "sbt" % Dependencies.sbtSnapshotVersion,
         "org.scala-lang" % "scala-compiler" % Dependencies.sbtPluginScalaVersion,
         "org.scala-lang" % "scala-compiler" % Dependencies.scalaVersion,
 
         // sbt stuff
-        sbtrcRemoteController,
+        sbtRcRemoteController,
 
         // sbt 0.13 plugins
         playSbt13Plugin,
