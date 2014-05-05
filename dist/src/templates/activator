@@ -292,7 +292,7 @@ if is_cygwin; then
   userhome="$USERPROFILE"
 fi
 declare -r activator_user_home_dir="${userhome}/.activator"
-declare -r java_opts_config="${activator_user_home_dir}/activatorconfig.txt"
+declare -r java_opts_config="${activator_user_home_dir}/${app_version}/activatorconfig.txt"
 
 # Now check to see if it's a good enough version
 declare -r java_version=$("$java_cmd" -version 2>&1 | awk -F '"' '/version/ {print $2}')
