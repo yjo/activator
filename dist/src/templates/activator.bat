@@ -41,7 +41,7 @@ rem manually run cmd /c
 for %%x in (%cmdcmdline%) do if %%~x==/c set DOUBLECLICKED=1
 
 rem FIRST we load the config file of extra options.
-set "CFG_FILE=%UserProfile%\.activator\activatorconfig.txt"
+set "CFG_FILE=%UserProfile%\.activator\%APP_VERSION%\activatorconfig.txt"
 set CFG_OPTS=
 if exist %CFG_FILE% (
   FOR /F "tokens=* eol=# usebackq delims=" %%i IN ("%CFG_FILE%") DO (
