@@ -3,32 +3,29 @@
   <img src="/public/images/monitor/newrelic.png">
 </header>
 <section class="warning">
-  Beware that distant monitoring disables the local inspector.
+  Third-party monitoring disables the local inspector.
 </section>
 <section class="activate">
 
   <!-- ko if: needProvision -->
-  <h2>Install New Relic's agent</h2>
-  <p>The agent is a jar file that will extract the data locally and send the informations to New Relic servers in order to perform the analytics. We can download it and add it you your application for you.</p>
+  <h2>Get the New Relic Agent</h2>
+  <p>The New Relic Agent collects data about your application.  This data is sent to New Relic for analysis.</p>
   <p>
     <button class="button big install" data-bind="click: provisionNewRelic">Install</button>
-    <span data-bind="visible: downloading">Downloading... (<span data-bind="text: downloading"></span>%)</span>
+    <span data-bind="visible: downloading"><span data-bind="text: downloading"></span></span>
   </p>
   <h2>Enter your licence key</h2>
-  <p>To get your licence key, you need to <a href="https://www.newrelic.com/typesafe" target="_blank">Login or Signup</a> to your New Relic account fist. Then your licence key is available in the application setup screen (<a href="/public/plugins/monitor/solutions/newrelic/LicenseKey.png" target="_blank">see this screenshot</a>)</p>
+  <p>To get your licence key, you need to <a href="https://rpm.newrelic.com/" target="_blank">Login</a> or <a href="https://www.newrelic.com/typesafe" target="_blank">Signup</a> to your New Relic account fist. Then your licence key is available in the application setup screen (<a href="/public/plugins/monitor/solutions/newrelic/LicenseKey.png" target="_blank">see this screenshot</a>)</p>
   <p>
     <input type="text" id="licenseKey" data-bind="value: licenseKey, valueUpdate: 'input'"/>
     <button class="button" data-bind="click: saveLicenseKey">Save</button>
   </p>
   <!-- /ko -->
   <!-- ko ifnot: needProvision-->
-  <h2>Activate monitoring</h2>
+  <h2>You're ready to go!</h2>
   <p>
-    <input type="checkbox" id="activateMonitoring" class="switch-input">
-    <label class="switch" for="activateMonitoring">
-      <span class="outer"><span class="inner"></span></span>
-        Activate monitoring
-    </label>
+    The New Relic Agent has been downloaded and your key configured.  You may enable New Relic for <a href="http://www.playframework.com/" target="_blank">Play</a>-based templates
+    from the <a href="#run">run</a> tab.
   </p>
   <p><button data-bind="click: resetKey">Reset key</button></p>
   <!-- /ko -->

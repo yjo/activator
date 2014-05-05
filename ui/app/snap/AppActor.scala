@@ -474,38 +474,30 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
         state
       case x @ Downloading(url) =>
         produce(toJson(x))
-        log.info(s"Downloading $url")
         state
       case x @ Progress(Left(value)) =>
-        log.info(s"... progress: $value bytes downloaded")
         val p = state.progress
         if ((value / 100000) != p) {
           produce(toJson(x))
           state.copy(progress = value / 100000)
         } else state
       case x @ Progress(Right(value)) =>
-        log.info(s"... progress: $value% complete")
         val p = state.progress
         if ((value.toInt / 10) != p) {
-          log.info(s"... call produce: ${value.toInt % 10} ==? $p")
           produce(toJson(x))
           state.copy(progress = value.toInt / 10)
         } else state
       case x @ DownloadComplete(url) =>
         produce(toJson(x))
-        log.info(s"Downloaded $url")
         state
       case x @ Validating =>
         produce(toJson(x))
-        log.info("... validating")
         state
       case x @ Extracting =>
         produce(toJson(x))
-        log.info("... extracting")
         state
       case x @ Complete =>
         produce(toJson(x))
-        log.info("Provisioning complete")
         context stop self
         state
     }

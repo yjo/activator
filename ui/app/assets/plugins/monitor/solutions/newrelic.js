@@ -9,79 +9,82 @@ define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./ne
       template: template,
       init: function(args) {
         var self = this;
-        this.licenseKeySaved = newrelic.licenseKeySaved;
-        this.available = newrelic.available;
-        this.needProvision = ko.computed(function() {
-          return !this.available() || !this.licenseKeySaved();
-        }, this);
-        this.downloadEnabled = ko.observable(false);
-        this.developerKeyEnabled = ko.observable(false);
-        this.licenseKey = ko.observable(newrelic.licenseKey());
-        this.downloadClass = ko.computed(function() {
-          var enabled = (this.available() == false);
-          this.downloadEnabled(enabled);
+        self.licenseKeySaved = newrelic.licenseKeySaved;
+        self.available = newrelic.available;
+        self.needProvision = ko.computed(function() {
+          return !self.available() || !self.licenseKeySaved();
+        }, self);
+        self.downloadEnabled = ko.observable(false);
+        self.developerKeyEnabled = ko.observable(false);
+        self.licenseKey = ko.observable(newrelic.licenseKey());
+        self.downloadClass = ko.computed(function() {
+          var enabled = (self.available() == false);
+          self.downloadEnabled(enabled);
           return enabled ? "enabled" : "disabled";
-        }, this);
-        this.developerKeyClass = ko.computed(function() {
-          var enabled = (this.available() == true);
-          this.developerKeyEnabled(enabled);
+        }, self);
+        self.developerKeyClass = ko.computed(function() {
+          var enabled = (self.available() == true);
+          self.developerKeyEnabled(enabled);
           return enabled ? "enabled" : "disabled";
-        }, this);
-        this.provisionDownloadSubscription = ko.observable(null);
-        this.downloading = ko.observable("Hello");
-        this.provisionObserver = function(value) {
-          console.log(value);
+        }, self);
+        self.provisionDownloadSubscription = ko.observable(null);
+        self.downloading = ko.observable("");
+        self.downloading.subscribe(function(value) {
+          console.log("downloading: "+value);
+        });
+        self.provisionObserver = function(value) {
+          var message = "";
           if (value.type == "provisioningError") {
-            var message = "Error provisioning New Relic: "+value.message
-            this.downloading(message);
-            this.error(message);
+            message = "Error provisioning New Relic: "+value.message
+            self.downloading(message);
+            self.error(message);
           } else if (value.type == "downloading") {
-            this.downloading("downloading: "+value.url);
+            self.downloading("Downloading: "+value.url);
           } else if (value.type == "progress") {
-            var message = "";
+            message = "";
             if (value.percent) {
-              message = value.percent.toFixed(2)+"%";
+              message = value.percent.toFixed(0)+"%";
             } else {
               message = value.bytes+" bytes";
             }
-            this.downloading(message);
+            self.downloading("Progress: "+message);
           } else if (value.type == "downloadComplete") {
-            this.downloading("download complete");
+            self.downloading("Download complete");
           } else if (value.type == "validating") {
-            this.downloading("validating");
+            self.downloading("Validating");
           } else if (value.type == "extracting") {
-            this.downloading("extracting");
+            self.downloading("Extracting");
           } else if (value.type == "complete") {
-            this.downloading("complete");
+            self.downloading("Complete");
           } else {
-            this.downloading("UNKNOWN STATE!!!");
+            self.downloading("UNKNOWN STATE!!!");
           }
 
           if (value.type == "complete" || value.type == "provisioningError") {
-            newrelic.cancelObserveProvision(this.provisionDownloadSubscription());
-            this.provisionDownloadSubscription(null);
+            newrelic.cancelObserveProvision(self.provisionDownloadSubscription());
+            self.provisionDownloadSubscription(null);
           }
         };
-        this.error = ko.observable();
-        this.provisionNewRelic = function () {
-          if (this.downloadEnabled()) {
-            this.provisionDownloadSubscription(newrelic.observeProvision(this.provisionObserver));
+        self.error = ko.observable();
+        self.provisionNewRelic = function () {
+          if (self.downloadEnabled()) {
+            self.provisionDownloadSubscription(newrelic.observeProvision(self.provisionObserver));
             newrelic.provision()
           }
         };
-        this.saveLicenseKey = function () {
-          if (this.developerKeyEnabled() && !this.licenseKeyInvalid()) {
-            newrelic.licenseKey(this.licenseKey());
+        self.saveLicenseKey = function () {
+          if (self.developerKeyEnabled() && !self.licenseKeyInvalid()) {
+            newrelic.licenseKey(self.licenseKey());
           }
         };
-        this.resetKey = function () {
-          this.licenseKey("");
+        self.resetKey = function () {
+          self.licenseKey("");
           newrelic.licenseKey("");
         };
-        this.licenseKeyInvalid = ko.computed(function() {
-          var key = this.licenseKey();
+        self.licenseKeyInvalid = ko.computed(function() {
+          var key = self.licenseKey();
           return !newrelic.validKey.test(key);
-        }, this);
+        }, self);
       }
     });
 
