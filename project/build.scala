@@ -3,6 +3,7 @@ import ActivatorBuild._
 import Dependencies._
 import play.PlayImport.PlayKeys
 import com.typesafe.sbt.less.Import.LessKeys
+import com.typesafe.sbt.web.SbtWeb.autoImport._
 import Packaging.localRepoArtifacts
 import com.typesafe.sbt.S3Plugin._
 import com.typesafe.sbt.SbtNativePackager.Universal
@@ -112,7 +113,7 @@ object TheActivatorBuild extends Build {
     )
     dependsOn(props, uiCommon)
     settings(PlayKeys.playDefaultPort := 8888)
-    settings(LessKeys.verbose := true)
+    settings(Keys.includeFilter in (Assets, LessKeys.less) := "*.less")
     settings(Keys.initialize ~= { _ => sys.props("scalac.patmat.analysisBudget") = "512" })
     settings(Keys.libraryDependencies ++= Seq(Dependencies.akkaTestkit % "test", Dependencies.specs2 % "test"))
     // set up debug props for forked tests

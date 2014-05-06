@@ -4,18 +4,18 @@ import Keys._
 object Dependencies {
   val sbtVersion = "0.13.0"
   val sbtPluginVersion = "0.13"
-  val sbtPluginScalaVersion = "2.10.2"
-  val scalaVersion = "2.10.2"
+  val sbtPluginScalaVersion = "2.10.4"
+  val scalaVersion = "2.10.4"
   val luceneVersion = "4.2.1"
 
   // TODO (h3nk3) : uses local version with Akka 2.3.2
-  //val templateCacheVersion = "1.0-9623101e1ee5b1b6efa87f9f877fa8773b37d6b0"
-  val templateCacheVersion = "0.3.0"
+  val templateCacheVersion = "1.0-9623101e1ee5b1b6efa87f9f877fa8773b37d6b0"
+  //val templateCacheVersion = "0.3.0"
 
   // echo enabled version (1.1.x)
   // TODO (h3nk3) : uses local version with Akka 2.3.2
-  //val sbtRcVersion = "1.0-47d2be0ae7815111beea8736ff531948e95c6f8b"
-  val sbtRcVersion = "1.0-136bf52c817cd9e09ff78cafa6dc495d3fca4f9a"
+  val sbtRcVersion = "1.0-47d2be0ae7815111beea8736ff531948e95c6f8b"
+  //val sbtRcVersion = "1.0-136bf52c817cd9e09ff78cafa6dc495d3fca4f9a"
 
   val playVersion = "2.3-M1"
   val webJarsVersion = "2.3-M1"
@@ -53,7 +53,7 @@ object Dependencies {
   val mimeUtil             = "eu.medsea.mimeutil" % "mime-util" % "2.1.1" exclude("org.slf4j", "slf4j-log4j12") exclude("org.slf4j", "slf4j-api") exclude("log4j", "log4j")
 
   val junitInterface       = "com.novocode" % "junit-interface" % "0.7"
-  val specs2               = "org.specs2" % "specs2_2.10" % "2.3.8"
+  val specs2               = "org.specs2" % "specs2_2.10" % "2.3.11"
 
   // SBT 0.13 required plugins
   val playSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % playVersion, "0.13", "2.10")

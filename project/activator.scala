@@ -1,8 +1,8 @@
-import com.typesafe.sbt.less.Import.LessKeys
 import sbt._
 import Keys._
 import play.PlayScala
 import play.PlayImport.PlayKeys
+import com.typesafe.sbt.less.Import.LessKeys
 import com.typesafe.sbt.web.SbtWeb
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
