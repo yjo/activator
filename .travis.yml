@@ -1,0 +1,20 @@
+language: scala
+
+scala:
+  - 2.10.3
+
+jdk:
+  - openjdk6
+
+script:
+  - sbt $TASKS
+
+env:
+  - TASKS=test
+  - TASKS=integrationTests
+  - TASKS=offlineTests
+
+notifications:
+  email:
+    - activator@typesafe.com
+  flowdock: 394be381de623fe7bee543e905ac3320
