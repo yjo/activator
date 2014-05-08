@@ -15,6 +15,7 @@ define(['services/build', 'services/newrelic', 'main/model', 'text!./run.html', 
         }
         result.push({ name: "New Relic", id: "newRelic", enabled: enabled, enable: function() {
             newrelic.enableProject(newrelic.licenseKey(), build.app.name());
+            self.currentMonitoringOption("newRelic");
           }
         });
       }

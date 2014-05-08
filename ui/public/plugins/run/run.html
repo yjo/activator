@@ -38,7 +38,7 @@
       <!-- ko if: showMonitoringOptions -->
       <li>
         <h3>Monitoring options</h3>
-        <ul>
+        <ul id="monitoring-options">
           <!-- ko foreach: monitoringOptions -->
           <li>
             <!-- ko if: $data.enabled -->
@@ -49,11 +49,7 @@
             </label>
             <!-- /ko -->
             <!-- ko ifnot: $data.enabled -->
-            <input type="button" data-bind="click: $data.enable, attr: {id: $data.id}" value="enable">
-            <label data-bind="attr: { for: $data.id }">
-              <span class="outer"><span class="inner"></span></span>
-              <p data-bind="text: $data.name, attr: {title: $data.name}"></p>
-            </label>
+            <button class="button" data-bind="click: $data.enable, attr: {id: $data.id}">Enable <span data-bind="text: $data.name"></span></button>
             <!-- /ko -->
           </li>
           <!-- /ko -->

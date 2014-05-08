@@ -6,14 +6,9 @@ package snap
 import java.io._
 import akka.util.Timeout
 import scala.concurrent.duration._
-import scala.concurrent.{ Future, ExecutionContext }
-import play.api.libs.ws._
-import java.security.MessageDigest
-import java.io.FileInputStream
+import scala.concurrent.Future
 import com.typesafe.config.{ Config => TSConfig }
-import play.api.Play
-import Play.current
-import scala.util.matching.Regex
+import activator.properties.ActivatorProperties
 
 sealed abstract class InstrumentationTag(val name: String)
 
@@ -28,8 +23,8 @@ case object Inspect extends Instrumentation(Instrumentations.InspectTag) {
 
 case class NewRelic(configFile: File, agentJar: File, environment: String = "development") extends Instrumentation(Instrumentations.NewRelicTag) {
   def jvmArgs: Seq[String] = Seq(
-    s"-javaagent:${agentJar.getPath()}",
-    s"-Dnewrelic.config.file=${configFile.getPath()}",
+    s"-javaagent:${agentJar.getPath}",
+    s"-Dnewrelic.config.file=${configFile.getPath}",
     s"-Dnewrelic.environment=$environment")
 }
 
@@ -186,6 +181,8 @@ object NewRelic {
     }
   }
 
+  private lazy val activatorHome: File = new File(ActivatorProperties.ACTIVATOR_HOME_FILENAME)
+
   case class Config(
     downloadUrlTemplate: String,
     version: String,
@@ -194,12 +191,12 @@ object NewRelic {
     extractRootTemplate: String) {
     val url: String = versionRegex.replaceAllIn(downloadUrlTemplate, version)
 
-    def extractRoot(relativeTo: File = Play.getFile(".")): File = new File(relativeTo, versionRegex.replaceAllIn(extractRootTemplate, version))
+    def extractRoot(relativeTo: File = activatorHome): File = new File(relativeTo, versionRegex.replaceAllIn(extractRootTemplate, version))
 
     def verifyFile(in: File): File =
       FileHelper.verifyFile(in, sha)
 
-    def extractFile(in: File, relativeTo: File = Play.getFile(".")): File =
+    def extractFile(in: File, relativeTo: File = activatorHome): File =
       FileHelper.unZipFile(in, extractRoot(relativeTo = relativeTo))
   }
 }
