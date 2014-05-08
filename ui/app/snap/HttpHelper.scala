@@ -112,8 +112,14 @@ object HttpHelper {
     destination: File = File.createTempFile("activator_", ".tmp"),
     executor: (File, FileOutputStream, WS.WSRequestHolder, ProgressObserver) => Future[Iteratee[Array[Byte], File]] = doGet,
     timeout: akka.util.Timeout = Akka.longTimeoutThatIsAProblem): Future[File] = {
+    import com.ning.http.client.Realm.AuthScheme
     val outputStream = new FileOutputStream(destination)
-    val iterateeFuture = executor(destination, outputStream, holder.withRequestTimeout(timeout.duration.toMillis.intValue), observer) flatMap (_.run)
+    val finalHolder = (sys.props.get("http.proxyUser"), sys.props.get("http.proxyPassword")) match {
+      case (Some(u), Some(p)) => holder.withAuth(u, p, AuthScheme.BASIC) // <- Only viable option?
+      case _ => holder
+    }
+
+    val iterateeFuture = executor(destination, outputStream, finalHolder.withRequestTimeout(timeout.duration.toMillis.intValue), observer) flatMap (_.run)
     iterateeFuture onComplete {
       case _: Success[File] => outputStream.close()
       case Failure(t) =>
