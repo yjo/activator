@@ -84,16 +84,16 @@
 					</ul>
 					<p data-bind="text: description"></p>
  					<div class="author">
-						<p><cite>by John Doe (<a href="">@@johndoe</a>)</cite></p>
-						<p><a href="#" class="source">github.com/johndoe/activator-akka-spray</a></p>
+						<p><cite>by <span data-bind="text: authorName"></span>
+                        <!-- ko if:(typeof(authorTwitter) == 'string' && authorTwitter != "") -->(<a target="_blank" data-bind="attr: { href: function() { return 'http://twitter.com/' + authorTwitter; } }, text: authorTwitter"></a>)<!--  /ko -->
+                        </cite></p>
+						<p><a target="_blank" data-bind="attr: { href: sourceLink }, text: sourceLink" class="source"></a></p>
 					</div>
 					<div class="promote partner">
-						<img src="http://dommkopfq6m1m.cloudfront.net/assets/1387589794721/images/partners/svcs/chariot.png">
-						<h4 _data-bind="text: partner">Chariot</h4>
-						<p _data-bind="text: description">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-						tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-						quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
-	 				</div>
+						<img data-bind="attr: { src: authorLogo }">
+						<h4 data-bind="text: authorName"></h4>
+						<p data-bind="text: authorBio"></p>
+                    </div>
  				</div>
 				@helper.form(action = routes.Application.forceHome, 'id -> "newApp") {
 					<h4>Create an app from this template</h4>
