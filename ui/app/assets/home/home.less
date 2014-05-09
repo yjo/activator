@@ -17,7 +17,6 @@ body {
   background: @slate url("/public/images/home.svg") no-repeat;
   background-size: cover;
   color: #D3D9DF;
-  // -webkit-font-smoothing: antialiased;
 }
 html, body {
   overflow: auto;
@@ -165,7 +164,7 @@ section {
   left: 5%;
   right: 36%;
   article {
-    top: 80px;
+    top: 40px;
     border-top: 1px solid #ddd;
   }
   li.template {
@@ -459,15 +458,6 @@ article {
   }
 }
 
-#templateList {
-  width: 50%;
-  position: absolute;
-  background: #f5f5f5;
-  top: 40px;
-  left: 0;
-  bottom: 0;
-}
-
 #newAppForm {
   .list-container {
     position: absolute;
@@ -520,9 +510,6 @@ article {
 }
 
 #openAppLocationBrowser, #newAppLocationBrowser {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
   .current {
     padding: 10px; 
     background: white;
@@ -850,4 +837,37 @@ article {
   right: 15px;
   bottom: 15px;
   color: #ffffff;
+}
+
+
+.tabs {
+  overflow: hidden;
+  h2 {
+    width: 50%;
+    float: left;
+    color: #666;
+    cursor: pointer;
+    text-align: center;
+    border-left: 1px solid #eee;
+    border-bottom: 3px solid #ccc;
+    &.active {
+      color: @blue-text;
+      border-bottom: 3px solid @blue;
+    }
+    &:before {
+      content: none;
+    }
+  }
+}
+
+#templateList {
+  .list {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-top: 1px solid #ddd;
+    overflow: auto;
+  }
 }

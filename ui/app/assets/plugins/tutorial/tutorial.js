@@ -29,11 +29,19 @@ define([
     this.table        = tutorialService.getTable(null);
     this.page         = ko.observable(null);
 
-    this.gotoPrevPage = function(){
+    this.gotoPrevPage = function(__, e){
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       if (self.hasPrevPage())
         self.gotoPage(self.page().index-1);
     }
-    this.gotoNextPage = function(){
+    this.gotoNextPage = function(__, e){
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       if (self.hasNextPage())
         self.gotoPage(self.page().index+1);
     }
