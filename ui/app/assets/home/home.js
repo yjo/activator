@@ -2,8 +2,6 @@
 Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
 */
 
-var skeletonsTag = 'seed';
-
 require.config({
   baseUrl:  '/public',
   // hack for now due to problem loading plugin loaders from a plugin loader
@@ -46,11 +44,11 @@ var handleVisibilityChange = function() {
   }
 }
 
-var skeletons = templates.filter(function(t){
-  return t.tags.indexOf(skeletonsTag) >= 0;
+var seeds = templates.filter(function(t){
+  return t.tags.indexOf('seed') >= 0;
 });
 templates = templates.filter(function(t){
-  return t.tags.indexOf(skeletonsTag) < 0;
+  return t.tags.indexOf('seed') < 0;
 });
 
 var startApp = function() {
@@ -74,7 +72,7 @@ var startApp = function() {
         var self = this;
 
         self.filteredTemplates = ko.observableArray(templates);
-        self.skeletons = skeletons;
+        self.seeds = seeds;
         self.currentApp = ko.observable();
         self.currentAppId = ko.computed(function(){
           return !!self.currentApp()?self.currentApp().id:"";
@@ -85,7 +83,7 @@ var startApp = function() {
         self.chooseTemplate = function(app){
           self.currentApp(app)
         }
-        self.chooseSkeleton = function(app){
+        self.chooseSeed = function(app){
           self.currentApp(app)
         }
         self.closeTemplate = function(){
@@ -114,12 +112,10 @@ var startApp = function() {
         }
         self.openedTab = ko.observable('templates');
         self.showTemplates = function() {
-          //
           self.openedTab('templates');
         }
-        self.showSkeletons = function() {
-          //
-          self.openedTab(skeletonsTag);
+        self.showSeeds = function() {
+          self.openedTab('seed');
         }
       };
 

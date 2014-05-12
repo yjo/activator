@@ -44,7 +44,7 @@
 			<div class="half">
 				<header class="tabs">
 					<h2 data-bind="click: showTemplates, css: {active: openedTab() == 'templates'}">Tutorials</h2>
-					<h2 data-bind="click: showSkeletons, css: {active: openedTab() == 'seed'}">Seeds</h2>
+					<h2 data-bind="click: showSeeds, css: {active: openedTab() == 'seed'}">Seeds</h2>
 				</header>
 				<article id="templateList" data-bind="visible: openedTab() == 'templates'">
 					<aside id="filter">
@@ -61,9 +61,9 @@
 						</li>
 					</ul>
 				</article>
-				<article id="skeletonList" data-bind="visible: openedTab() == 'seed'">
-					<ul class="list" data-bind="foreach: skeletons">
-						<li class="template" data-bind="css: {featured: featured, active: $root.currentAppId() == id}, click: $root.chooseSkeleton">
+				<article id="seedList" data-bind="visible: openedTab() == 'seed'">
+					<ul class="list" data-bind="foreach: seeds">
+						<li class="template" data-bind="css: {featured: featured, active: $root.currentAppId() == id}, click: $root.chooseSeed">
 							<input type="radio" name="template" data-bind="value: id">
 							<span data-bind="text: title"></span>
 							<ul class="tags" data-bind="foreach: tags">
