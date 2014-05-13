@@ -6,6 +6,10 @@ import com.typesafe.sbt.S3Plugin._
 import com.typesafe.sbt.SbtNativePackager.Universal
 import com.typesafe.sbt.SbtPgp
 import com.typesafe.sbt.SbtPgp.PgpKeys
+import play.PlayImport.PlayKeys
+import com.typesafe.sbt.less.Import.LessKeys
+import com.typesafe.sbt.web.SbtWeb.autoImport._
+import com.typesafe.sbt.jse.JsEngineImport.JsEngineKeys
 // NOTE - This file is only used for SBT 0.12.x, in 0.13.x we'll use build.sbt and scala libraries.
 // As such try to avoid putting stuff in here so we can see how good build.sbt is without build.scala.
 
@@ -25,7 +29,8 @@ object TheActivatorBuild extends Build {
       sys.props("activator.home") = fixFileForURIish(bd.getAbsoluteFile)
       bd
     }
-  ) ++ play.Project.intellijCommandSettings
+  ) 
+  // TODO : Add ++ play.Project.intellijCommandSettings Play 2.3 style to settings above
 
   val root = (
     Project("root", file("."))  // TODO - Oddities with clean..
@@ -101,7 +106,7 @@ object TheActivatorBuild extends Build {
   lazy val ui = (
     ActivatorPlayProject("ui")
     dependsOnRemote(
-      webjarsPlay3, requirejs, jquery, knockout, ace, requireCss, requireText, keymage, commonsIo, mimeUtil, activatorAnalytics,
+      webjarsPlay3, requirejs, jquery, knockout, ace, /*requireCss, requireText,*/ keymage, commonsIo, mimeUtil, activatorAnalytics,
       sbtLauncherInterface % "provided",
       sbtrcRemoteController % "compile;test->test",
       // Here we hack our probes into the UI project.
@@ -109,9 +114,14 @@ object TheActivatorBuild extends Build {
       sbtshimUiInterface13 % "sbtprobes->default(compile)"
     )
     dependsOn(props, uiCommon)
-    settings(play.Project.playDefaultPort := 8888)
+    settings(PlayKeys.playDefaultPort := 8888)
+    settings(Keys.includeFilter in (Assets, LessKeys.less) := "*.less")
+    settings(Keys.excludeFilter in (Assets, LessKeys.less) := "_*.less")
+    // The line below can be removed when Play version > 2.3.0-RC1.
+    // It sets Trireme to use sequental compilation of resources because of race condition in there somewhere.
+    settings(JsEngineKeys.parallelism in LessKeys.less := 1)
     settings(Keys.initialize ~= { _ => sys.props("scalac.patmat.analysisBudget") = "512" })
-    settings(Keys.libraryDependencies ++= Seq("com.typesafe.akka" % "akka-testkit_2.10" % "2.2.0" % "test", Dependencies.specs2 % "test"))
+    settings(Keys.libraryDependencies ++= Seq(Dependencies.akkaTestkit % "test", Dependencies.specs2 % "test"))
     // set up debug props for forked tests
     settings(configureSbtTest(Keys.test): _*)
     settings(configureSbtTest(Keys.testOnly): _*)
@@ -209,7 +219,6 @@ object TheActivatorBuild extends Build {
 
         // base dependencies
         "org.scala-sbt" % "sbt" % Dependencies.sbtVersion,
-        "org.scala-sbt" % "sbt" % Dependencies.sbtSnapshotVersion,
         "org.scala-lang" % "scala-compiler" % Dependencies.sbtPluginScalaVersion,
         "org.scala-lang" % "scala-compiler" % Dependencies.scalaVersion,
 
@@ -226,10 +235,10 @@ object TheActivatorBuild extends Build {
         // featured template deps
         // note: do not use %% here
         "org.scalatest" % "scalatest_2.10" % "1.9.1",
-        "com.typesafe.akka" % "akka-actor_2.10" % "2.2.1",
-        "com.typesafe.akka" % "akka-testkit_2.10" % "2.2.1",
-        "com.typesafe.akka" % "akka-slf4j_2.10" % "2.2.1",
-        "com.typesafe.akka" % "akka-contrib_2.10" % "2.2.1",
+        "com.typesafe.akka" % "akka-actor_2.10" % "2.3.2",
+        "com.typesafe.akka" % "akka-testkit_2.10" % "2.3.2",
+        "com.typesafe.akka" % "akka-slf4j_2.10" % "2.3.2",
+        "com.typesafe.akka" % "akka-contrib_2.10" % "2.3.2",
         "org.scalatest" % "scalatest_2.10" % "2.0",
         "junit" % "junit" % "4.11",
         "org.fusesource.jansi" % "jansi" % "1.11",
@@ -254,9 +263,11 @@ object TheActivatorBuild extends Build {
         "junit" % "junit" % "3.8.1",
         "com.jcraft" % "jsch" % "0.1.44-1",
         "jline" % "jline" % "0.9.94",
+        "org.scala-lang" % "scala-compiler" % "2.10.2",
+        "org.scala-lang" % "jline" % "2.10.2",
         "org.scala-lang" % "jline" % "2.10.3",
-        "com.typesafe.akka" % "akka-slf4j_2.10" % "2.2.0",
-        "com.typesafe.akka" % "akka-contrib_2.10" % "2.2.3"
+        "com.typesafe.akka" % "akka-slf4j_2.10" % "2.3.2",
+        "com.typesafe.akka" % "akka-contrib_2.10" % "2.3.2"
       ),
       Keys.mappings in S3.upload <<= (Keys.packageBin in Universal, Packaging.minimalDist, Keys.version) map { (zip, minimalZip, v) =>
         Seq(minimalZip -> ("typesafe-activator/%s/typesafe-activator-%s-minimal.zip" format (v, v)),

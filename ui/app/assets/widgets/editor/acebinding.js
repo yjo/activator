@@ -3,8 +3,8 @@
  */
 define([
   'commons/settings',
-  'webjars!knockout',
-  'webjars!ace',
+  'lib/knockout/knockout',
+  'lib/ace/src/ace',
   'commons/markers',
   'css!./theme.css'],
   function(settings, ko, ignore_ace, markers) {

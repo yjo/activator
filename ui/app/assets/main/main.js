@@ -3,25 +3,20 @@
  */
 require.config({
   baseUrl:  '/public',
-  // hack for now due to problem loading plugin loaders from a plugin loader
-  map: {
-    '*': {
-      'css': '../../webjars/require-css/0.0.7/css',
-      'text': '../../webjars/requirejs-text/2.0.10/text'
-    }
-  },
   paths: {
-    jquery: 'vendors/jquery',
-    ko: 'vendors/knockout-3.0.0'
+    jquery: 'lib/jquery//jquery',
+    ko: 'lib/knockout/knockout',
+    ace: 'lib/ace/src/ace'
   }
 });
 
 var vendors = [
-  'webjars!jquery',
-  'webjars!knockout',
-  'commons/visibility',
-  '../../webjars/requirejs-text/2.0.10/text',
-  '../../webjars/require-css/0.0.7/css'
+  'lib/jquery/jquery',
+  'lib/knockout/knockout',
+  'css',
+  'text',
+  'lib/ace/src/ace',
+  'commons/visibility'
 ]
 
 var commons = [

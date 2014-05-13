@@ -45,5 +45,4 @@ GET         /api/console/:id                             controllers.ConsoleCont
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /public/*file                                controllers.Assets.at(path="/public", file)
-GET         /webjars/requirejs-loader.js                 controllers.WebJarAssets.requirejs
-GET         /webjars/*file                               controllers.WebJarAssets.at(file)
+GET         /assets/*file                                controllers.Assets.at(path="/public", file)

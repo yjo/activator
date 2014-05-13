@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./notifications.html', 'webjars!knockout', 'commons/widget', 'commons/utils', 'services/build'],
+define(['text!./notifications.html', 'lib/knockout/knockout', 'commons/widget', 'commons/utils', 'services/build'],
     function(template, ko, Widget, utils, build) {
 
   var Notifications = utils.Class(Widget, {
