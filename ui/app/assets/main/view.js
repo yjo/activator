@@ -2,28 +2,34 @@
  Copyright (C) 2014 Typesafe, Inc <http://typesafe.com>
  */
 define([
-  'text!templates/header.html',
-  'text!templates/navigation.html',
-  'text!templates/wrapper.html',
+  'widgets/header/header',
+  'widgets/navigation/navigation',
+  'widgets/layout/layout',
   'widgets/panels/panels'
 ], function(
   header,
   navigation,
-  wrapper,
+  layout,
   panels
 ) {
 
+  // Get the internal states from navigation and pannels
+  // since they influence the main view and the header
+  var ViewState = {
+    navigation: navigation.state,
+    panel: panels.state
+  }
+
   return {
-    render: function(model) {
-      $(document.body)
-        .append($(header)[0])
-        .append($(navigation)[0])
-        .append($(wrapper)[0]);
+    render: function() {
 
-      ko.applyBindings(model, document.body);
+      ko.applyBindings(ViewState, document.body); //Body tag also has bindings
 
       $(document.body)
-        .append(panels);
+        .append(navigation.render())
+        .append(header.render(ViewState))
+        .append(layout.render())
+        .append(panels.render());
     }
   }
 

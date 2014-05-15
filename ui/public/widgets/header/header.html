@@ -1,0 +1,37 @@
+<header id="header">
+  <button class="toggleNavigation" data-bind="click: navigation.toggle, event: {mouseover: navigation.sneakOn}"></button>
+
+  <dl id="layoutManager" class="dropdown dropdownNoEvent" data-bind="css: {active: panel.dropdownActive}">
+    <dt data-bind="click: panel.toggle.bind(panel)"><span class="all-options" data-bind="click: panel.toggleDropdown.bind(panel)"></span></dt>
+    <dd>
+      <button class="right1" data-panel-shape="right1" data-bind="click: panel.toggleShape.bind(panel)"></button>
+      <button class="bottom1" data-panel-shape="bottom1" data-bind="click: panel.toggleShape.bind(panel)"></button>
+    </dd>
+  </dl>
+
+  <div id="omnisearch" data-bind="css: {busy: omnisearch.busy()}">
+    <input type="text" name="keywords" placeholder="Type keywords or a command" autocomplete="off" data-bind="value: omnisearch.searchString, valueUpdate: 'keyup', event: {keyup: omnisearch.onKeyUp.bind(omnisearch), blur: omnisearch.onBlur.bind(omnisearch)}">
+    <ul data-bind="css: {active: omnisearch.active()}, foreach: omnisearch.options">
+      <li data-bind="click: $parent.omnisearch.onOptionSelected.bind($parent.omnisearch), css: {selected: $index() == $parent.omnisearch.selected()}">
+        <span class="type" data-bind="text: type"></span>
+        <span class="title" data-bind="text: title"></span>
+        <span class="subtitle" data-bind="text: subtitle"></span>
+      </li>
+    </ul>
+  </div>
+
+  <div id="breadcrumb" data-bind="text: '&nbsp;'">
+    <a href="#"></a>
+  </div>
+
+  <!--
+  <dl id="user" class="dropdown">
+    <dt></dt>
+    <dd>
+      <iframe id="loginIFrame" src="https://typesafe.com/account/activator/frame"></iframe>
+    </dd>
+  </dl>
+  -->
+
+<dl id="notifications" class="dropdown" data-bind="snapView: notifications"></dl>
+</header>

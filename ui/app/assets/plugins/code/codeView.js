@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(["text!./viewCode.html", 'main/pluginapi', 'commons/settings'], function(template, api, settings){
+define(["text!./viewCode.html", 'commons/utils', 'commons/widget', 'widgets/editor/acebinding'], function(template, utils, Widget, ace){
 
 
   // !settings.editor.theme && settings.register("editor.theme", false);
@@ -53,7 +53,7 @@ define(["text!./viewCode.html", 'main/pluginapi', 'commons/settings'], function(
     return 'text';
   }
 
-  var CodeView = api.Class(api.Widget, {
+  var CodeView = utils.Class(Widget, {
     id: 'code-edit-view',
     template: template,
     init: function(args) {
@@ -76,10 +76,10 @@ define(["text!./viewCode.html", 'main/pluginapi', 'commons/settings'], function(
       this.focusLine(line);
     },
     switchTheme: function(name) {
-      settings.editor.theme(name);
+      ace.theme(name);
     },
     setFontSize: function(size) {
-      settings.editor.fontSize(size);
+      ace.fontSize(size);
     }
   });
   return CodeView;

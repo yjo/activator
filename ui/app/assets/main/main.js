@@ -44,21 +44,17 @@ var services = [
 ]
 
 var core = [
-  'main/model',
   'main/view',
   'main/router',
-  'main/pluginapi',
-  'main/keyboard',
-  'main/omnisearch',
-  'main/navigation'
+  'main/keyboard'
 ]
 
 require(vendors, function($, ko) {
   window.ko = ko; // it's used on every page...
   require(commons, function() {
     require(services, function() {
-      require(core, function(model,view, router) {
-        view.render(model);
+      require(core, function(view, router) {
+        view.render();
         router.load(window.location.hash)
       })
     })
