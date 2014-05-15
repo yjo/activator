@@ -11,7 +11,7 @@ define(function() {
     $(htmlNodes).filter("div").each(function(i,el){
       $("a", el).each(function(j, link) {
         // Open external links in new window.
-        if (link.getAttribute('href').indexOf("http://") == 0){
+        if (link.getAttribute('href').indexOf("http://") == 0 && !link.target){
           link.target = "_blank";
         // Force shorcut class on links to code
         } else if (link.getAttribute('href').indexOf("#code/") == 0){
