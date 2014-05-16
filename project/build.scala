@@ -257,7 +257,6 @@ object TheActivatorBuild extends Build {
         "org.webjars" % "bootstrap" % "3.0.0",
         "org.webjars" % "knockout" % "2.3.0",
         "org.webjars" % "leaflet" % "0.7.2",
-        "com.typesafe.sbt" % "sbt-atmos-play" % "0.3.1",
 
         // failed transatives
         "junit" % "junit" % "3.8.1",
@@ -266,8 +265,18 @@ object TheActivatorBuild extends Build {
         "org.scala-lang" % "scala-compiler" % "2.10.2",
         "org.scala-lang" % "jline" % "2.10.2",
         "org.scala-lang" % "jline" % "2.10.3",
+        Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % "2.2.1", "0.13", "2.10"),
+        "com.typesafe.play" % "play-java_2.10" % "2.2.1",
+        "com.typesafe.play" % "play-test_2.10" % "2.2.1",
+        "com.typesafe.play" % "play-docs_2.10" % "2.2.1",
+        "com.typesafe.akka" % "akka-actor_2.10" % "2.2.1",
+        "com.typesafe.akka" % "akka-testkit_2.10" % "2.2.1",
+        "com.typesafe.akka" % "akka-slf4j_2.10" % "2.2.1",
+        "com.typesafe.akka" % "akka-contrib_2.10" % "2.2.1",
         "com.typesafe.akka" % "akka-slf4j_2.10" % "2.3.2",
-        "com.typesafe.akka" % "akka-contrib_2.10" % "2.3.2"
+        "com.typesafe.akka" % "akka-contrib_2.10" % "2.3.2",
+        "com.novocode" % "junit-interface"  % "0.10",
+        "org.webjars" % "webjars-play_2.10" % "2.2.1"
       ),
       Keys.mappings in S3.upload <<= (Keys.packageBin in Universal, Packaging.minimalDist, Keys.version) map { (zip, minimalZip, v) =>
         Seq(minimalZip -> ("typesafe-activator/%s/typesafe-activator-%s-minimal.zip" format (v, v)),
