@@ -713,9 +713,7 @@ form {
 @media (max-width: 1023px) {
   body {
     overflow: visible;
-  }
-  section {
-    position: static;
+    padding-bottom: 40px;
   }
   #license {
     display: block;
@@ -727,15 +725,19 @@ form {
   }
 
   #open {
-    margin: 0 auto;
+    margin: 20px auto;
     width: 700px;
-    position: static;
+    height: 210px;
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
   #openAppForm {
     margin: 0 auto;
     width: 700px;
     height: 170px;
-    position: static;
   }
   #openAppLocationBrowser {
     .fileselection {
@@ -744,22 +746,20 @@ form {
       height: 170px;
       overflow-y: auto;
     }
-    .listing {
-      position: static;
-    }
   }
 
   #new {
-    margin: 40px auto 20px auto;
+    margin: 100px auto 20px auto;
     width: 700px;
-    position: static;
-    article {
-      position: static;
-    }
+    height: 480px;
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 
   .half {
-    position: static;
     float: left;
   }
   ul.list {
@@ -775,9 +775,7 @@ form {
 
   #viewTemplate{
     padding: 0;
-    position: static;
     #newApp {
-      position: static;
       height: 150px;
     }
     .template {
@@ -790,7 +788,6 @@ form {
   #working {
     margin: 0 auto;
     width: 700px;
-    position: static;
   }
 
   .console {
