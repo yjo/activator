@@ -117,12 +117,12 @@ for /f "delims=. tokens=1-3" %%v in ("%JAVA_VERSION%") do (
     set MINOR=%%w
     set BUILD=%%x
 
-    set PERM_SIZE=
+    set META_SIZE=-XX:MetaspaceSize=64M -XX:MaxMetaspaceSize=256M
     if "%MINOR%" LSS "8" (
-      set PERM_SIZE=-XX:PermSize=64M -XX:MaxPermSize=256M
+      set META_SIZE=-XX:PermSize=64M -XX:MaxPermSize=256M
     )
 
-    set MEM_OPTS=%PERM_SIZE%
+    set MEM_OPTS=%META_SIZE%
  )
 
 rem We use the value of the JAVA_OPTS environment variable if defined, rather than the config.
