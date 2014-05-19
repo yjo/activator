@@ -13,18 +13,21 @@ set "var1=%~1"
 if defined var1 (
   if "%var1%"=="help" (
     echo.
-    echo Usage activator [command]
+    echo Usage activator [options] [command]
     echo.
     echo Commands:
-    echo ui               Start the Activator UI
+    echo ui                 Start the Activator UI
     echo new [name] [template-id]  Create a new project with [name] using template [template-id]
-    echo list-templates   Print all available template names
-    echo help             Print this message
+    echo list-templates     Print all available template names
+    echo help               Print this message
+    echo.
+    echo Options:
+    echo -jvm-debug [port]  Turn on JVM debugging, open at the given port.  Defaults to 9999 if no port given.
     echo.
     echo Environment variables ^(read from context^):
-    echo JAVA_OPTS        Environment variable, if unset uses ""
-    echo SBT_OPTS         Environment variable, if unset uses ""
-    echo ACTIVATOR_OPTS   Environment variable, if unset uses ""
+    echo JAVA_OPTS          Environment variable, if unset uses ""
+    echo SBT_OPTS           Environment variable, if unset uses ""
+    echo ACTIVATOR_OPTS     Environment variable, if unset uses ""
     echo.
     goto :end
   )
@@ -129,13 +132,47 @@ rem We use the value of the JAVA_OPTS environment variable if defined, rather th
 set _JAVA_OPTS=%JAVA_OPTS%
 if "%_JAVA_OPTS%"=="" set _JAVA_OPTS=%CFG_OPTS%
 
+set DEBUG_OPTS=""
+
+rem Loop through the arguments, building remaining args in args variable
+set args=
+:argsloop
+if not "%~1"=="" (
+  if "%~1"=="-jvm-debug" (
+    if not "%~2"=="" (
+      rem This piece of magic somehow checks that an argument is a number
+      for /F "delims=0123456789" %%i in ("%~2") do (
+        set var="%%i"
+      )
+      if defined var (
+        rem Not a number, assume no argument given and default to 9999
+        set JPDA_PORT=9999
+      ) else (
+        rem Port was given, shift arguments
+        set JPDA_PORT=%~2
+        shift
+      )
+    ) else (
+      set JPDA_PORT=9999
+    )
+    shift
+
+    set DEBUG_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=!JPDA_PORT!
+    goto argsloop
+  )
+  rem else
+  set "args=%args% "%~1""
+  shift
+  goto argsloop
+)
+
 :run
 
-if "%*"=="" (
+if "!args!"=="" (
   if defined DOUBLECLICKED (
     set CMDS="ui"
-  ) else set CMDS=%*
-) else set CMDS=%*
+  ) else set CMDS=!args!
+) else set CMDS=!args!
 
 rem We add a / in front, so we get file:///C: instead of file://C:
 rem Java considers the later a UNC path.
@@ -144,7 +181,7 @@ rem We don't even bother with UNC paths.
 set JAVA_FRIENDLY_HOME_1=/!ACTIVATOR_HOME:\=/!
 set JAVA_FRIENDLY_HOME=/!JAVA_FRIENDLY_HOME_1: =%%20!
 
-"%_JAVACMD%" %MEM_OPTS% %ACTIVATOR_OPTS% %SBT_OPTS% %_JAVA_OPTS% "-Dactivator.home=%JAVA_FRIENDLY_HOME%" -jar "%ACTIVATOR_HOME%\%ACTIVATOR_LAUNCH_JAR%" %CMDS%
+"%_JAVACMD%" %DEBUG_OPTS% %MEM_OPTS% %ACTIVATOR_OPTS% %SBT_OPTS% %_JAVA_OPTS% "-Dactivator.home=%JAVA_FRIENDLY_HOME%" -jar "%ACTIVATOR_HOME%\%ACTIVATOR_LAUNCH_JAR%" %CMDS%
 if ERRORLEVEL 1 goto error
 goto end
 
