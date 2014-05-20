@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./browse.html', 'main/pluginapi', './files'], function(template, api, files) {
+define(['text!./browse.html', 'commons/utils', 'commons/widget', './files'], function(template, utils, Widget, files) {
 
   // TODO - Don't duplicate this in both view.js + browse.js...
   function open(location) {
@@ -26,7 +26,7 @@ define(['text!./browse.html', 'main/pluginapi', './files'], function(template, a
     });
   }
 
-  var Browser = api.Class(api.Widget, {
+  var Browser = utils.Class(Widget, {
     id: 'code-browser-view',
     template: template,
     init: function(config) {

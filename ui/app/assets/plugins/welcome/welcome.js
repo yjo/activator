@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./welcome.html', 'css!./welcome.css', 'main/pluginapi' ], function(template, css, api){
+define(['text!./welcome.html', 'css!./welcome.css'], function(template, css){
 
 
   var WelcomeState = (function(){

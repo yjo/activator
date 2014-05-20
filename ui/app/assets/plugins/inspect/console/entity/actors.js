@@ -1,10 +1,10 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./actors.html', 'main/pluginapi', '../widget', '../format', '../hover'], function(template, api, ConsoleWidget, format) {
+define(['text!./actors.html', 'commons/utils', '../widget', '../format', '../hover'], function(template, utils, ConsoleWidget, format) {
 
 
-  return api.Class(ConsoleWidget, {
+  return utils.Class(ConsoleWidget, {
     id: 'console-actors-widget',
     template: template,
     init: function(args) {
@@ -85,7 +85,7 @@ define(['text!./actors.html', 'main/pluginapi', '../widget', '../format', '../ho
         return false;
       };
 
-      this.hasActors = api.arrayGTZero(self.actors);
+      this.hasActors = utils.arrayGTZero(self.actors);
     },
     dataName: 'actors',
     dataTypes: ['actors'],

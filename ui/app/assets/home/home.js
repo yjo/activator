@@ -1,16 +1,11 @@
 /*
 Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
 */
+
 require.config({
   baseUrl:  '/public',
-  // hack for now due to problem loading plugin loaders from a plugin loader
-  map: {
-    '*': {
-      'css': '../../webjars/require-css/0.0.7/css',
-      'text': '../../webjars/requirejs-text/2.0.10/text'
-    }
-  },
   paths: {
+    ko:       'lib/knockout/knockout',
     commons:  'commons',
     home:     'home',
     services: 'services',
@@ -21,12 +16,12 @@ require.config({
 
 require([
   // Vendors
-  'webjars!knockout',
-  '../../webjars/requirejs-text/2.0.10/text',
-  '../../webjars/require-css/0.0.7/css',
-  'webjars!jquery',
+  'lib/jquery/jquery',
+  'lib/knockout/knockout',
+  'css',
+  'text',
   'commons/visibility'
-],function(ko) {
+],function($, ko) {
   window.ko = ko;
   if (!document[hidden]) {
     startApp()
@@ -42,6 +37,13 @@ var handleVisibilityChange = function() {
     document.removeEventListener(visibilityChange, handleVisibilityChange)
   }
 }
+
+var seeds = templates.filter(function(t){
+  return t.tags.indexOf('seed') >= 0;
+});
+templates = templates.filter(function(t){
+  return t.tags.indexOf('seed') < 0;
+});
 
 var startApp = function() {
   require([
@@ -64,6 +66,7 @@ var startApp = function() {
         var self = this;
 
         self.filteredTemplates = ko.observableArray(templates);
+        self.seeds = seeds;
         self.currentApp = ko.observable();
         self.currentAppId = ko.computed(function(){
           return !!self.currentApp()?self.currentApp().id:"";
@@ -72,6 +75,9 @@ var startApp = function() {
         self.filterValue = ko.observable("");
 
         self.chooseTemplate = function(app){
+          self.currentApp(app)
+        }
+        self.chooseSeed = function(app){
           self.currentApp(app)
         }
         self.closeTemplate = function(){
@@ -97,6 +103,13 @@ var startApp = function() {
         }
         self.closeNewBrowser = function() {
           $("#newAppLocationBrowser").hide();
+        }
+        self.openedTab = ko.observable('templates');
+        self.showTemplates = function() {
+          self.openedTab('templates');
+        }
+        self.showSeeds = function() {
+          self.openedTab('seed');
         }
       };
 

@@ -21,11 +21,11 @@ require.config({
 
 require([
   // Vendors
-  '../../webjars/requirejs-text/2.0.10/text',
-  '../../webjars/require-css/0.0.7/css',
-  'webjars!jquery',
-  'webjars!knockout',
-  'webjars!keymage',
+  'lib/requirejs-text/text',
+  'lib/require-css/css',
+  'lib/jquery/jquery',
+  'lib/knockout/knockout',
+  'lib/keymage/keymage',
   // other
   'commons/utils'
 ],function(v1,v2,v3,v4,v5,v6, utils){

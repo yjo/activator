@@ -11,6 +11,7 @@ import sbt.complete.{ Parser, Parsers }
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import activator.cache.{ TemplateMetadata, TemplateCache }
+import scala.util.control.NonFatal
 
 object ActivatorCli extends ActivatorCliHelper {
   case class ProjectInfo(projectName: String = "N/A", templateName: String = "N/A", file: Option[File] = None)
@@ -19,6 +20,46 @@ object ActivatorCli extends ActivatorCliHelper {
     // TODO - move this into a common shared location between CLI and GUI.
     val cache = UICacheHelper.makeDefaultCache(ActivatorCliHelper.system)
     val metadata = TemplateHandler.downloadTemplates(cache, ActivatorCliHelper.defaultDuration)
+
+    val possible = metadata.map(_.name).toSeq.distinct
+    val featured = metadata.filter(_.featured)
+    val suggestedSeeds = featured.filter(_.tags.contains("seed")).map(_.name).toSeq.distinct
+    val suggested = if (suggestedSeeds.nonEmpty) suggestedSeeds else featured.map(_.name).toSeq.distinct
+
+    def validateTemplateName(tNameOption: Option[String]): Option[String] = {
+      val validated = {
+        if (tNameOption.isEmpty) {
+          System.err.println("Please enter a template name.")
+          None
+        } else {
+          tNameOption flatMap { tName =>
+            if (metadata.exists(_.name == tName)) {
+              Some(tName)
+            } else {
+              System.err.println(s"Template name '${tName}' wasn't found in the template catalog.")
+              None
+            }
+          }
+        }
+      }
+
+      if (validated.isEmpty) {
+        System.err.println(s"Try these template names: ${suggested.mkString(", ")}")
+        System.err.println(s"or see all templates at http://typesafe.com/activator/templates or with 'activator list-templates'")
+      }
+
+      validated
+    }
+
+    def getTemplateName(): Option[String] = {
+      val tNameOption = try TemplateHandler.getTemplateName(possible, suggested)
+      catch {
+        case NonFatal(e) =>
+          None
+      }
+
+      validateTemplateName(tNameOption)
+    }
 
     // Handling input based on length (yes, it is brittle to do argument parsing like this...):
     // length = 2 : "new" and "project name" => generate project automatically, but query for template to use
@@ -30,29 +71,32 @@ object ActivatorCli extends ActivatorCliHelper {
           val pName = configuration.arguments()(1)
           createFile(pName) match {
             case f @ Some(_) =>
-              ProjectInfo(
+              (for (tName <- getTemplateName) yield ProjectInfo(
                 projectName = pName,
-                templateName = TemplateHandler.getTemplateName(metadata.map(_.name).toSeq.distinct),
-                file = f)
+                templateName = tName,
+                file = f)) getOrElse ProjectInfo()
             case None => ProjectInfo()
           }
         case 3 =>
           val pName = configuration.arguments()(1)
-          val tName = configuration.arguments()(2)
-          ProjectInfo(
-            projectName = pName,
-            templateName = tName,
-            file = createFile(pName))
+          validateTemplateName(Some(configuration.arguments()(2))) map { tName =>
+            ProjectInfo(
+              projectName = pName,
+              templateName = tName,
+              file = createFile(pName))
+          } getOrElse ProjectInfo()
         case _ =>
-          val pName = getApplicationName()
-          createFile(pName) match {
-            case f @ Some(_) =>
-              ProjectInfo(
-                projectName = pName,
-                templateName = TemplateHandler.getTemplateName(metadata.map(_.name).toSeq.distinct),
-                file = f)
-            case None => ProjectInfo()
-          }
+          (for (tName <- getTemplateName()) yield {
+            val pName = getApplicationName(tName)
+            createFile(pName) match {
+              case f @ Some(_) =>
+                ProjectInfo(
+                  projectName = pName,
+                  templateName = tName,
+                  file = f)
+              case None => ProjectInfo()
+            }
+          }) getOrElse ProjectInfo()
       }
 
     val result = for {
@@ -112,15 +156,15 @@ object ActivatorCli extends ActivatorCliHelper {
                            |""".stripMargin)
   }
 
-  private def getApplicationName(): String = {
-    System.out.println("Enter an application name")
+  private def getApplicationName(default: String): String = {
+    System.out.println(s"Enter a name for your application (just press enter for '${default}')")
     val appNameParser: Parser[String] = {
       import Parser._
       import Parsers._
       token(any.* map { _ mkString "" }, "<application name>")
     }
 
-    readLine(appNameParser) filterNot (_.isEmpty) getOrElse sys.error("No application name specified.")
+    readLine(appNameParser) map (_.trim) filterNot (_.isEmpty) getOrElse default
   }
 
   def withContextClassloader[A](f: => A): A = {

@@ -28,8 +28,16 @@ object Templates extends Controller {
           "name" -> JsString(o.name),
           "title" -> JsString(o.title),
           "timestamp" -> JsNumber(o.timeStamp),
+          "creationTime" -> JsNumber(o.persistentConfig.creationTime),
+          "sourceLink" -> JsString(o.sourceLink),
           "description" -> JsString(o.description),
           "featured" -> JsBoolean(o.featured),
+          "authorName" -> JsString(o.persistentConfig.authorName),
+          "authorLink" -> JsString(o.persistentConfig.authorLink),
+          "authorTwitter" -> o.persistentConfig.authorTwitter.map(JsString(_)).getOrElse(JsNull),
+          "authorBio" -> o.persistentConfig.authorBio.map(JsString(_)).getOrElse(JsNull),
+          "authorLogo" -> o.persistentConfig.authorLogo.map(JsString(_)).getOrElse(JsNull),
+          "category" -> JsString(o.persistentConfig.category),
           "tags" -> JsArray(o.tags map JsString.apply)))
     //We don't need reads, really
     def reads(json: JsValue): JsResult[TemplateMetadata] =

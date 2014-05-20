@@ -1,6 +1,6 @@
-define(['text!./actor.html', 'main/pluginapi', './../widget', '../format'], function(template, api, ConsoleWidget, format) {
+define(['text!./actor.html', 'commons/utils', './../widget', '../format'], function(template, utils, ConsoleWidget, format) {
 
-  return api.Class(ConsoleWidget, {
+  return utils.Class(ConsoleWidget, {
     id: 'console-actor-widget',
     template: template,
     init: function(args) {
@@ -11,7 +11,7 @@ define(['text!./actor.html', 'main/pluginapi', './../widget', '../format'], func
       this.actor = ko.observable();
       this.actorPath = ko.observable();
       this.deviationCount = ko.observable(0);
-      this.hasDeviations = api.valueGTZero(this.deviationCount);
+      this.hasDeviations = utils.valueGTZero(this.deviationCount);
       this.deviationsLink = ko.computed(function() {
         return "#inspect/deviations/" + self.actorPath();
       });

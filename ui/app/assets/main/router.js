@@ -15,7 +15,7 @@ define(function() {
 
     // Structure of plugins are: 'plugins' + pluginName + '/' + pluginName
     // e.g 'plugins/tutorial/tutorial'
-    require(['plugins/'+metaInfo.plugin+'/'+metaInfo.plugin], function(plugin) {
+    require([metaInfo.pluginUrl], function(plugin) {
       plugin.id = plugin.id || metaInfo.plugin;
 
       // if the current plugin is different from the new then we render the new plugin

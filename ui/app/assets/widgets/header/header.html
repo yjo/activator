@@ -1,5 +1,5 @@
 <header id="header">
-  <button class="toggleNavigation" data-bind="click: navigation.toggle.bind(navigation), event: {mouseover: navigation.sneakOn.bind(navigation)}"></button>
+  <button class="toggleNavigation" data-bind="click: navigation.toggle, event: {mouseover: navigation.sneakOn}"></button>
 
   <dl id="layoutManager" class="dropdown dropdownNoEvent" data-bind="css: {active: panel.dropdownActive}">
     <dt data-bind="click: panel.toggle.bind(panel)"><span class="all-options" data-bind="click: panel.toggleDropdown.bind(panel)"></span></dt>
@@ -12,7 +12,7 @@
   <div id="omnisearch" data-bind="css: {busy: omnisearch.busy()}">
     <input type="text" name="keywords" placeholder="Type keywords or a command" autocomplete="off" data-bind="value: omnisearch.searchString, valueUpdate: 'keyup', event: {keyup: omnisearch.onKeyUp.bind(omnisearch), blur: omnisearch.onBlur.bind(omnisearch)}">
     <ul data-bind="css: {active: omnisearch.active()}, foreach: omnisearch.options">
-      <li data-bind="click: $parent.omnisearch.onOptionSelected, css: {selected: $index() == $parent.omnisearch.selected()}">
+      <li data-bind="click: $parent.omnisearch.onOptionSelected.bind($parent.omnisearch), css: {selected: $index() == $parent.omnisearch.selected()}">
         <span class="type" data-bind="text: type"></span>
         <span class="title" data-bind="text: title"></span>
         <span class="subtitle" data-bind="text: subtitle"></span>

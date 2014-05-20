@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['main/pluginapi'], function(api) {
+define(['commons/utils'], function(utils) {
 
 
   function browse(location) {
@@ -49,7 +49,7 @@ define(['main/pluginapi'], function(api) {
 
   // A model for files that works directly off a location, and
   // nothing else.
-  var FileModel = api.Class({
+  var FileModel = utils.Class({
     init: function(config) {
       var self = this;
       // TODO - Split this into relative + absolute/canonical locations...

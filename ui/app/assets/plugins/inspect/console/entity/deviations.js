@@ -1,8 +1,8 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./deviations.html', 'main/pluginapi', './../widget', '../format'], function(template, api, ConsoleWidget, formatter) {
-      return api.Class(ConsoleWidget, {
+define(['text!./deviations.html', 'commons/utils', './../widget', '../format'], function(template, utils, ConsoleWidget, formatter) {
+      return utils.Class(ConsoleWidget, {
         id: 'console-deviations-widget',
         template: template,
         init: function(args) {
@@ -19,12 +19,12 @@ define(['text!./deviations.html', 'main/pluginapi', './../widget', '../format'],
             this.unhandledMessageCount = ko.observable(0);
             this.deadlockCount = ko.observable(0);
             this.deviationCount = ko.observable(0);
-            this.hasDeviations = api.valueGTZero(self.deviationCount);
-            this.hasErrors = api.valueGTZero(self.errorCount);
-            this.hasWarnings = api.valueGTZero(self.warningCount);
-            this.hasDeadLetters = api.valueGTZero(self.deadLetterCount);
-            this.hasUnhandledMessages = api.valueGTZero(self.unhandledMessageCount);
-            this.hasDeadlocks = api.valueGTZero(self.deadlockCount);
+            this.hasDeviations = utils.valueGTZero(self.deviationCount);
+            this.hasErrors = utils.valueGTZero(self.errorCount);
+            this.hasWarnings = utils.valueGTZero(self.warningCount);
+            this.hasDeadLetters = utils.valueGTZero(self.deadLetterCount);
+            this.hasUnhandledMessages = utils.valueGTZero(self.unhandledMessageCount);
+            this.hasDeadlocks = utils.valueGTZero(self.deadlockCount);
             this.actorPath = ko.observable("");
             this.parameters = function(params) {
               self.actorPath(params.toString().replace(/,/g, "/"));

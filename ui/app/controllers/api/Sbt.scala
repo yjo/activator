@@ -19,7 +19,7 @@ import snap.UpdateSourceFiles
 import snap.JsonHelper._
 
 object Sbt extends Controller {
-  private def jsonAction(f: JsValue => Future[SimpleResult]): Action[AnyContent] = CSRFCheck {
+  private def jsonAction(f: JsValue => Future[Result]): Action[AnyContent] = CSRFCheck {
     Action.async { request =>
       request.body.asJson.map({ json =>
         try f(json)
