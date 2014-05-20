@@ -19,6 +19,7 @@ require.config({
 var vendors = [
   'webjars!jquery',
   'webjars!knockout',
+  'webjars!ace',
   'commons/visibility',
   '../../webjars/requirejs-text/2.0.10/text',
   '../../webjars/require-css/0.0.7/css'

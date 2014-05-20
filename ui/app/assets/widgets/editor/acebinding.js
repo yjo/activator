@@ -3,11 +3,9 @@
  */
 define([
   'commons/settings',
-  'webjars!knockout',
-  'webjars!ace',
   'commons/markers',
   'css!./theme.css'],
-  function(settings, ko, ignore_ace, markers) {
+  function(settings, markers) {
 
   // Create Editor container
   var editorDom = document.createElement('div');
