@@ -1,7 +1,21 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(["text!./viewWrapper.html", "text!./viewDefault.html", "./imageView", "./codeView", 'commons/utils', 'commons/widget'], function(viewOuter, defaultTemplate, ImageView, CodeView, utils, Widget) {
+define([
+  "./imageView",
+  "./codeView",
+  'commons/utils',
+  'commons/widget',
+  "text!./viewWrapper.html",
+  "text!./viewDefault.html"
+], function(
+  ImageView,
+  CodeView,
+  utils,
+  Widget,
+  viewOuter,
+  defaultTemplate
+){
 
   function open(location) {
     return $.ajax({
