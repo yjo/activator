@@ -86,12 +86,19 @@
 						<li data-bind="click: $root.searchTag, text: $data"></li>
 					</ul>
 					<p data-bind="text: description"></p>
-<!--
  					<div class="author">
-						<cite>by John Doe (<a href="">@@johndoe</a>)</cite>
-						<a href="#" class="source">github.com/johndoe/activator-akka-spray</a>
+						<p><cite>by <span data-bind="text: authorName"></span>
+                        <!-- ko if:authorTwitter -->
+                        (<a target="_blank" data-bind="attr: { href: 'http://twitter.com/' + authorTwitter }, text: authorTwitter"></a>)
+                        <!--  /ko -->
+                        </cite></p>
+						<p><a target="_blank" data-bind="attr: { href: sourceLink }, text: sourceLink" class="source"></a></p>
 					</div>
- -->
+					<div class="promote partner">
+						<img data-bind="attr: { src: authorLogo }">
+						<h4 data-bind="text: authorName"></h4>
+						<p data-bind="text: authorBio"></p>
+                    </div>
  				</div>
 				@helper.form(action = routes.Application.forceHome, 'id -> "newApp") {
 					<h4>Create an app from this template</h4>
