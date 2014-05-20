@@ -85,7 +85,9 @@
 					<p data-bind="text: description"></p>
  					<div class="author">
 						<p><cite>by <span data-bind="text: authorName"></span>
-                        <!-- ko if:(typeof(authorTwitter) == 'string' && authorTwitter != "") -->(<a target="_blank" data-bind="attr: { href: function() { return 'http://twitter.com/' + authorTwitter; } }, text: authorTwitter"></a>)<!--  /ko -->
+                        <!-- ko if:authorTwitter -->
+                        (<a target="_blank" data-bind="attr: { href: 'http://twitter.com/' + authorTwitter }, text: authorTwitter"></a>)
+                        <!--  /ko -->
                         </cite></p>
 						<p><a target="_blank" data-bind="attr: { href: sourceLink }, text: sourceLink" class="source"></a></p>
 					</div>
