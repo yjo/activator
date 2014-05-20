@@ -1,8 +1,26 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['main/plugins', 'text!./home.html', './files', './browse', './view', './openIn', 'css!./code.css', 'main/keyboard', "widgets/navigation/menu"],
-    function(plugins, template, files, Browser, Viewer, openIn, css, keyboard) {
+
+define([
+  'main/plugins',
+  'main/keyboard',
+  './files',
+  './browse',
+  './view',
+  './openIn',
+  'text!./home.html',
+  'css!./code.css',
+  "widgets/navigation/menu"
+], function(
+  plugins,
+  keyboard,
+  files,
+  Browser,
+  Viewer,
+  openIn,
+  template
+){
 
   var CodeState = (function(){
     var self = {};

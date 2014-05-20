@@ -1,7 +1,17 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(["text!./viewCode.html", 'commons/utils', 'commons/widget', 'widgets/editor/acebinding'], function(template, utils, Widget, ace){
+define([
+  'commons/utils',
+  'commons/widget',
+  'widgets/editor/acebinding',
+  "text!./viewCode.html"
+], function(
+  utils,
+  Widget,
+  ace,
+  template
+){
 
 
   // !settings.editor.theme && settings.register("editor.theme", false);
