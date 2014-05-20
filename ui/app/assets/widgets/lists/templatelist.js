@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./templatelist.html', 'webjars!knockout', 'commons/widget', 'commons/utils'], function(template, ko, Widget, utils) {
+define(['text!./templatelist.html', 'lib/knockout/knockout', 'commons/widget', 'commons/utils'], function(template, ko, Widget, utils) {
 
   function getlist() {
     return $.ajax({

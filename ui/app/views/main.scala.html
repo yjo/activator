@@ -26,7 +26,7 @@
       window.serverAppModel = @Html(Json.toJson(model).toString())
       window.serverAppVersion = "@ActivatorProperties.APP_VERSION"
     </script>
-    <script data-main='@routes.Assets.at("main/main.js")' type='text/javascript' src='@routes.WebJarAssets.requirejs()'></script>
+    <script data-main="@routes.Assets.at("main/main.js")" type="text/javascript" src="@routes.Assets.at("lib/requirejs/require.js")"></script>
   </head>
   <body data-bind="css: {navigationOpened: navigation.navigationOpened, navigationSneak: navigation.sneak, panelOpened: panel.panelOpened}, attr: { 'data-shape': panel.panelShape }">
   </body>

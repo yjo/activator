@@ -3,9 +3,11 @@
  */
 define([
   'commons/settings',
+  'lib/knockout/knockout',
+  'lib/ace/src/ace',
   'commons/markers',
   'css!./theme.css'],
-  function(settings, markers) {
+  function(settings, ko, ignore_ace, markers) {
 
   // Create Editor container
   var editorDom = document.createElement('div');

@@ -1,6 +1,6 @@
 // this file is a simple keymage wrapper to control our usage of it
 // and offer some convenience functionality.
-define([ 'webjars!keymage' ], function(key) {
+define([ 'lib/keymage/keymage' ], function(key) {
   return {
     installBindingsInScope: function(scope, keybindings) {
       $.each(keybindings, function(i, params) {

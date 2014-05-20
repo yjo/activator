@@ -4,6 +4,7 @@ import play.api._
 import play.api.mvc._
 import play.filters.csrf._
 import play.api.libs.iteratee._
+import scala.concurrent.Future
 
 object WebSocketUtil {
 
@@ -14,19 +15,18 @@ object WebSocketUtil {
   //  - we work on WebSocket not Action
   // See https://github.com/playframework/playframework/issues/1788
   // for a future official replacement.
-  private def csrfCheckedWebSocket[A](tokenProvider: CSRF.TokenProvider,
-    wrapped: WebSocket[A]): WebSocket[A] = {
-    def checkedF(request: RequestHeader): (Enumerator[A], Iteratee[A, Unit]) => Unit = {
+  private def csrfCheckedWebSocket[A](tokenProvider: CSRF.TokenProvider, socket: WebSocket[A, A]): WebSocket[A, A] = {
+    def checkedF(request: RequestHeader): Future[Either[Result, (Enumerator[A], Iteratee[A, Unit]) => Unit]] = {
       for {
         cookieToken <- CSRF.getToken(request)
         queryToken <- request.getQueryString(TokenParam)
         if (tokenProvider.compareTokens(queryToken, cookieToken.value))
-      } yield wrapped.f(request)
+      } yield socket.f(request)
     } getOrElse {
       throw new RuntimeException("Bad CSRF token for websocket")
     }
 
-    WebSocket(f = checkedF)(wrapped.frameFormatter)
+    WebSocket(checkedF)(socket.inFormatter, socket.outFormatter)
   }
 
   // unfortunately we have a cut-and-pasted default for this config option
@@ -34,11 +34,9 @@ object WebSocketUtil {
   private def signTokens(implicit app: Application): Boolean =
     app.configuration.getBoolean("csrf.sign.tokens").getOrElse(true)
 
-  def socketCSRFCheck[A](ws: WebSocket[A]): WebSocket[A] = {
+  def socketCSRFCheck[A](ws: WebSocket[A, A]): WebSocket[A, A] = {
     import play.api.Play.current
-
-    csrfCheckedWebSocket(if (signTokens) CSRF.SignedTokenProvider else CSRF.UnsignedTokenProvider,
-      ws)
+    csrfCheckedWebSocket(if (signTokens) CSRF.SignedTokenProvider else CSRF.UnsignedTokenProvider, ws)
   }
 
   def webSocketURLWithCSRF[A](socketCall: Call)(implicit request: RequestHeader): String = {

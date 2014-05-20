@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['css!./overlay.css', 'text!./overlay.html', 'webjars!knockout', 'commons/widget', 'commons/utils'], function(css, template, ko, Widget, utils){
+define(['css!./overlay.css', 'text!./overlay.html', 'lib/knockout/knockout', 'commons/widget', 'commons/utils'], function(css, template, ko, Widget, utils){
 
   var Overlay = utils.Class(Widget, {
     id: 'overlay-widget',

@@ -4,14 +4,8 @@ Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
 
 require.config({
   baseUrl:  '/public',
-  // hack for now due to problem loading plugin loaders from a plugin loader
-  map: {
-    '*': {
-      'css': '../../webjars/require-css/0.0.7/css',
-      'text': '../../webjars/requirejs-text/2.0.10/text'
-    }
-  },
   paths: {
+    ko:       'lib/knockout/knockout',
     commons:  'commons',
     home:     'home',
     services: 'services',
@@ -22,12 +16,12 @@ require.config({
 
 require([
   // Vendors
-  'webjars!knockout',
-  '../../webjars/requirejs-text/2.0.10/text',
-  '../../webjars/require-css/0.0.7/css',
-  'webjars!jquery',
+  'lib/jquery/jquery',
+  'lib/knockout/knockout',
+  'css',
+  'text',
   'commons/visibility'
-],function(ko) {
+],function($, ko) {
   window.ko = ko;
   if (!document[hidden]) {
     startApp()

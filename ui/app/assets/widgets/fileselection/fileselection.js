@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['css!./fileselection.css', 'text!./fileselection.html', 'webjars!knockout', 'commons/widget', 'commons/utils'], function(css, template, ko, Widget, utils) {
+define(['css!./fileselection.css', 'text!./fileselection.html', 'lib/knockout/knockout', 'commons/widget', 'commons/utils'], function(css, template, ko, Widget, utils) {
 
   function browse(location) {
     return $.ajax({
