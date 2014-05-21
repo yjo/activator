@@ -11,8 +11,8 @@ import akka.util._
 import play.api.libs.iteratee._
 import scala.collection.immutable.Queue
 import play.api.mvc.WebSocket.FrameFormatter
-import console.ConsolePlugin
-import console.ClientController.InitializeCommunication
+//import console.ConsolePlugin
+//import console.ClientController.InitializeCommunication
 import JsonHelper._
 import play.api.libs.json.Json._
 
@@ -99,12 +99,13 @@ abstract class WebSocketActor[MessageType](implicit frameFormatter: FrameFormatt
 
   // Hook Console related actors up with this actor by initializing the communication.
   // A reply with a reference to the console actor will be sent to "self" (see internalReceive below).
-  def plugin(implicit app: play.api.Application): ConsolePlugin =
-    app.plugin(classOf[ConsolePlugin]).getOrElse(throw new RuntimeException("The Console plugin does not exist"))
+  //  TODO (h3nk3) : uncomment when Inspect works for 2.11/2.3.2
+  //def plugin(implicit app: play.api.Application): ConsolePlugin =
+  //  app.plugin(classOf[ConsolePlugin]).getOrElse(throw new RuntimeException("The Console plugin does not exist"))
 
-  implicit val ctx = play.api.Play.current
-  plugin.clientHandlerActor ! InitializeCommunication(id = "Actor" + System.currentTimeMillis, consumer = producerActorWrapper.actor)
-  var consoleActor: Option[ActorRef] = None
+  //implicit val ctx = play.api.Play.current
+  //plugin.clientHandlerActor ! InitializeCommunication(id = "Actor" + System.currentTimeMillis, consumer = producerActorWrapper.actor)
+  //var consoleActor: Option[ActorRef] = None
 
   override def preStart(): Unit = {
     log.debug("starting")
@@ -190,8 +191,9 @@ abstract class WebSocketActor[MessageType](implicit frameFormatter: FrameFormatt
     case CloseWebSocket =>
       log.debug("got CloseWebSocket poisoning the producer")
       producerActorWrapper.actor ! PoisonPill
-    case InitializeCommunication(_, ref) =>
-      consoleActor = Some(ref)
+    //  TODO (h3nk3) : uncomment when Inspect works for 2.11/2.3.2
+    //case InitializeCommunication(_, ref) =>
+    //  consoleActor = Some(ref)
   }
 
   final override def receive = internalReceive orElse subReceive
