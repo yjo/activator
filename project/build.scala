@@ -146,6 +146,14 @@ object TheActivatorBuild extends Build {
           update
       }
     )
+    // TODO (h3nk3) : remove when Inspect is available for Scala 2.11/Akka 2.3
+    settings(Keys.excludeFilter in Keys.unmanagedSources in Compile := new FileFilter() {
+      override def accept(file: java.io.File) = { file.getPath.contains("/app/console") }
+    })
+    settings(Keys.excludeFilter in Keys.unmanagedSources in Test := new FileFilter() {
+      override def accept(file: java.io.File) = { file.getPath.contains("/console") }
+    })
+
     settings(
       Keys.compile in Compile <<= (Keys.compile in Compile, Keys.baseDirectory, Keys.streams) map { (oldCompile, baseDir, streams) =>
         val jsErrors = JsChecker.fixAndCheckAll(baseDir, streams.log)
