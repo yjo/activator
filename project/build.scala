@@ -117,9 +117,6 @@ object TheActivatorBuild extends Build {
     settings(PlayKeys.playDefaultPort := 8888)
     settings(Keys.includeFilter in (Assets, LessKeys.less) := "*.less")
     settings(Keys.excludeFilter in (Assets, LessKeys.less) := "_*.less")
-    // The line below can be removed when Play version > 2.3.0-RC1.
-    // It sets Trireme to use sequental compilation of resources because of race condition in there somewhere.
-    settings(JsEngineKeys.parallelism in LessKeys.less := 1)
     settings(Keys.initialize ~= { _ => sys.props("scalac.patmat.analysisBudget") = "512" })
     settings(Keys.libraryDependencies ++= Seq(Dependencies.akkaTestkit % "test", Dependencies.specs2 % "test"))
     // set up debug props for forked tests
