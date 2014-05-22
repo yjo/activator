@@ -4,7 +4,7 @@
 @REM JAVA_HOME - location of a JDK home dir (optional if java on path)
 @REM CFG_OPTS  - JVM options (optional)
 @REM Configuration:
-@REM activatorconfig.txt found in the ACTIVATOR_HOME.
+@REM activatorconfig.txt found in the ACTIVATOR_HOME or ACTIVATOR_HOME/ACTIVATOR_VERSION
 @setlocal enabledelayedexpansion
 
 @echo off
@@ -40,15 +40,26 @@ rem Detect if we were double clicked, although theoretically A user could
 rem manually run cmd /c
 for %%x in (%cmdcmdline%) do if %%~x==/c set DOUBLECLICKED=1
 
-rem FIRST we load the config file of extra options.
-set "CFG_FILE=%UserProfile%\.activator\%APP_VERSION%\activatorconfig.txt"
+rem FIRST we load a config file of extra options (if there is one)
+set "CFG_FILE_HOME=%UserProfile%\.activator\activatorconfig.txt"
+set "CFG_FILE_VERSION=%UserProfile%\.activator\%APP_VERSION%\activatorconfig.txt"
 set CFG_OPTS=
-if exist %CFG_FILE% (
-  FOR /F "tokens=* eol=# usebackq delims=" %%i IN ("%CFG_FILE%") DO (
+if exist %CFG_FILE_VERSION% (
+  FOR /F "tokens=* eol=# usebackq delims=" %%i IN ("%CFG_FILE_VERSION%") DO (
     set DO_NOT_REUSE_ME=%%i
     rem ZOMG (Part #2) WE use !! here to delay the expansion of
     rem CFG_OPTS, otherwise it remains "" for this loop.
     set CFG_OPTS=!CFG_OPTS! !DO_NOT_REUSE_ME!
+  )
+)
+if "%CFG_OPTS%"=="" (
+  if exist %CFG_FILE_HOME% (
+    FOR /F "tokens=* eol=# usebackq delims=" %%i IN ("%CFG_FILE_HOME%") DO (
+      set DO_NOT_REUSE_ME=%%i
+      rem ZOMG (Part #2) WE use !! here to delay the expansion of
+      rem CFG_OPTS, otherwise it remains "" for this loop.
+      set CFG_OPTS=!CFG_OPTS! !DO_NOT_REUSE_ME!
+    )
   )
 )
 
