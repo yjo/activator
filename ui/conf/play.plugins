@@ -1,1 +1,2 @@
-10000:console.ConsolePlugin
+#TODO (h3nk3) : uncomment when Inspect works for 2.11/2.3.2
+#10000:console.ConsolePlugin

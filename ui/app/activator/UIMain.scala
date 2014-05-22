@@ -43,7 +43,7 @@ object PidDetector {
   private def psListHasPid(pid: String, pb: ProcessBuilder): Boolean =
     try {
       for {
-        line <- pb.lines
+        line <- pb.lineStream
         p <- line.split("\\s+").filterNot(_.isEmpty).headOption
         if p == pid
       } return true

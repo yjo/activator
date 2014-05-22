@@ -106,7 +106,7 @@ object TheActivatorBuild extends Build {
   lazy val ui = (
     ActivatorPlayProject("ui")
     dependsOnRemote(
-      webjarsPlay3, requirejs, jquery, knockout, ace, /*requireCss, requireText,*/ keymage, commonsIo, mimeUtil, activatorAnalytics,
+      webjarsPlay3, requirejs, jquery, knockout, ace, /*requireCss, requireText,*/ keymage, commonsIo, mimeUtil, /*activatorAnalytics,*/
       sbtLauncherInterface % "provided",
       sbtrcRemoteController % "compile;test->test",
       // Here we hack our probes into the UI project.
@@ -143,6 +143,14 @@ object TheActivatorBuild extends Build {
           update
       }
     )
+    // TODO (h3nk3) : remove when Inspect is available for Scala 2.11/Akka 2.3
+    settings(Keys.excludeFilter in Keys.unmanagedSources in Compile := new FileFilter() {
+      override def accept(file: java.io.File) = { file.getPath.contains("/app/console") }
+    })
+    settings(Keys.excludeFilter in Keys.unmanagedSources in Test := new FileFilter() {
+      override def accept(file: java.io.File) = { file.getPath.contains("/console") }
+    })
+
     settings(
       Keys.compile in Compile <<= (Keys.compile in Compile, Keys.baseDirectory, Keys.streams) map { (oldCompile, baseDir, streams) =>
         val jsErrors = JsChecker.fixAndCheckAll(baseDir, streams.log)
@@ -226,8 +234,9 @@ object TheActivatorBuild extends Build {
         playSbt13Plugin,
         eclipseSbt13Plugin,
         ideaSbt13Plugin,
-        echoSbt13Plugin,
-        echoPlaySbt13Plugin,
+        // TODO (h3nk3): Uncomment when 2.11 version of Echo is available
+        //echoSbt13Plugin,
+        //echoPlaySbt13Plugin,
 
         // featured template deps
         // note: do not use %% here

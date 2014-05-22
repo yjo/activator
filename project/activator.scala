@@ -52,7 +52,7 @@ object ActivatorBuild {
       javacOptions in (Compile, doc) := Seq("-source", "1.6"),
       libraryDependencies += Dependencies.junitInterface % "test",
       scalaVersion := Dependencies.scalaVersion,
-      scalaBinaryVersion := "2.10",
+      scalaBinaryVersion := "2.11",
       ScalariformKeys.preferences in Compile := formatPrefs,
       ScalariformKeys.preferences in Test    := formatPrefs,
       makeFixWhitespace(Compile),

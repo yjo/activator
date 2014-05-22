@@ -10,7 +10,7 @@ import java.io.File
 import java.net.URLEncoder
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.duration._
-import console.ClientController.HandleRequest
+//import console.ClientController.HandleRequest
 import JsonHelper._
 import play.api.libs.json._
 import play.api.libs.json.Json._
@@ -256,7 +256,8 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
   class AppSocketActor extends WebSocketActor[JsValue] with ActorLogging {
     override def onMessage(json: JsValue): Unit = {
       json match {
-        case InspectRequest(m) => for (cActor <- consoleActor) cActor ! HandleRequest(json)
+        //  TODO (h3nk3) : uncomment when Inspect works for 2.11/2.3.2
+        //case InspectRequest(m) => for (cActor <- consoleActor) cActor ! HandleRequest(json)
         case WebSocketActor.Ping(ping) => produce(WebSocketActor.Pong(ping.cookie))
         case _ => log.info("unhandled message on web socket: {}", json)
       }
