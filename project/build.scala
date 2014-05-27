@@ -103,6 +103,9 @@ object TheActivatorBuild extends Build {
          Seq.empty)
     })
 
+  import WebKeys.{assets, public}
+  import sbt.Keys.products
+
   lazy val ui = (
     ActivatorPlayProject("ui")
     dependsOnRemote(
@@ -141,7 +144,11 @@ object TheActivatorBuild extends Build {
           System.err.println("Remote probe classpath = " + sys.props("sbtrc.controller.classpath"))
           System.err.println("Template cache = " + sys.props("activator.template.cache"))
           update
-      }
+      },
+      // We need to embed the assets in this JAR for activator.
+      // If we add any more play projects, we need to be clever with them.
+      public in Assets := (public in Assets).value / "public",
+      products in Compile += (assets in Assets).value.getParentFile
     )
     // TODO (h3nk3) : remove when Inspect is available for Scala 2.11/Akka 2.3
     settings(Keys.excludeFilter in Keys.unmanagedSources in Compile := new FileFilter() {
@@ -150,7 +157,6 @@ object TheActivatorBuild extends Build {
     settings(Keys.excludeFilter in Keys.unmanagedSources in Test := new FileFilter() {
       override def accept(file: java.io.File) = { file.getPath.contains("/console") }
     })
-
     settings(
       Keys.compile in Compile <<= (Keys.compile in Compile, Keys.baseDirectory, Keys.streams) map { (oldCompile, baseDir, streams) =>
         val jsErrors = JsChecker.fixAndCheckAll(baseDir, streams.log)
