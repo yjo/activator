@@ -103,6 +103,9 @@ object TheActivatorBuild extends Build {
          Seq.empty)
     })
 
+  import WebKeys.{assets, public}
+  import sbt.Keys.products
+
   lazy val ui = (
     ActivatorPlayProject("ui")
     dependsOnRemote(
@@ -142,24 +145,10 @@ object TheActivatorBuild extends Build {
           System.err.println("Template cache = " + sys.props("activator.template.cache"))
           update
       },
-      // Define ivy configuration for assets artifact.  This
-      // places the asset jar on the same classpath as the main jar, always, by
-      // having it in the compile scope.
-      Keys.artifact in PlayKeys.playPackageAssets := {
-        Artifact(
-          name=s"${Keys.name.value}-assets",
-          `type`="assets",
-          extension="jar",
-          classifier=None,
-          configurations=List(Compile),
-          url=None
-        )
-      },
-      // Ensures the artifact is reported by ivy.xml, so we know to resolve it on
-      // the other end without explicitly specifying it.
-      Keys.artifacts += (Keys.artifact in PlayKeys.playPackageAssets).value,
-      // Ensures the actualy JAR is published.
-      Keys.packagedArtifacts += ((Keys.artifact in PlayKeys.playPackageAssets).value -> PlayKeys.playPackageAssets.value)
+      // We need to embed the assets in this JAR for activator.
+      // If we add any more play projects, we need to be clever with them.
+      public in Assets := (public in Assets).value / "public",
+      products in Compile += (assets in Assets).value.getParentFile
     )
     // TODO (h3nk3) : remove when Inspect is available for Scala 2.11/Akka 2.3
     settings(Keys.excludeFilter in Keys.unmanagedSources in Compile := new FileFilter() {
