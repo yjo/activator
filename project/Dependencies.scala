@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  val sbtVersion = "0.13.5-RC3"
+  val sbtVersion = "0.13.5"
   val sbtPluginVersion = "0.13"
   val sbtPluginScalaVersion = "2.11.1"
   val scalaVersion = "2.11.1"
