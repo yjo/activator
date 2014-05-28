@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  val sbtVersion = "0.13.0"
+  val sbtVersion = "0.13.5"
   val sbtPluginVersion = "0.13"
   val sbtPluginScalaVersion = "2.11.1"
   val scalaVersion = "2.11.1"
@@ -13,7 +13,7 @@ object Dependencies {
   val playVersion = "2.3.0-RC2"
   val webJarsVersion = "2.3-M1"
   val akkaVersion = "2.3.2"
-  val slickVersion = "2.0.0"
+  val slickVersion = "2.0.2"
   val echoPluginVersion = "0.1.1"
   val activatorAnalyticsVersion = "0.1.3"
   val aspectJVersion = "1.7.3"
