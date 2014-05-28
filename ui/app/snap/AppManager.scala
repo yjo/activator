@@ -284,6 +284,19 @@ object AppManager {
         val namePromise = Promise[String]()
         val nameFuture = namePromise.future
         def onConnect(client: SbtClient): Unit = {
+
+          val eventsSub = client.handleEvents({ event =>
+            import sbt.protocol._
+            val json = event match {
+              case e: LogEvent =>
+                Sbt.wrapEvent(e)
+              case _ =>
+                Sbt.synthesizeLogEvent(LogMessage.DEBUG, event.toString)
+            }
+            eventHandler.foreach(_.apply(json))
+          })
+          nameFuture.onComplete { _ => eventsSub.cancel() }
+
           client.lookupScopedKey("name") map { keys =>
             if (keys.isEmpty) {
               namePromise.tryFailure(new RuntimeException("Project has no 'name' setting"))
