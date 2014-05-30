@@ -11,7 +11,6 @@ object Dependencies {
   val sbtRcVersion = "1.0-5e3507d8e90bba4fe2cf1e10b1f6e926f359dd69"
 
   val playVersion = "2.3.0"
-  val webJarsVersion = "2.3-M1"
   val akkaVersion = "2.3.3"
   val slickVersion = "2.0.2"
   val echoPluginVersion = "0.1.2-RC1"
@@ -62,7 +61,6 @@ object Dependencies {
 
 
   // WebJars for the Activator UI
-  val webjarsPlay3     = "org.webjars" % "webjars-play_2.10" % Dependencies.webJarsVersion
   val requirejs        = "org.webjars" % "requirejs" % "2.1.11"
   val jquery           = "org.webjars" % "jquery" % "2.0.3"
   val knockout         = "org.webjars" % "knockout" % "3.0.0"
