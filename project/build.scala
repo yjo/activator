@@ -238,7 +238,7 @@ object TheActivatorBuild extends Build {
 
         // featured template deps
         // *** note: do not use %% here ***
-        "com.h2database" % "h2" % "1.3.170",
+        "com.h2database" % "h2" % "1.3.175",
         "com.novocode" % "junit-interface" % "0.10",
         "com.typesafe.slick" % "slick_2.11" % Dependencies.slickVersion,
         "junit" % "junit" % "4.11",
