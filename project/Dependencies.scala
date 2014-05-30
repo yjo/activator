@@ -10,9 +10,9 @@ object Dependencies {
   val templateCacheVersion = "1.0-ccaac9da8e01b066467fdad2c8bc27b187a5b032"
   val sbtRcVersion = "1.0-5e3507d8e90bba4fe2cf1e10b1f6e926f359dd69"
 
-  val playVersion = "2.3.0-RC2"
+  val playVersion = "2.3.0"
   val webJarsVersion = "2.3-M1"
-  val akkaVersion = "2.3.2"
+  val akkaVersion = "2.3.3"
   val slickVersion = "2.0.2"
   val echoPluginVersion = "0.1.2-RC1"
   val activatorAnalyticsVersion = "0.1.4"
@@ -49,9 +49,9 @@ object Dependencies {
   val specs2               = "org.specs2" % "specs2_2.11" % "2.3.11"
 
   // SBT 0.13 required plugins
-  val playSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % playVersion, "0.13", "2.11")
-  val eclipseSbt13Plugin     =  Defaults.sbtPluginExtra("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0", "0.13", "2.11")
-  val ideaSbt13Plugin        =  Defaults.sbtPluginExtra("com.github.mpeltonen" % "sbt-idea" % "1.5.2", "0.13", "2.11")
+  val playSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % playVersion, "0.13", "2.10")
+  val eclipseSbt13Plugin     =  Defaults.sbtPluginExtra("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0", "0.13", "2.10")
+  val ideaSbt13Plugin        =  Defaults.sbtPluginExtra("com.github.mpeltonen" % "sbt-idea" % "1.5.2", "0.13", "2.10")
   val echoSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-echo-play" % echoPluginVersion, "0.13", "2.10")
   val echoPlaySbt13Plugin    =  Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-echo" % echoPluginVersion, "0.13", "2.10")
 
