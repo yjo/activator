@@ -7,8 +7,8 @@ object Dependencies {
   val sbtPluginScalaVersion = "2.11.1"
   val scalaVersion = "2.11.1"
   val luceneVersion = "4.2.1"
-  val templateCacheVersion = "1.0-ccaac9da8e01b066467fdad2c8bc27b187a5b032"
-  val sbtRcVersion = "1.0-ee7a24c8a0aa49d207ae0a3b7d77ab4a70b90a01"
+  val templateCacheVersion = "1.0-a369fc100e493d824745e457b45685ecd4c890a5"
+  val sbtRcVersion = "1.0-46280b51037faa6d50698c46c8725d33b75cae1e"
 
   val playVersion = "2.3.0"
   val akkaVersion = "2.3.3"
