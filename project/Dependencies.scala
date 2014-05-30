@@ -8,14 +8,14 @@ object Dependencies {
   val scalaVersion = "2.11.1"
   val luceneVersion = "4.2.1"
   val templateCacheVersion = "1.0-ccaac9da8e01b066467fdad2c8bc27b187a5b032"
-  val sbtRcVersion = "1.0-fdb8a5e14cc1f165d2ddb4269626ec84ca6f7fbc"
+  val sbtRcVersion = "1.0-5e3507d8e90bba4fe2cf1e10b1f6e926f359dd69"
 
   val playVersion = "2.3.0-RC2"
   val webJarsVersion = "2.3-M1"
   val akkaVersion = "2.3.2"
   val slickVersion = "2.0.2"
-  val echoPluginVersion = "0.1.1"
-  val activatorAnalyticsVersion = "0.1.3"
+  val echoPluginVersion = "0.1.2-RC1"
+  val activatorAnalyticsVersion = "0.1.4"
   val aspectJVersion = "1.7.3"
 
   val activatorCommon      = "com.typesafe.activator" % "activator-common" % templateCacheVersion
@@ -52,9 +52,8 @@ object Dependencies {
   val playSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % playVersion, "0.13", "2.11")
   val eclipseSbt13Plugin     =  Defaults.sbtPluginExtra("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0", "0.13", "2.11")
   val ideaSbt13Plugin        =  Defaults.sbtPluginExtra("com.github.mpeltonen" % "sbt-idea" % "1.5.2", "0.13", "2.11")
-  // TODO (h3nk3): Uncomment when 2.11 version of Echo is available
-  //val echoSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-echo-play" % echoPluginVersion, "0.13", "2.11")
-  //val echoPlaySbt13Plugin    =  Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-echo" % echoPluginVersion, "0.13", "2.11")
+  val echoSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-echo-play" % echoPluginVersion, "0.13", "2.10")
+  val echoPlaySbt13Plugin    =  Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-echo" % echoPluginVersion, "0.13", "2.10")
 
   // Embedded databases / index
   val lucene = "org.apache.lucene" % "lucene-core" % luceneVersion
@@ -74,8 +73,7 @@ object Dependencies {
   val keymage          = "org.webjars" % "keymage" % "1.0.1"
 
   // Analyzers used by Inspect
-  // TODO (h3nk3): Uncomment when 2.11 version of Elucidator is available
-  //val activatorAnalytics = "com.typesafe.activator"  %% "analytics" % activatorAnalyticsVersion
+  val activatorAnalytics = "com.typesafe.activator"  %% "analytics" % activatorAnalyticsVersion
 
   // Mini DSL
   // DSL for adding remote deps like local deps.

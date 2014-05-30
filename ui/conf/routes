@@ -41,8 +41,7 @@ GET         /app/:id/tutorial/*location                  controllers.Application
 GET         /home/stream                                 controllers.Application.homeStream
 
 # Console
-#TODO (h3nk3) : uncomment when Inspect works for 2.11/2.3.2
-#GET         /api/console/:id                             controllers.ConsoleController.connectConsole(id)
+GET         /api/console/:id                             controllers.ConsoleController.connectConsole(id)
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /public/*file                                controllers.Assets.at(path="/public", file)
