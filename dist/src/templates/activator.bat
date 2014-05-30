@@ -33,7 +33,11 @@ if defined var1 (
   )
 )
 
-if "%ACTIVATOR_HOME%"=="" set "ACTIVATOR_HOME=%~dp0"
+if "%ACTIVATOR_HOME%"=="" (
+	set "ACTIVATOR_HOME=%~dp0"
+	@REM remove trailing "\" from path
+	set ACTIVATOR_HOME=!ACTIVATOR_HOME:~0,-1!
+)
 
 set ERROR_CODE=0
 ${{template_declares}}
@@ -143,7 +147,7 @@ rem We use the value of the JAVA_OPTS environment variable if defined, rather th
 set _JAVA_OPTS=%JAVA_OPTS%
 if "%_JAVA_OPTS%"=="" set _JAVA_OPTS=%CFG_OPTS%
 
-set DEBUG_OPTS=""
+set DEBUG_OPTS=
 
 rem Loop through the arguments, building remaining args in args variable
 set args=
@@ -192,7 +196,7 @@ rem We don't even bother with UNC paths.
 set JAVA_FRIENDLY_HOME_1=/!ACTIVATOR_HOME:\=/!
 set JAVA_FRIENDLY_HOME=/!JAVA_FRIENDLY_HOME_1: =%%20!
 
-"%_JAVACMD%" %DEBUG_OPTS% %MEM_OPTS% %ACTIVATOR_OPTS% %SBT_OPTS% %_JAVA_OPTS% "-Dactivator.home=%JAVA_FRIENDLY_HOME%" -jar "%ACTIVATOR_HOME%\%ACTIVATOR_LAUNCH_JAR%" %CMDS%
+%_JAVACMD% %DEBUG_OPTS% %MEM_OPTS% %ACTIVATOR_OPTS% %SBT_OPTS% %_JAVA_OPTS% "-Dactivator.home=%JAVA_FRIENDLY_HOME%" -jar "%ACTIVATOR_HOME%\%ACTIVATOR_LAUNCH_JAR%" %CMDS%
 if ERRORLEVEL 1 goto error
 goto end
 
