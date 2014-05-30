@@ -239,18 +239,20 @@ object TheActivatorBuild extends Build {
         // featured template deps
         // *** note: do not use %% here ***
         "com.h2database" % "h2" % "1.3.170",
-        "com.novocode" % "junit-interface" % "0.7",
+        "com.novocode" % "junit-interface" % "0.10",
         "com.typesafe.slick" % "slick_2.11" % Dependencies.slickVersion,
         "junit" % "junit" % "4.11",
         "org.slf4j" % "slf4j-nop" % "1.6.4",
         "org.fusesource.jansi" % "jansi" % "1.11",
         "org.scalatest" % "scalatest_2.11" % "2.1.6",
 
-        // TODO : update to Scala versions when plugins are available in 2.11
         Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-jshint" % "1.0.0", "0.13", "2.10"),
-        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-rjs" % "1.0.0", "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-rjs" % "1.0.1", "0.13", "2.10"),
         Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-digest" % "1.0.0", "0.13", "2.10"),
         Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-mocha" % "1.0.0", "0.13", "2.10"),
+        // reactive maps using an older sbt-gzip, later we should go back to one copy
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-gzip" % "1.0.0", "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-gzip" % "1.0.1", "0.13", "2.10"),
 
         // transient dependencies used in offline mode
         "org.scala-lang" % "jline" % "2.10.4",
@@ -266,7 +268,18 @@ object TheActivatorBuild extends Build {
         "com.typesafe.play" % "play-cache_2.11" % Dependencies.playVersion,
         "com.typesafe.play" % "play-docs_2.11" % Dependencies.playVersion,
         "com.typesafe.play" % "anorm_2.11" % Dependencies.playVersion,
-        "com.typesafe.play" % "play-ws_2.11" % Dependencies.playVersion
+        "com.typesafe.play" % "play-ws_2.11" % Dependencies.playVersion,
+
+        "org.webjars" % "bootstrap" % "2.3.1",
+        "org.webjars" % "flot" % "0.8.0",
+        "org.webjars" % "bootstrap" % "3.0.0",
+        "org.webjars" % "knockout" % "2.3.0",
+        "org.webjars" % "requirejs" % "2.1.11-1",
+        "org.webjars" % "leaflet" % "0.7.2",
+        "org.webjars" % "squirejs" % "0.1.0",
+
+        "com.typesafe.play.extras" % "play-geojson_2.11" % "1.1.0",
+        "com.typesafe.akka" % "akka-contrib_2.11" % Dependencies.akkaVersion
         ),
       Keys.mappings in S3.upload <<= (Keys.packageBin in Universal, Packaging.minimalDist, Keys.version) map { (zip, minimalZip, v) =>
         Seq(minimalZip -> ("typesafe-activator/%s/typesafe-activator-%s-minimal.zip" format (v, v)),
