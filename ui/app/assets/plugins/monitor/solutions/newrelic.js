@@ -1,10 +1,10 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['main/pluginapi', 'services/newrelic', 'text!./newrelic.html', 'css!./newrelic.css'],
-  function(api, newrelic, template, css){
+define(['commons/utils', 'commons/widget', 'services/newrelic', 'text!./newrelic.html', 'css!./newrelic.css'],
+  function(utils, Widget, newrelic, template, css){
 
-    var NewRelic = api.Class(api.Widget,{
+    var NewRelic = utils.Class(Widget,{
       id: 'newrelic-widget',
       template: template,
       init: function(args) {

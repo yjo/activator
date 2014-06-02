@@ -3,7 +3,8 @@
  */
 define([
   'main/plugins',
-  'main/pluginapi',
+  'commons/utils',
+  'commons/widget',
   'text!./monitor.html',
   'text!./monitorWidget.html',
   './solutions/newrelic',
@@ -11,7 +12,8 @@ define([
   'css!./monitor.css'
 ], function(
   plugins,
-  api,
+  utils,
+  Widget,
   template,
   widgetTemplate,
   NewRelic,
@@ -51,11 +53,13 @@ define([
 
 // });
 
+  console.log("HELLO!");
 
-    var MonitorWidget = api.Class(api.Widget, {
+    var MonitorWidget = utils.Class(Widget, {
       id: 'monitor-widget',
       template: widgetTemplate,
       init: function(args) {
+        console.log("In init!!");
         var self = this;
         self.crumbs = ko.observableArray([]);
         self.views = {

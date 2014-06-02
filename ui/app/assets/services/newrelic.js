@@ -3,7 +3,7 @@
  */
 define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'], function(utils, streams, settings, build) {
 
-  settings.register("newrelic.licenseKey", "");
+  var licenseKey = settings.observable("newrelic.licenseKey", "");
 
   function nrMessage(type) {
     return { request: 'NewRelicRequest', type: type };
@@ -72,7 +72,7 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
       });
       console.log("Making initial request to check NR availability");
       streams.send(nrMessage("available"));
-      self.licenseKey = settings.newrelic.licenseKey;
+      self.licenseKey = licenseKey;
       self.provision = function() {
         streams.send(nrMessage("provision"))
       };
