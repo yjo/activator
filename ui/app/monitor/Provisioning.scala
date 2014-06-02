@@ -16,6 +16,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import JsonHelper._
+import play.api.Play.current
 
 object Provisioning {
   import snap.HttpHelper._

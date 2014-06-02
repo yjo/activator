@@ -86,10 +86,10 @@ object HttpHelper {
     holder: WS.WSRequestHolder,
     observer: ProgressObserver): Future[Iteratee[Array[Byte], File]] = {
     holder.get {
-      case ResponseHeaders(200, rh) =>
+      case DefaultWSResponseHeaders(200, rh) =>
         val contentLength = rh.get(play.api.http.HeaderNames.CONTENT_LENGTH).flatMap(_.headOption.map(_.toInt))
         Cont(step(contentLength, destination, outputStream, observer))
-      case ResponseHeaders(x, _) => throw new RuntimeException(s"non-200 response code: $x for request ${holder.url}")
+      case DefaultWSResponseHeaders(x, _) => throw new RuntimeException(s"non-200 response code: $x for request ${holder.url}")
     }
   }
 
@@ -99,10 +99,10 @@ object HttpHelper {
     holder: WS.WSRequestHolder,
     observer: ProgressObserver)(implicit wrt: Writeable[T], ct: ContentTypeOf[T]): Future[Iteratee[Array[Byte], File]] = {
     holder.postAndRetrieveStream(body) {
-      case ResponseHeaders(200, rh) =>
+      case DefaultWSResponseHeaders(200, rh) =>
         val contentLength = rh.get(play.api.http.HeaderNames.CONTENT_LENGTH).flatMap(_.headOption.map(_.toInt))
         Cont(step(contentLength, destination, outputStream, observer))
-      case ResponseHeaders(x, _) => throw new RuntimeException(s"non-200 response code: $x for request ${holder.url}")
+      case DefaultWSResponseHeaders(x, _) => throw new RuntimeException(s"non-200 response code: $x for request ${holder.url}")
     }
   }
 
@@ -112,10 +112,10 @@ object HttpHelper {
     destination: File = File.createTempFile("activator_", ".tmp"),
     executor: (File, FileOutputStream, WS.WSRequestHolder, ProgressObserver) => Future[Iteratee[Array[Byte], File]] = doGet,
     timeout: akka.util.Timeout = Akka.longTimeoutThatIsAProblem): Future[File] = {
-    import com.ning.http.client.Realm.AuthScheme
+    // import com.ning.http.client.Realm.AuthScheme
     val outputStream = new FileOutputStream(destination)
     val finalHolder = (sys.props.get("http.proxyUser"), sys.props.get("http.proxyPassword")) match {
-      case (Some(u), Some(p)) => holder.withAuth(u, p, AuthScheme.BASIC) // <- Only viable option?
+      case (Some(u), Some(p)) => holder.withAuth(u, p, WSAuthScheme.BASIC) // <- Only viable option?
       case _ => holder
     }
 

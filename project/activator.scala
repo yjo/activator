@@ -115,7 +115,8 @@ object ActivatorBuild {
     Project("activator-" + name, file(name))
     .enablePlugins(PlayScala, SbtWeb)
     .noAutoPgp
-    settings(libraryDependencies += "com.typesafe.play" %% "filters-helpers" % play.core.PlayVersion.current)
+    settings(libraryDependencies ++= Seq("com.typesafe.play" %% "filters-helpers" % play.core.PlayVersion.current,
+                                         "com.typesafe.play" %% "play-ws" % play.core.PlayVersion.current))
     settings(LessKeys.verbose := true)
     settings(activatorDefaults:_*)
   )
