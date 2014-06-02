@@ -57,10 +57,10 @@ trait OverviewHandlerBase extends PagingRequestHandler[OverviewSort, OverviewHan
 
   def useMetadataStats(sender: ActorRef, stats: MetadataStats, errorStats: ErrorStats, currentStorageTime: Long): Unit
   def onModuleInformation(sender: ActorRef, mi: OverviewModuleInfo): Unit = withPagingDefaults(mi) { (offset, limit) =>
-    val metadataFuture = future { repository.metadataStatsRepository.findFiltered(mi.time, mi.scope, mi.modifiers.anonymous, mi.modifiers.temporary) }
-    val spanFuture = future { repository.summarySpanStatsRepository.findMetadata(mi.time, mi.scope, mi.modifiers.anonymous, mi.modifiers.temporary) }
-    val deviationFuture = future { repository.errorStatsRepository.findWithinTimePeriod(mi.time, mi.scope.node, mi.scope.actorSystem) }
-    val currentStorageTimeFuture = future { repository.lifecycleRepository.currentStorageTime }
+    val metadataFuture = Future { repository.metadataStatsRepository.findFiltered(mi.time, mi.scope, mi.modifiers.anonymous, mi.modifiers.temporary) }
+    val spanFuture = Future { repository.summarySpanStatsRepository.findMetadata(mi.time, mi.scope, mi.modifiers.anonymous, mi.modifiers.temporary) }
+    val deviationFuture = Future { repository.errorStatsRepository.findWithinTimePeriod(mi.time, mi.scope.node, mi.scope.actorSystem) }
+    val currentStorageTimeFuture = Future { repository.lifecycleRepository.currentStorageTime }
     for {
       metadata <- metadataFuture
       spans <- spanFuture
