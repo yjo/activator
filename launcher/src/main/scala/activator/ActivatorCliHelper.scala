@@ -6,6 +6,7 @@ package activator
 import sbt.complete.Parser
 import akka.actor.ActorSystem
 import scala.concurrent.duration._
+import java.util.concurrent.TimeUnit
 
 trait ActivatorCliHelper {
   import ActivatorCliHelper._
@@ -27,5 +28,5 @@ trait ActivatorCliHelper {
 
 object ActivatorCliHelper {
   val system = ActorSystem("default")
-  val defaultDuration = Duration(system.settings.config.getMilliseconds("activator.timeout"), MILLISECONDS)
+  val defaultDuration = Duration(system.settings.config.getDuration("activator.timeout", MILLISECONDS), MILLISECONDS)
 }

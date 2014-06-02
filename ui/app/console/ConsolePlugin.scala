@@ -21,17 +21,15 @@ class ConsolePlugin(app: Application) extends Plugin {
   override def onStart(): Unit = {
     require(env eq null)
     env = ConsolePluginEnvironment(app.configuration.underlying)
-    // TODO : uncomment lines below when Activator runs on Play 2.3 and Scala 2.11
-    //ReceiveMain.main(Array())
-    //AnalyzerManager.create(config)
+    ReceiveMain.main(Array())
+    AnalyzerManager.create(config)
   }
 
   override def onStop(): Unit = {
     try {
       require(env ne null)
-      // TODO : uncomment lines below when Activator runs on Play 2.3 and Scala 2.11
-      //AnalyzerManager.delete()
-      //ReceiveMain.shutdownReceiver()
+      AnalyzerManager.delete()
+      ReceiveMain.shutdownReceiver()
       env.close()
     } finally {
       env = null

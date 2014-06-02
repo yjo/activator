@@ -16,7 +16,7 @@ import scala.util.control.NonFatal
 object ActivatorCli extends ActivatorCliHelper {
   case class ProjectInfo(projectName: String = "N/A", templateName: String = "N/A", file: Option[File] = None)
 
-  def apply(configuration: AppConfiguration): Int = try withContextClassloader {
+  def apply(configuration: AppConfiguration): Int = withContextClassloader {
     // TODO - move this into a common shared location between CLI and GUI.
     val cache = UICacheHelper.makeDefaultCache(ActivatorCliHelper.system)
     val metadata = TemplateHandler.downloadTemplates(cache, ActivatorCliHelper.defaultDuration)
@@ -145,13 +145,13 @@ object ActivatorCli extends ActivatorCliHelper {
 
   private def printUsage(name: String, dir: File): Unit = {
     // TODO - Cross-platform-ize these strings! Possibly keep script name in SnapProperties.
-    System.out.println(s"""|To run "$name" from the command-line, run:
+    System.out.println(s"""|To run "$name" from the command line, "cd $name" then:
                            |${dir.getAbsolutePath}/${SCRIPT_NAME} run
                            |
-                           |To run the test for "$name" from the command-line, run:
+                           |To run the test for "$name" from the command line, "cd $name" then:
                            |${dir.getAbsolutePath}/${SCRIPT_NAME} test
                            |
-                           |To run the Activator UI for "$name" from the command-line, run:
+                           |To run the Activator UI for "$name" from the command line, "cd $name" then:
                            |${dir.getAbsolutePath}/${SCRIPT_NAME} ui
                            |""".stripMargin)
   }

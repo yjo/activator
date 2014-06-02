@@ -52,14 +52,15 @@ object ActivatorBuild {
       javacOptions in (Compile, doc) := Seq("-source", "1.6"),
       libraryDependencies += Dependencies.junitInterface % "test",
       scalaVersion := Dependencies.scalaVersion,
-      scalaBinaryVersion := "2.10",
+      scalaBinaryVersion := "2.11",
       ScalariformKeys.preferences in Compile := formatPrefs,
       ScalariformKeys.preferences in Test    := formatPrefs,
       makeFixWhitespace(Compile),
       makeFixWhitespace(Test),
       compileInputs in (Compile, compile) <<= (compileInputs in (Compile, compile)) dependsOn (fixWhitespace in Compile),
       compileInputs in (Test, compile) <<= (compileInputs in (Test, compile)) dependsOn (fixWhitespace in Test)
-    ) ++ JavaVersionCheck.javacVersionCheckSettings ++ SbtPgp.settings
+    ) ++ JavaVersionCheck.javacVersionCheckSettings ++ SbtPgp.settings ++
+    net.virtualvoid.sbt.graph.Plugin.graphSettings
 
   def sbtShimPluginSettings: Seq[Setting[_]] =
     activatorDefaults ++

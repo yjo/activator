@@ -1,5 +1,5 @@
 <header id="header">
-  <button class="toggleNavigation" data-bind="click: navigation.toggle, event: {mouseover: navigation.sneakOn}"></button>
+  <button class="toggleNavigation" data-bind="click: navigation.toggle.bind(navigation), event: {mouseover: navigation.sneakOn.bind(navigation)}"></button>
 
   <dl id="layoutManager" class="dropdown dropdownNoEvent" data-bind="css: {active: panel.dropdownActive}">
     <dt data-bind="click: panel.toggle.bind(panel)"><span class="all-options" data-bind="click: panel.toggleDropdown.bind(panel)"></span></dt>
@@ -12,7 +12,7 @@
   <div id="omnisearch" data-bind="css: {busy: omnisearch.busy()}">
     <input type="text" name="keywords" placeholder="Type keywords or a command" autocomplete="off" data-bind="value: omnisearch.searchString, valueUpdate: 'keyup', event: {keyup: omnisearch.onKeyUp.bind(omnisearch), blur: omnisearch.onBlur.bind(omnisearch)}">
     <ul data-bind="css: {active: omnisearch.active()}, foreach: omnisearch.options">
-      <li data-bind="click: $parent.omnisearch.onOptionSelected.bind($parent.omnisearch), css: {selected: $index() == $parent.omnisearch.selected()}">
+      <li data-bind="click: $parent.omnisearch.onOptionSelected, css: {selected: $index() == $parent.omnisearch.selected()}">
         <span class="type" data-bind="text: type"></span>
         <span class="title" data-bind="text: title"></span>
         <span class="subtitle" data-bind="text: subtitle"></span>
@@ -24,14 +24,42 @@
     <a href="#"></a>
   </div>
 
-  <!--
-  <dl id="user" class="dropdown">
-    <dt></dt>
+  
+  <dl id="help" class="dropdown">
+    <dt>?</dt>
     <dd>
-      <iframe id="loginIFrame" src="https://typesafe.com/account/activator/frame"></iframe>
+      <div class="group documentation">
+        <h3>Documentation</h3>
+        <a target="_blank" href="http://typesafe.com/activator/docs">Activator full documentation</a>
+      </div>
+      <div class="group typesafe">
+        <h3>Professional support</h3>
+        <a target="_blank" href="http://typesafe.com/how/training">Training</a>
+        <a target="_blank" href="http://typesafe.com/how/consulting">Consulting</a>
+        <a target="_blank" href="http://typesafe.com/how/subscription">Typesafe Subscription</a>
+      </div>
+      <div class="group community">
+        <h3>Community support</h3>
+        <h4>Akka</h4>
+        <a target="_blank" href="http://akka.io/docs/">Documentation</a>
+        <a target="_blank" href="http://groups.google.com/group/akka-user">Mailing list</a>
+        <a target="_blank" href="http://stackoverflow.com/questions/tagged/akka">Stack Overflow</a>
+        <h4>Play</h4>
+        <a target="_blank" href="http://www.playframework.com/documentation/latest/Home">Documentation</a>
+        <a target="_blank" href="http://groups.google.com/forum/#!forum/play-framework">Mailing list</a>
+        <a target="_blank" href="http://stackoverflow.com/questions/tagged/playframework">Stack Overflow</a>
+        <h4>Scala</h4>
+        <a target="_blank" href="http://www.scala-lang.org/documentation/">Documentation</a>
+        <a target="_blank" href="http://www.scala-lang.org/community/">Mailing lists</a>
+        <a target="_blank" href="http://stackoverflow.com/questions/tagged/scala">Stack Overflow</a>
+        <h4>Slick</h4>
+        <a target="_blank" href="http://slick.typesafe.com/docs/">Documentation</a>
+        <a target="_blank" href="http://groups.google.com/group/scalaquery">Mailing list</a>
+        <a target="_blank" href="http://stackoverflow.com/questions/tagged/slick">Stack Overflow</a>
+      </div>
     </dd>
   </dl>
-  -->
+  
 
 <dl id="notifications" class="dropdown" data-bind="snapView: notifications"></dl>
 </header>

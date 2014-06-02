@@ -2,20 +2,21 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  val sbtVersion = "0.13.0"
+  val sbtVersion = "0.13.6-MSERVER-1"
   val sbtPluginVersion = "0.13"
-  val sbtPluginScalaVersion = "2.10.4"
-  val scalaVersion = "2.10.4"
+  val sbtPluginScalaVersion = "2.11.1"
+  val scalaVersion = "2.11.1"
   val luceneVersion = "4.2.1"
-  val templateCacheVersion = "0.3.1"
-  val sbtRcVersion = "1.0-687cea25e934e60bd9666a5de97f16ba31df86ce"
 
-  val playVersion = "2.3.0-RC1"
-  val webJarsVersion = "2.3-M1"
-  val akkaVersion = "2.3.2"
-  val slickVersion = "2.0.0"
-  val echoPluginVersion = "0.1.1"
-  val activatorAnalyticsVersion = "0.1.3"
+  val templateCacheVersion = "1.0-a369fc100e493d824745e457b45685ecd4c890a5"
+  val sbtRcVersion = "1.0-46280b51037faa6d50698c46c8725d33b75cae1e"
+
+  val playVersion = "2.3.0"
+  val akkaVersion = "2.3.3"
+  val slickVersion = "2.1.0-M2"
+  val echoPluginVersion = "0.1.3"
+  val activatorAnalyticsVersion = "0.1.5"
+
   val aspectJVersion = "1.7.3"
 
   val activatorCommon      = "com.typesafe.activator" % "activator-common" % templateCacheVersion
@@ -25,7 +26,7 @@ object Dependencies {
   val sbtLauncherInterface = "org.scala-sbt" % "launcher-interface" % sbtVersion
   val sbtMain              = "org.scala-sbt" % "main" % sbtVersion
   val sbtTheSbt            = "org.scala-sbt" % "sbt" % sbtVersion
-  val sbtIo                = "org.scala-sbt" % "io" % sbtVersion
+  val sbtIo                = "org.scala-sbt" % "io" % "0.13.6-MSERVER-1"
   val sbtLogging           = "org.scala-sbt" % "logging" % sbtVersion
   val sbtProcess           = "org.scala-sbt" % "process" % sbtVersion
 
@@ -35,16 +36,16 @@ object Dependencies {
 
   val sbtCompletion           = "org.scala-sbt" % "completion" % sbtVersion
 
-  val akkaActor            = "com.typesafe.akka" % "akka-actor_2.10" % akkaVersion
-  val akkaSlf4j            = "com.typesafe.akka" % "akka-slf4j_2.10" % akkaVersion
-  val akkaTestkit          = "com.typesafe.akka" % "akka-testkit_2.10"% akkaVersion
+  val akkaActor            = "com.typesafe.akka" %% "akka-actor" % akkaVersion
+  val akkaSlf4j            = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+  val akkaTestkit          = "com.typesafe.akka" %% "akka-testkit"% akkaVersion
 
   val commonsIo            = "commons-io" % "commons-io" % "2.0.1"
 
   val mimeUtil             = "eu.medsea.mimeutil" % "mime-util" % "2.1.1" exclude("org.slf4j", "slf4j-log4j12") exclude("org.slf4j", "slf4j-api") exclude("log4j", "log4j")
 
   val junitInterface       = "com.novocode" % "junit-interface" % "0.7"
-  val specs2               = "org.specs2" % "specs2_2.10" % "2.3.11"
+  val specs2               = "org.specs2" % "specs2_2.11" % "2.3.11"
 
   // SBT 0.13 required plugins
   val playSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % playVersion, "0.13", "2.10")
@@ -60,7 +61,6 @@ object Dependencies {
 
 
   // WebJars for the Activator UI
-  val webjarsPlay3     = "org.webjars" %% "webjars-play" % Dependencies.webJarsVersion
   val requirejs        = "org.webjars" % "requirejs" % "2.1.11"
   val jquery           = "org.webjars" % "jquery" % "2.0.3"
   val knockout         = "org.webjars" % "knockout" % "3.0.0"
