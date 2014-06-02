@@ -24,11 +24,13 @@ object Dependencies {
 
   // 2.10 sbt
   val sbtIo210             = "org.scala-sbt" % "io" % sbtVersion
+  // launcher interface is pure Java, no scala versioning
   val sbtLauncherInterface = "org.scala-sbt" % "launcher-interface" % sbtVersion
 
   // 2.11 sbt
   val sbtIo                = "org.scala-sbt" %% "io" % sbtVersion
-  val sbtCompletion        = "org.scala-sbt" %% "completion" % sbtVersion
+  // this doesn't actually exist for 2.11 yet
+  //val sbtCompletion        = "org.scala-sbt" %% "completion" % sbtVersion
 
   // sbtrc projects
   val sbtrcClient          = "com.typesafe.sbtrc" % "client-2-11" % sbtRcVersion
