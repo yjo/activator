@@ -55,7 +55,6 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
   log.debug(s"Creating AppActor for $location")
 
   // TODO configName/humanReadableName are cut-and-pasted into AppManager, fix
-  // TODO actually open the connector and use it
   val connector = SbtConnector(configName = "activator", humanReadableName = "Activator", location)
   val socket = context.actorOf(Props(new AppSocketActor()), name = "socket")
   val projectWatcher = context.actorOf(Props(new ProjectWatcher(location, newSourcesSocket = socket, appActor = self)),
