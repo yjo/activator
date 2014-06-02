@@ -8,8 +8,8 @@ object Dependencies {
   val scalaVersion = "2.11.1"
   val luceneVersion = "4.2.1"
 
-  val templateCacheVersion = "1.0-a369fc100e493d824745e457b45685ecd4c890a5"
-  val sbtRcVersion = "1.0-46280b51037faa6d50698c46c8725d33b75cae1e"
+  val templateCacheVersion = "1.0-5b61a82baa9bb0d9fe161752d6721fe6551eed54"
+  val sbtRcVersion = "1.0-505bbf5905a434292b468fc2ebe5768aef6d3d2e"
 
   val playVersion = "2.3.0"
   val akkaVersion = "2.3.3"
@@ -22,19 +22,17 @@ object Dependencies {
   val activatorCommon      = "com.typesafe.activator" % "activator-common" % templateCacheVersion
   val templateCache        = "com.typesafe.activator" % "activator-templates-cache" % templateCacheVersion
 
+  // 2.10 sbt
   val sbtIo210             = "org.scala-sbt" % "io" % sbtVersion
   val sbtLauncherInterface = "org.scala-sbt" % "launcher-interface" % sbtVersion
-  val sbtMain              = "org.scala-sbt" % "main" % sbtVersion
-  val sbtTheSbt            = "org.scala-sbt" % "sbt" % sbtVersion
-  val sbtIo                = "org.scala-sbt" % "io" % "0.13.6-MSERVER-1"
-  val sbtLogging           = "org.scala-sbt" % "logging" % sbtVersion
-  val sbtProcess           = "org.scala-sbt" % "process" % sbtVersion
+
+  // 2.11 sbt
+  val sbtIo                = "org.scala-sbt" %% "io" % sbtVersion
+  val sbtCompletion        = "org.scala-sbt" %% "completion" % sbtVersion
 
   // sbtrc projects
-  val sbtrcClient          = "com.typesafe.sbtrc" % "client" % sbtRcVersion
+  val sbtrcClient          = "com.typesafe.sbtrc" % "client-2-11" % sbtRcVersion
   val sbtrcIntegration     = "com.typesafe.sbtrc" % "integration-tests" % sbtRcVersion
-
-  val sbtCompletion           = "org.scala-sbt" % "completion" % sbtVersion
 
   val akkaActor            = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaSlf4j            = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
