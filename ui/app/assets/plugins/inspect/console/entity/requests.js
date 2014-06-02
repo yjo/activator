@@ -1,10 +1,10 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./requests.html', 'main/pluginapi', './../widget', '../format'], function(template, api, ConsoleWidget, format) {
+define(['text!./requests.html', 'commons/utils', './../widget', '../format'], function(template, utils, ConsoleWidget, format) {
 
 
-  var Requests = api.Class(ConsoleWidget, {
+  var Requests = utils.Class(ConsoleWidget, {
     id: 'console-requests-widget',
     template: template,
     init: function(args) {
@@ -14,7 +14,7 @@ define(['text!./requests.html', 'main/pluginapi', './../widget', '../format'], f
       this.data = ko.observable({ 'requests': [], 'total': 0 });
       this.limit = ko.observable('25');
       this.requests = ko.observableArray([]);
-      this.hasRequests = api.arrayGTZero(self.requests);
+      this.hasRequests = utils.arrayGTZero(self.requests);
     },
     changeSort: function(sortBy) {
       return function(){

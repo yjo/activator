@@ -1,7 +1,21 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(["text!./viewWrapper.html", "text!./viewDefault.html", "./imageView", "./codeView", 'main/pluginapi'], function(viewOuter, defaultTemplate, ImageView, CodeView, api) {
+define([
+  "./imageView",
+  "./codeView",
+  'commons/utils',
+  'commons/widget',
+  "text!./viewWrapper.html",
+  "text!./viewDefault.html"
+], function(
+  ImageView,
+  CodeView,
+  utils,
+  Widget,
+  viewOuter,
+  defaultTemplate
+){
 
   function open(location) {
     return $.ajax({
@@ -24,7 +38,7 @@ define(["text!./viewWrapper.html", "text!./viewDefault.html", "./imageView", "./
   }
 
   // Default view for when we don't know which other to use.
-  var DefaultView = api.Class(api.Widget, {
+  var DefaultView = utils.Class(Widget, {
     id: 'code-default-view',
     template: defaultTemplate,
     init: function(args) {
@@ -42,7 +56,7 @@ define(["text!./viewWrapper.html", "text!./viewDefault.html", "./imageView", "./
   });
 
   // Fetch utility
-  var FileBrowser = api.Class(api.Widget, {
+  var FileBrowser = utils.Class(Widget, {
     id: 'file-browser-widget',
     template: viewOuter,
     init: function(args) {

@@ -1,8 +1,8 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['main/pluginapi', 'commons/streams', 'services/build', './console/console', 'services/connection', 'text!./inspect.html', 'css!./inspect.css'],
-  function(api, streams, build, Console, Connection, template){
+define(['commons/streams', 'services/build', './console/console', 'services/connection', 'text!./inspect.html', 'css!./inspect.css'],
+  function(streams, build, Console, Connection, template){
 
     var InspectState = {
       inspectEnabled: ko.computed(function() {

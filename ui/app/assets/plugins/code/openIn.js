@@ -1,10 +1,8 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./openInEclipse.html', 'text!./openInIdea.html', 'main/pluginapi', 'widgets/overlay/overlay', 'services/log', 'widgets/log/log'],
-function(eclipseTemplate, ideaTemplate, api, Overlay, Log, LogView){
-
-  var sbt = api.sbt;
+define(['text!./openInEclipse.html', 'text!./openInIdea.html', 'commons/utils', 'commons/widget', 'services/sbt', 'widgets/overlay/overlay', 'services/log', 'widgets/log/log'],
+function(eclipseTemplate, ideaTemplate, utils, Widget, sbt, Overlay, Log, LogView){
 
   function browse(location) {
     return $.ajax({
@@ -17,7 +15,7 @@ function(eclipseTemplate, ideaTemplate, api, Overlay, Log, LogView){
     });
   }
 
-  var OpenIn = api.Class(api.Widget, {
+  var OpenIn = utils.Class(Widget, {
     init: function(parameters) {
       var self = this;
       self.overlay = new Overlay({
@@ -107,7 +105,7 @@ function(eclipseTemplate, ideaTemplate, api, Overlay, Log, LogView){
     }
   });
 
-  var OpenInEclipse = api.Class(OpenIn, {
+  var OpenInEclipse = utils.Class(OpenIn, {
     id: 'open-in-eclipse-widget',
     template: eclipseTemplate,
     overlayClass: 'open-in-eclipse',
@@ -116,7 +114,7 @@ function(eclipseTemplate, ideaTemplate, api, Overlay, Log, LogView){
     ideName: 'Eclipse'
   });
 
-  var OpenInIdea = api.Class(OpenIn, {
+  var OpenInIdea = utils.Class(OpenIn, {
     id: 'open-in-idea-widget',
     template: ideaTemplate,
     overlayClass: 'open-in-idea',

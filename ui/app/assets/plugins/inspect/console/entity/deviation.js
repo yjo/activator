@@ -1,5 +1,5 @@
-define(['text!./deviation.html', 'main/pluginapi', './../widget', './../format', 'commons/templates', 'text!./tracetree.html'],
-  function(template, api, ConsoleWidget, formatter, templates, traceTreeTemplate) {
+define(['text!./deviation.html', 'commons/utils', './../widget', './../format', 'commons/templates', 'text!./tracetree.html'],
+  function(template, utils, ConsoleWidget, formatter, templates, traceTreeTemplate) {
 
     var systemEvents = ["EventStreamError","EventStreamWarning","EventStreamDeadLetter","EventStreamUnhandledMessage",
                         "TopLevelActorRequested","TopLevelActorCreated","SysMsgDispatched","SysMsgReceived","SysMsgCompleted"];
@@ -65,7 +65,7 @@ define(['text!./deviation.html', 'main/pluginapi', './../widget', './../format',
         return result;
     }
 
-      return api.Class(ConsoleWidget, {
+      return utils.Class(ConsoleWidget, {
         id: 'console-deviation-widget',
         template: template,
         classInit: function(proto) {

@@ -134,7 +134,7 @@ private[snap] object ConfigFile {
     // a parent file which eventually leads to NPE.
     val canonicalFile = file.getCanonicalFile
     require(canonicalFile.getParentFile ne null)
-    future {
+    Future {
       val obj = parse(canonicalFile, upgradeFrom)
       new ConfigFile(canonicalFile, obj)
     } flatMap { cf =>
@@ -151,7 +151,7 @@ private[snap] object ConfigFile {
   def rewrite(configFile: ConfigFile)(f: RootConfig => RootConfig): Future[ConfigFile] = {
     val newJson = Json.toJson(f(configFile.config))
 
-    future {
+    Future {
       // we parse the json we create back before doing any IO, as a sanity check
       val newConfig = new ConfigFile(configFile.file, newJson)
 

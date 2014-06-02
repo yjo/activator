@@ -21,7 +21,6 @@ class ConsolePlugin(app: Application) extends Plugin {
   override def onStart(): Unit = {
     require(env eq null)
     env = ConsolePluginEnvironment(app.configuration.underlying)
-    // TODO -> disable not used analyzers
     ReceiveMain.main(Array())
     AnalyzerManager.create(config)
   }

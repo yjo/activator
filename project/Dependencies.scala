@@ -2,32 +2,29 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  val sbtVersion = "0.13.0"
+  val sbtVersion = "0.13.5"
   val sbtPluginVersion = "0.13"
-  val sbtPluginScalaVersion = "2.10.2"
-  val scalaVersion = "2.10.2"
-  val sbtSnapshotVersion = "0.13.0"
+  val sbtPluginScalaVersion = "2.11.1"
+  val scalaVersion = "2.11.1"
   val luceneVersion = "4.2.1"
-  val templateCacheVersion = "0.3.0"
-  // echo enabled version (1.1.x)
-  val sbtRcVersion = "1.0-723cf0f30f307a3f0c36d6df50423e4ec85c5f53"
+  val templateCacheVersion = "1.0-a369fc100e493d824745e457b45685ecd4c890a5"
+  val sbtRcVersion = "1.0-46280b51037faa6d50698c46c8725d33b75cae1e"
 
-  val playVersion = "2.2.1"
-  val webJarsVersion = "2.2.1"
-  val akkaVersion = "2.2.3"
-  val slickVersion = "2.0.0"
-  val echoPluginVersion = "0.1.1"
-  val activatorAnalyticsVersion = "0.1.3"
+  val playVersion = "2.3.0"
+  val akkaVersion = "2.3.3"
+  val slickVersion = "2.1.0-M2"
+  val echoPluginVersion = "0.1.3"
+  val activatorAnalyticsVersion = "0.1.5"
   val aspectJVersion = "1.7.3"
 
   val activatorCommon      = "com.typesafe.activator" % "activator-common" % templateCacheVersion
   val templateCache        = "com.typesafe.activator" % "activator-templates-cache" % templateCacheVersion
 
-  val sbtIo210             = "org.scala-sbt" % "io" % sbtSnapshotVersion
+  val sbtIo210             = "org.scala-sbt" % "io" % sbtVersion
   val sbtLauncherInterface = "org.scala-sbt" % "launcher-interface" % sbtVersion
   val sbtMain              = "org.scala-sbt" % "main" % sbtVersion
   val sbtTheSbt            = "org.scala-sbt" % "sbt" % sbtVersion
-  val sbtIo                = "org.scala-sbt" % "io" % sbtVersion
+  val sbtIo                = "org.scala-sbt" % "io" % "0.13.6-MSERVER-1"
   val sbtLogging           = "org.scala-sbt" % "logging" % sbtVersion
   val sbtProcess           = "org.scala-sbt" % "process" % sbtVersion
 
@@ -37,20 +34,18 @@ object Dependencies {
   // Probes
   val sbtrcProbe13           = "com.typesafe.sbtrc" % "sbt-rc-probe-0-13" % sbtRcVersion
   val sbtshimUiInterface13   = "com.typesafe.sbtrc" % "sbt-rc-ui-interface-0-13" % sbtRcVersion
+  val sbtCompletion           = "org.scala-sbt" % "completion" % sbtVersion
 
-  // TODO - Don't use a snapshot version for this...
-  val sbtCompletion           = "org.scala-sbt" % "completion" % sbtSnapshotVersion
-
-  val akkaActor            = "com.typesafe.akka" % "akka-actor_2.10" % akkaVersion
-  val akkaSlf4j            = "com.typesafe.akka" % "akka-slf4j_2.10" % akkaVersion
-  val akkaTestkit          = "com.typesafe.akka" % "akka-testkit_2.10" % akkaVersion
+  val akkaActor            = "com.typesafe.akka" %% "akka-actor" % akkaVersion
+  val akkaSlf4j            = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+  val akkaTestkit          = "com.typesafe.akka" %% "akka-testkit"% akkaVersion
 
   val commonsIo            = "commons-io" % "commons-io" % "2.0.1"
 
   val mimeUtil             = "eu.medsea.mimeutil" % "mime-util" % "2.1.1" exclude("org.slf4j", "slf4j-log4j12") exclude("org.slf4j", "slf4j-api") exclude("log4j", "log4j")
 
   val junitInterface       = "com.novocode" % "junit-interface" % "0.7"
-  val specs2               = "org.specs2" % "specs2_2.10" % "2.3.8"
+  val specs2               = "org.specs2" % "specs2_2.11" % "2.3.11"
 
   // SBT 0.13 required plugins
   val playSbt13Plugin        =  Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % playVersion, "0.13", "2.10")
@@ -66,13 +61,13 @@ object Dependencies {
 
 
   // WebJars for the Activator UI
-  val webjarsPlay3     = "org.webjars" %% "webjars-play" % Dependencies.webJarsVersion
-  val requirejs        = "org.webjars" % "requirejs" % "2.1.8"
+  val requirejs        = "org.webjars" % "requirejs" % "2.1.11"
   val jquery           = "org.webjars" % "jquery" % "2.0.3"
   val knockout         = "org.webjars" % "knockout" % "3.0.0"
-  val ace              = "org.webjars" % "ace" % "04.09.2013"
-  val requireCss       = "org.webjars" % "require-css" % "0.0.7-3"
-  val requireText      = "org.webjars" % "requirejs-text" % "2.0.10"
+  val ace              = "org.webjars" % "ace" % "1.1.3"
+  // TODO : Use again when there is are new webjars versions to be pulled in
+  //val requireCss       = "org.webjars" % "require-css" % "0.0.7-3"
+  //val requireText      = "org.webjars" % "requirejs-text" % "2.0.10"
   val keymage          = "org.webjars" % "keymage" % "1.0.1"
 
   // Analyzers used by Inspect

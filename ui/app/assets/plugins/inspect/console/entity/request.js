@@ -1,6 +1,6 @@
-define(['text!./request.html', 'main/pluginapi', './../widget'], function(template, api, ConsoleWidget) {
+define(['text!./request.html', 'commons/utils', './../widget'], function(template, utils, ConsoleWidget) {
 
-  return api.Class(ConsoleWidget, {
+  return utils.Class(ConsoleWidget, {
     id: 'console-request-widget',
     template: template,
     init: function(args) {

@@ -1,6 +1,8 @@
 import sbt._
 import Keys._
-import play.Project._
+import play.PlayScala
+import com.typesafe.sbt.less.Import.LessKeys
+import com.typesafe.sbt.web.SbtWeb
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.SbtGit
@@ -18,8 +20,6 @@ object ActivatorBuild {
   }
 
   val typesafeIvyReleases = Resolver.url("typesafe-ivy-private-releases", new URL("http://private-repo.typesafe.com/typesafe/ivy-releases/"))(Resolver.ivyStylePatterns)
-  // TODO - When SBT 0.13 is out we won't need this...
-  val typesafeIvySnapshots = Resolver.url("typesafe-ivy-private-snapshots", new URL("http://private-repo.typesafe.com/typesafe/ivy-snapshots/"))(Resolver.ivyStylePatterns)
 
   private val fixWhitespace = TaskKey[Seq[File]]("fix-whitespace")
 
@@ -40,9 +40,6 @@ object ActivatorBuild {
       crossPaths := false,
       resolvers += "typesafe-mvn-releases" at "http://repo.typesafe.com/typesafe/releases/",
       resolvers += Resolver.url("typesafe-ivy-releases", new URL("http://repo.typesafe.com/typesafe/releases/"))(Resolver.ivyStylePatterns),
-      // TODO - This won't be needed when SBT 0.13 is released...
-      resolvers += typesafeIvyReleases,
-      resolvers += typesafeIvySnapshots,
       // TODO - Publish to ivy for sbt plugins, maven central otherwise?
       publishTo := Some(typesafeIvyReleases),
       publishMavenStyle := false,
@@ -55,14 +52,15 @@ object ActivatorBuild {
       javacOptions in (Compile, doc) := Seq("-source", "1.6"),
       libraryDependencies += Dependencies.junitInterface % "test",
       scalaVersion := Dependencies.scalaVersion,
-      scalaBinaryVersion := "2.10",
+      scalaBinaryVersion := "2.11",
       ScalariformKeys.preferences in Compile := formatPrefs,
       ScalariformKeys.preferences in Test    := formatPrefs,
       makeFixWhitespace(Compile),
       makeFixWhitespace(Test),
       compileInputs in (Compile, compile) <<= (compileInputs in (Compile, compile)) dependsOn (fixWhitespace in Compile),
       compileInputs in (Test, compile) <<= (compileInputs in (Test, compile)) dependsOn (fixWhitespace in Test)
-    ) ++ JavaVersionCheck.javacVersionCheckSettings ++ SbtPgp.settings
+    ) ++ JavaVersionCheck.javacVersionCheckSettings ++ SbtPgp.settings ++
+    net.virtualvoid.sbt.graph.Plugin.graphSettings
 
   def sbtShimPluginSettings: Seq[Setting[_]] =
     activatorDefaults ++
@@ -75,7 +73,7 @@ object ActivatorBuild {
 
   implicit class NoAutoPgp(val project: Project) extends AnyVal {
     def noAutoPgp: Project = {
-      // the default is autoSettings(userSettings, allPlugins, defaultSbtFiles)
+      // the default is autoSettings(autoPlugins, buildScalaSettings, userSettings, nonAutoPlugins, defaultSbtFiles)
       // userSettings = Project.settings
       // we want to push PGP before userSettings so we can override
       // publishSigned and publishLocalSigned,
@@ -83,9 +81,12 @@ object ActivatorBuild {
       def isPgp(plugin: Plugin): Boolean =
         plugin.getClass.getName.startsWith("com.typesafe.sbt.SbtPgp")
       import AddSettings._
-      project.autoSettings(userSettings,
-                           plugins(!isPgp(_)),
-                           defaultSbtFiles)
+      project.settingSets(
+        autoPlugins,
+        buildScalaFiles,
+        userSettings,
+        plugins(!isPgp(_)),
+        defaultSbtFiles)
     }
   }
 
@@ -111,19 +112,19 @@ object ActivatorBuild {
   )
 
   def ActivatorPlayProject(name: String): Project = (
-    play.Project("activator-" + name, path = file(name))
+    Project("activator-" + name, file(name))
+    .enablePlugins(PlayScala, SbtWeb)
     .noAutoPgp
+    settings(libraryDependencies += "com.typesafe.play" %% "filters-helpers" % play.core.PlayVersion.current)
+    settings(LessKeys.verbose := true)
     settings(activatorDefaults:_*)
-    settings(libraryDependencies += play.Keys.filters)
   )
 
   def ActivatorJavaProject(name: String): Project = (
     Project("activator-" + name, file(name))
     .noAutoPgp
     settings(activatorDefaults:_*)
-    settings(
-        autoScalaLibrary := false
-    )
+    settings(autoScalaLibrary := false)
   )
 }
 

@@ -141,8 +141,28 @@ define([], function() {
     return new ctor();
   };
 
+
+  function arrayGTZero(obs) {
+    return ko.computed(function() {
+      if (obs().length == undefined) {
+        return false;
+      }
+
+      return obs().length > 0
+    });
+  }
+
+  function valueGTZero(obs) {
+    return ko.computed(function() {
+      return obs() > 0
+    });
+  }
+
+
   return {
     Class: Class,
-    Singleton: Singleton
+    Singleton: Singleton,
+    arrayGTZero: arrayGTZero,
+    valueGTZero: valueGTZero
   }
 });

@@ -1,4 +1,4 @@
-    <nav id="navigation" data-bind="event: {mouseover: navigation.sneakShow.bind(navigation), mouseout: navigation.sneakHide.bind(navigation)}">
+    <nav id="navigation" data-bind="event: {mouseover: sneakShow, mouseout: sneakHide}">
 
       <dl id="switch" class="dropdown">
         <dt data-bind="text: build.app.name, attr: { title: build.app.name }"></dt>
@@ -13,12 +13,12 @@
       <div id="appStatus">
         <button class="running" data-bind="click: build.onToggleRun, css: {active: build.activity.running, working: build.activity.busy() && !build.activity.running() }"></button>
         <span class="tooltip running" data-bind="text: build.statusTooltips.run "></span>
-        <button class="refresh" data-bind="toggle: settings.build.recompileOnChange, css: {active: settings.build.recompileOnChange }"></button>
-        <span class="tooltip refresh" data-bind="text: settings.build.recompileOnChange() ? 'Rebuild on file changes enabled':'Rebuild on file changes disabled' "></span>
-        <button class="console" data-bind="toggle: settings.build.automaticResetInspect, css: {active: settings.build.automaticResetInspect}"></button>
-        <span class="tooltip console" data-bind="text: settings.build.automaticResetInspect() ? 'Automatic resetting of Inspect enabled':'Automatic resetting of Inspect disabled' "></span>
-        <button class="testing" data-bind="toggle: settings.build.retestOnSuccessfulBuild, css: {active: settings.build.retestOnSuccessfulBuild}"></button>
-        <span class="tooltip testing" data-bind="text: settings.build.retestOnSuccessfulBuild() ? 'Test on rebuild enabled':'Test on rebuild disabled' "></span>
+        <button class="refresh" data-bind="toggle: build.settings.recompileOnChange, css: {active: build.settings.recompileOnChange }"></button>
+        <span class="tooltip refresh" data-bind="text: build.settings.recompileOnChange() ? 'Rebuild on file changes enabled':'Rebuild on file changes disabled' "></span>
+        <button class="console" data-bind="toggle: build.settings.automaticResetInspect, css: {active: build.settings.automaticResetInspect}"></button>
+        <span class="tooltip console" data-bind="text: build.settings.automaticResetInspect() ? 'Automatic resetting of Inspect enabled':'Automatic resetting of Inspect disabled' "></span>
+        <button class="testing" data-bind="toggle: build.settings.retestOnSuccessfulBuild, css: {active: build.settings.retestOnSuccessfulBuild}"></button>
+        <span class="tooltip testing" data-bind="text: build.settings.retestOnSuccessfulBuild() ? 'Test on rebuild enabled':'Test on rebuild disabled' "></span>
       </div>
 
       <dl id="rockets">

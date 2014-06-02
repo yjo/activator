@@ -30,7 +30,7 @@ class SbtTest {
 
   implicit val timeout: Timeout = Timeout(120, TimeUnit.SECONDS)
 
-  private def deAsync(result: Future[SimpleResult]): SimpleResult = {
+  private def deAsync(result: Future[Result]): Result = {
     Await.result(result, timeout.duration)
   }
 
@@ -42,7 +42,7 @@ class SbtTest {
   // the "body" and "Writeable" args are a workaround for
   // https://play.lighthouseapp.com/projects/82401/tickets/770-fakerequestwithjsonbody-no-longer-works
   // TODO drop this hack when upgrading past Play 2.1-RC1
-  private def routeThrowingIfNotSuccess[B](req: FakeRequest[_], body: B)(implicit w: Writeable[B]): SimpleResult = {
+  private def routeThrowingIfNotSuccess[B](req: FakeRequest[_], body: B)(implicit w: Writeable[B]): Result = {
     route(req, body) map deAsync match {
       case Some(result) if result.header.status == Status.OK => result
       case None =>

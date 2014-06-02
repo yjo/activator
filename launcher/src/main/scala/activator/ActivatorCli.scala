@@ -16,7 +16,7 @@ import scala.util.control.NonFatal
 object ActivatorCli extends ActivatorCliHelper {
   case class ProjectInfo(projectName: String = "N/A", templateName: String = "N/A", file: Option[File] = None)
 
-  def apply(configuration: AppConfiguration): Int = try withContextClassloader {
+  def apply(configuration: AppConfiguration): Int = withContextClassloader {
     // TODO - move this into a common shared location between CLI and GUI.
     val cache = UICacheHelper.makeDefaultCache(ActivatorCliHelper.system)
     val metadata = TemplateHandler.downloadTemplates(cache, ActivatorCliHelper.defaultDuration)

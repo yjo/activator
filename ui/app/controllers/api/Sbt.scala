@@ -121,7 +121,7 @@ object Sbt extends Controller {
     resultFuture
   }
 
-  private def jsonAction(f: JsValue => Future[SimpleResult]): Action[AnyContent] = CSRFCheck {
+  private def jsonAction(f: JsValue => Future[Result]): Action[AnyContent] = CSRFCheck {
     Action.async { request =>
       request.body.asJson.map({ json =>
         try f(json)

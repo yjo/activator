@@ -8,7 +8,7 @@ import play.api.libs.json._
 import java.io.File
 import akka.pattern.pipe
 import scala.util.control.NonFatal
-import scala.concurrent.Future
+import scala.concurrent.{ Promise, Future }
 import activator._
 
 // THE API for the HomePage actor.
@@ -133,8 +133,7 @@ class HomePageActor extends WebSocketActor[JsValue] with ActorLogging {
       self ! Respond(Status("Compiling project definition..."))
     else
       log.warning(s"Failed to locate directory $location: " + file) // error response is generated in loadApplicationAndSendResponse
-    import scala.concurrent.promise
-    val filePromise = promise[ProcessResult[File]]
+    val filePromise = Promise[ProcessResult[File]]()
     filePromise.success(file)
     loadApplicationAndSendResponse("OpenExistingApplication", filePromise.future)
   }

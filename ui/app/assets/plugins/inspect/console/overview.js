@@ -1,10 +1,10 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./overview.html', 'main/pluginapi', './widget', './format', 'services/connection'], function(template, api, ConsoleWidget, format, Connection) {
+define(['text!./overview.html', 'commons/utils', './widget', './format', 'services/connection'], function(template, utils, ConsoleWidget, format, Connection) {
 
 
-  return api.Class(ConsoleWidget, {
+  return utils.Class(ConsoleWidget, {
     id: 'console-overview-widget',
     template: template,
     init: function(args) {

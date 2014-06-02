@@ -8,7 +8,6 @@ import akka.pattern._
 import scala.concurrent.{ Channel => _, _ }
 import scala.concurrent.duration._
 import akka.util._
-import play.api._
 import play.api.libs.iteratee._
 import scala.collection.immutable.Queue
 import play.api.mvc.WebSocket.FrameFormatter
@@ -26,7 +25,6 @@ private case object CloseWebSocket
 // This is a bunch of glue to convert Iteratee/Enumerator into an actor.
 // There's probably a better approach, oh well.
 abstract class WebSocketActor[MessageType](implicit frameFormatter: FrameFormatter[MessageType], mf: Manifest[MessageType]) extends Actor with ActorLogging {
-  import WebSocketActor.timeout
   import WebSocketActor._
   private implicit def ec: ExecutionContext = context.system.dispatcher
 
@@ -267,18 +265,15 @@ object WebSocketActor {
    *  Note: This method is a convenience, and most likely needs tweaking
    *  as we use more websockets.
    */
-  def create[T](system: ActorSystem, creator: => WebSocketActor[T], name: String)(implicit fm: FrameFormatter[T]): WebSocket[T] = WebSocketUtil.socketCSRFCheck {
-    WebSocket.async[T] { request =>
+  def create[T](system: ActorSystem, creator: => WebSocketActor[T], name: String)(implicit fm: FrameFormatter[T]): WebSocket[T, T] = WebSocketUtil.socketCSRFCheck {
+    WebSocket.tryAccept[T] { request =>
       val wsActor = system.actorOf(Props(creator), name = name)
       import system.dispatcher
-      (wsActor ? GetWebSocket).map {
-        case snap.WebSocketAlreadyUsed =>
-          throw new RuntimeException("can only connect to websocket actor once.")
+      val stream = (wsActor ? GetWebSocket).map {
+        case snap.WebSocketAlreadyUsed => throw new RuntimeException("can only connect to websocket actor once.")
         case whatever => whatever
-      }.mapTo[(Iteratee[T, _], Enumerator[T])].map { streams =>
-        Logger.info("WebSocket streams created")
-        streams
       }
+      stream.mapTo[(play.api.libs.iteratee.Iteratee[T, _], play.api.libs.iteratee.Enumerator[T])].map { streams => Right(streams) }
     }
   }
 }

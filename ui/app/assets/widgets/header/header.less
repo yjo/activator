@@ -1,3 +1,10 @@
+/*
+ Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
+ */
+@import "../../commons/_base";
+@import "./_breadcrumb";
+@import "./_omnisearch";
+
 .red-icon() {
   background-color: @red;
   background-repeat: no-repeat;
@@ -18,7 +25,7 @@
   z-index: 10;
 }
 
-#user, #notifications, #layoutManager {
+#help, #notifications, #layoutManager {
   display: block;
   height: 50px;
   width: 52px;
@@ -35,7 +42,7 @@
   }
 }
 
-#notifications {
+#help, #notifications {
   dt {
     text-align: center;
   }
@@ -55,6 +62,10 @@
     background: @slate-dkr;
     right: -1px;
     min-width: 300px;
+    h3, h4 {
+      line-height: 20px;
+      padding: 5px 10px;
+    }
     a {
       color: @grey-ltr;
       line-height: 20px;
@@ -75,6 +86,38 @@
   p {
     padding: 10px;
     color: @grey;
+  }
+}
+
+#help {
+  dt {
+    font-size: 25px;
+    color: @grey;
+  }
+  dd {
+    width: 450px;
+    padding-bottom: 20px;
+  }
+  .group {
+    border-bottom: 1px solid @slate-dkr;
+    padding: 10px 10px 0 50px;
+    background: url(/public/images/header/typesafe.png) 20px 20px no-repeat;
+    &.documentation {
+      background-image: url(/public/images/header/documentation.png);
+    }
+    &.community {
+      background-image: url(/public/images/header/community.png);
+    }
+    a {
+      display: inline-block;
+      &:hover {
+        background: none;
+      }
+    }
+  }
+  h4 {
+    font-size: 16px;
+    color: @blue;
   }
 }
 
@@ -152,4 +195,5 @@
     display: none;
   }
 }
+
 

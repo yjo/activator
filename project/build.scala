@@ -6,6 +6,10 @@ import com.typesafe.sbt.S3Plugin._
 import com.typesafe.sbt.SbtNativePackager.Universal
 import com.typesafe.sbt.SbtPgp
 import com.typesafe.sbt.SbtPgp.PgpKeys
+import play.PlayImport.PlayKeys
+import com.typesafe.sbt.less.Import.LessKeys
+import com.typesafe.sbt.web.SbtWeb.autoImport._
+import com.typesafe.sbt.jse.JsEngineImport.JsEngineKeys
 // NOTE - This file is only used for SBT 0.12.x, in 0.13.x we'll use build.sbt and scala libraries.
 // As such try to avoid putting stuff in here so we can see how good build.sbt is without build.scala.
 
@@ -25,7 +29,8 @@ object TheActivatorBuild extends Build {
       sys.props("activator.home") = fixFileForURIish(bd.getAbsoluteFile)
       bd
     }
-  ) ++ play.Project.intellijCommandSettings
+  ) 
+  // TODO : Add ++ play.Project.intellijCommandSettings Play 2.3 style to settings above
 
   val root = (
     Project("root", file("."))  // TODO - Oddities with clean..
@@ -98,10 +103,13 @@ object TheActivatorBuild extends Build {
          Seq.empty)
     })
 
+  import WebKeys.{assets, public}
+  import sbt.Keys.products
+
   lazy val ui = (
     ActivatorPlayProject("ui")
     dependsOnRemote(
-      webjarsPlay3, requirejs, jquery, knockout, ace, requireCss, requireText, keymage, commonsIo, mimeUtil, activatorAnalytics,
+      requirejs, jquery, knockout, ace, /*requireCss, requireText,*/ keymage, commonsIo, mimeUtil, activatorAnalytics,
       sbtLauncherInterface % "provided",
       sbtrcRemoteController % "compile;test->test",
       // Here we hack our probes into the UI project.
@@ -109,9 +117,11 @@ object TheActivatorBuild extends Build {
       sbtshimUiInterface13 % "sbtprobes->default(compile)"
     )
     dependsOn(props, uiCommon)
-    settings(play.Project.playDefaultPort := 8888)
+    settings(PlayKeys.playDefaultPort := 8888)
+    settings(Keys.includeFilter in (Assets, LessKeys.less) := "*.less")
+    settings(Keys.excludeFilter in (Assets, LessKeys.less) := "_*.less")
     settings(Keys.initialize ~= { _ => sys.props("scalac.patmat.analysisBudget") = "512" })
-    settings(Keys.libraryDependencies ++= Seq("com.typesafe.akka" % "akka-testkit_2.10" % "2.2.0" % "test", Dependencies.specs2 % "test"))
+    settings(Keys.libraryDependencies ++= Seq(Dependencies.akkaTestkit % "test", Dependencies.specs2 % "test"))
     // set up debug props for forked tests
     settings(configureSbtTest(Keys.test): _*)
     settings(configureSbtTest(Keys.testOnly): _*)
@@ -134,7 +144,11 @@ object TheActivatorBuild extends Build {
           System.err.println("Remote probe classpath = " + sys.props("sbtrc.controller.classpath"))
           System.err.println("Template cache = " + sys.props("activator.template.cache"))
           update
-      }
+      },
+      // We need to embed the assets in this JAR for activator.
+      // If we add any more play projects, we need to be clever with them.
+      public in Assets := (public in Assets).value / "public",
+      products in Compile += (assets in Assets).value.getParentFile
     )
     settings(
       Keys.compile in Compile <<= (Keys.compile in Compile, Keys.baseDirectory, Keys.streams) map { (oldCompile, baseDir, streams) =>
@@ -209,7 +223,6 @@ object TheActivatorBuild extends Build {
 
         // base dependencies
         "org.scala-sbt" % "sbt" % Dependencies.sbtVersion,
-        "org.scala-sbt" % "sbt" % Dependencies.sbtSnapshotVersion,
         "org.scala-lang" % "scala-compiler" % Dependencies.sbtPluginScalaVersion,
         "org.scala-lang" % "scala-compiler" % Dependencies.scalaVersion,
 
@@ -224,40 +237,50 @@ object TheActivatorBuild extends Build {
         echoPlaySbt13Plugin,
 
         // featured template deps
-        // note: do not use %% here
-        "org.scalatest" % "scalatest_2.10" % "1.9.1",
-        "com.typesafe.akka" % "akka-actor_2.10" % "2.2.1",
-        "com.typesafe.akka" % "akka-testkit_2.10" % "2.2.1",
-        "com.typesafe.akka" % "akka-slf4j_2.10" % "2.2.1",
-	      "com.typesafe.akka" % "akka-contrib_2.10" % "2.2.1",
-        "org.scalatest" % "scalatest_2.10" % "2.0",
+        // *** note: do not use %% here ***
+        "com.h2database" % "h2" % "1.3.175",
+        "com.novocode" % "junit-interface" % "0.10",
+        "com.typesafe.slick" % "slick_2.11" % Dependencies.slickVersion,
         "junit" % "junit" % "4.11",
+        "org.slf4j" % "slf4j-nop" % "1.6.4",
         "org.fusesource.jansi" % "jansi" % "1.11",
-        "com.novocode" % "junit-interface" % "0.7",
-        "org.webjars" % "webjars-play_2.10" % Dependencies.webJarsVersion,
-        "org.webjars" % "webjars-play_2.10" % "2.2.0",
+        "org.scalatest" % "scalatest_2.11" % "2.1.6",
+
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-jshint" % "1.0.0", "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-rjs" % "1.0.1", "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-digest" % "1.0.0", "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-mocha" % "1.0.0", "0.13", "2.10"),
+        // reactive maps using an older sbt-gzip, later we should go back to one copy
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-gzip" % "1.0.0", "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-gzip" % "1.0.1", "0.13", "2.10"),
+
+        // transient dependencies used in offline mode
+        "org.scala-lang" % "jline" % "2.10.4",
+        Defaults.sbtPluginExtra("com.typesafe.play" % "sbt-plugin" % Dependencies.playVersion, "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-coffeescript" % "1.0.0", "0.13", "2.10"),
+        Defaults.sbtPluginExtra("com.typesafe.sbt" % "sbt-less" % "1.0.0", "0.13", "2.10"),
+        "org.scalaz" % "scalaz-core_2.10" % "7.0.2",
+        "org.scalaz" % "scalaz-effect_2.10" % "7.0.2",
+        "com.typesafe.play" % "play-java_2.11" % Dependencies.playVersion,
+        "com.typesafe.play" % "play-java-jdbc_2.11" % Dependencies.playVersion,
+        "com.typesafe.play" % "play-java-ebean_2.11" % Dependencies.playVersion,
+        "com.typesafe.play" % "play-java-ws_2.11" % Dependencies.playVersion,
+        "com.typesafe.play" % "play-cache_2.11" % Dependencies.playVersion,
+        "com.typesafe.play" % "play-docs_2.11" % Dependencies.playVersion,
+        "com.typesafe.play" % "anorm_2.11" % Dependencies.playVersion,
+        "com.typesafe.play" % "play-ws_2.11" % Dependencies.playVersion,
+
         "org.webjars" % "bootstrap" % "2.3.1",
         "org.webjars" % "flot" % "0.8.0",
-        "com.typesafe.play" % "play-java_2.10" % Dependencies.playVersion,
-        "com.typesafe.play" % "play-test_2.10" % Dependencies.playVersion,
-        "com.typesafe.play" % "play-docs_2.10" % Dependencies.playVersion,
-        "com.typesafe.slick" % "slick_2.10" % Dependencies.slickVersion,
-        "org.slf4j" % "slf4j-nop" % "1.6.4",
-        "com.h2database" % "h2" % "1.3.170",
-        "com.typesafe.play.extras" % "play-geojson_2.10" % "1.0.0",
         "org.webjars" % "bootstrap" % "3.0.0",
         "org.webjars" % "knockout" % "2.3.0",
+        "org.webjars" % "requirejs" % "2.1.11-1",
         "org.webjars" % "leaflet" % "0.7.2",
-        "com.typesafe.sbt" % "sbt-atmos-play" % "0.3.1",
+        "org.webjars" % "squirejs" % "0.1.0",
 
-        // failed transatives
-        "junit" % "junit" % "3.8.1",
-        "com.jcraft" % "jsch" % "0.1.44-1",
-        "jline" % "jline" % "0.9.94",
-        "org.scala-lang" % "jline" % "2.10.3",
-        "com.typesafe.akka" % "akka-slf4j_2.10" % "2.2.0",
-        "com.typesafe.akka" % "akka-contrib_2.10" % "2.2.3"
-      ),
+        "com.typesafe.play.extras" % "play-geojson_2.11" % "1.1.0",
+        "com.typesafe.akka" % "akka-contrib_2.11" % Dependencies.akkaVersion
+        ),
       Keys.mappings in S3.upload <<= (Keys.packageBin in Universal, Packaging.minimalDist, Keys.version) map { (zip, minimalZip, v) =>
         Seq(minimalZip -> ("typesafe-activator/%s/typesafe-activator-%s-minimal.zip" format (v, v)),
             zip -> ("typesafe-activator/%s/typesafe-activator-%s.zip" format (v, v)))

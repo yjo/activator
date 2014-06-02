@@ -236,7 +236,8 @@ object Application extends Controller {
    * per-application for information.
    */
   def connectApp(id: String) = snap.WebSocketUtil.socketCSRFCheck {
-    WebSocket.async[JsValue] { request =>
+
+    WebSocket.tryAccept[JsValue] { request =>
       Logger.debug("Connect request for app id: " + id)
       // we kill off any previous browser tab
       AppManager.loadTakingOverApp(id) flatMap { theApp =>
@@ -247,7 +248,7 @@ object Application extends Controller {
             Logger.warn("Giving up on opening websocket")
         }
 
-        streamsFuture
+        streamsFuture.mapTo[(play.api.libs.iteratee.Iteratee[JsValue, _], play.api.libs.iteratee.Enumerator[JsValue])].map { streams => Right(streams) }
       }
     }
   }

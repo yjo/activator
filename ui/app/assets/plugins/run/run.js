@@ -1,8 +1,8 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['services/build', 'services/newrelic', 'main/model', 'text!./run.html', 'main/pluginapi', 'commons/settings', 'css!./run.css', "widgets/navigation/menu"],
-  function(build, newrelic, model, template, api, settings, LogView, css){
+define(['services/build', 'services/newrelic', 'text!./run.html', 'css!./run.css', "widgets/navigation/menu"],
+    function(build, newrelic, template, LogView, css){
 
   var RunState = (function(){
     var self = {};
@@ -60,7 +60,7 @@ define(['services/build', 'services/newrelic', 'main/model', 'text!./run.html', 
     self.haveMainClass = build.run.haveMainClass;
     self.currentMainClass = build.run.currentMainClass;
     self.mainClasses = build.run.mainClasses;
-    self.rerunOnBuild = settings.build.rerunOnBuild;
+    self.rerunOnBuild = build.settings.rerunOnBuild;
     self.restartPending = build.run.restartPending;
     self.consoleCompatible = build.app.hasConsole;
     self.statusMessage = build.run.statusMessage;

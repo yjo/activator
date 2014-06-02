@@ -19,9 +19,12 @@
 
 			var templates = @Html(json.toString);
 		</script>
-		<script data-main='@routes.Assets.at("home/home.js")' type='text/javascript' src='@routes.WebJarAssets.requirejs()'></script>
+        <script data-main="@routes.Assets.at("home/home.js")" type="text/javascript" src="@routes.Assets.at("lib/requirejs/require.js")"></script>
 		<link rel="stylesheet" media="screen" href="@routes.Assets.at("home/home.css")">
 		<link rel="shortcut icon" type="image/png" href="/public/images/favicon.png">
+    <!--[if lte IE 9]>
+    <script src='@routes.Assets.at("commons/ie.js")' type='text/javascript'></script>
+    <![endif]-->
 	</head>
 	<body>
 
@@ -44,7 +47,7 @@
 			<div class="half">
 				<header class="tabs">
 					<h2 data-bind="click: showTemplates, css: {active: openedTab() == 'templates'}">Tutorials</h2>
-					<h2 data-bind="click: showSkeletons, css: {active: openedTab() == 'skeletons'}">Seeds</h2>
+					<h2 data-bind="click: showSeeds, css: {active: openedTab() == 'seed'}">Seeds</h2>
 				</header>
 				<article id="templateList" data-bind="visible: openedTab() == 'templates'">
 					<aside id="filter">
@@ -61,9 +64,9 @@
 						</li>
 					</ul>
 				</article>
-				<article id="skeletonList" data-bind="visible: openedTab() == 'skeletons'">
-					<ul class="list" data-bind="foreach: skeletons">
-						<li class="template" data-bind="css: {featured: featured, active: $root.currentAppId() == id}, click: $root.chooseSkeleton">
+				<article id="seedList" data-bind="visible: openedTab() == 'seed'">
+					<ul class="list" data-bind="foreach: seeds">
+						<li class="template" data-bind="css: {featured: featured, active: $root.currentAppId() == id}, click: $root.chooseSeed">
 							<input type="radio" name="template" data-bind="value: id">
 							<span data-bind="text: title"></span>
 							<ul class="tags" data-bind="foreach: tags">
@@ -84,16 +87,18 @@
 					</ul>
 					<p data-bind="text: description"></p>
  					<div class="author">
-						<p><cite>by John Doe (<a href="">@@johndoe</a>)</cite></p>
-						<p><a href="#" class="source">github.com/johndoe/activator-akka-spray</a></p>
+						<p><cite>by <span data-bind="text: authorName"></span>
+                        <!-- ko if:authorTwitter -->
+                        (<a target="_blank" data-bind="attr: { href: 'http://twitter.com/' + authorTwitter }, text: authorTwitter"></a>)
+                        <!--  /ko -->
+                        </cite></p>
+						<p><a target="_blank" data-bind="attr: { href: sourceLink }, text: sourceLink" class="source"></a></p>
 					</div>
 					<div class="promote partner">
-						<img src="http://dommkopfq6m1m.cloudfront.net/assets/1387589794721/images/partners/svcs/chariot.png">
-						<h4 _data-bind="text: partner">Chariot</h4>
-						<p _data-bind="text: description">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-						tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-						quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</p>
-	 				</div>
+						<img data-bind="attr: { src: authorLogo }">
+						<h4 data-bind="text: authorName"></h4>
+						<p data-bind="text: authorBio"></p>
+                    </div>
  				</div>
 				@helper.form(action = routes.Application.forceHome, 'id -> "newApp") {
 					<h4>Create an app from this template</h4>
