@@ -119,9 +119,7 @@ abstract class WebSocketActor[MessageType](implicit frameFormatter: FrameFormatt
         triggeredFullyCompleted = true
         self ! PoisonPill
       }
-    }
-
-    if (incomingCompleted || outgoingCompleted) {
+    } else if (incomingCompleted || outgoingCompleted) {
       context.system.scheduler.scheduleOnce(WebSocketActor.timeout.duration, self, TimeoutAfterHalfCompleted)
     }
   }
@@ -150,11 +148,13 @@ abstract class WebSocketActor[MessageType](implicit frameFormatter: FrameFormatt
       case Ready =>
         ready = true
       case TimeoutAfterHalfCompleted =>
-        log.warning("websocket actor had incoming completed=" + incomingCompleted +
-          " and outgoing completed=" + outgoingCompleted +
-          " and timed out before the other one completed; force-terminating")
-        incomingCompleted = true
-        outgoingCompleted = true
+        if (!(incomingCompleted && outgoingCompleted)) {
+          log.warning("websocket actor had incoming completed=" + incomingCompleted +
+            " and outgoing completed=" + outgoingCompleted +
+            " and timed out before the other one completed; force-terminating")
+          incomingCompleted = true
+          outgoingCompleted = true
+        }
         checkFullyCompleted()
       case other => log.warning("Received unexpected internal websocket message {}", other)
     }
