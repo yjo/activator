@@ -2,7 +2,7 @@
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
 
-define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './sbt', 'commons/markers', './connection'],
+define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './oldSbt', 'commons/markers', './connection'],
     function(ko, settings, Log, utils, events, sbt, markers, Connection){
 
   var rerunOnBuild = settings.observable("build.rerunOnBuild", true);

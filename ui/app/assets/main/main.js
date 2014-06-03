@@ -29,7 +29,7 @@ var commons = [
 ]
 
 var services = [
-    'services/sbt',
+    'services/oldSbt',
     'services/build',
     'services/log',
     'services/tutorial',

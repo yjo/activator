@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['text!./openInEclipse.html', 'text!./openInIdea.html', 'commons/utils', 'commons/widget', 'services/sbt', 'widgets/overlay/overlay', 'services/log', 'widgets/log/log'],
+define(['text!./openInEclipse.html', 'text!./openInIdea.html', 'commons/utils', 'commons/widget', 'services/oldSbt', 'widgets/overlay/overlay', 'services/log', 'widgets/log/log'],
 function(eclipseTemplate, ideaTemplate, utils, Widget, sbt, Overlay, Log, LogView){
 
   function browse(location) {
