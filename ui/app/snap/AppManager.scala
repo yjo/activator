@@ -41,9 +41,10 @@ class AppCacheActor extends Actor with ActorLogging {
             // this should be "instant" but 5 seconds to be safe
             val app = Await.result(futureApp, 5.seconds)
             if (Some(app.actor) == deadRef || app.isTerminated) {
-              log.debug("cleaning up terminated app actor {} {}", id, app.actor)
+              //log.debug("cleaning up terminated app actor {} {}", id, app.actor)
               false
             } else {
+              //log.debug("keeping live app actor {} {}", id, app.actor)
               true
             }
           } catch {
@@ -53,6 +54,7 @@ class AppCacheActor extends Actor with ActorLogging {
           }
         } else {
           // still pending, keep it
+          //log.debug("app actor {} still pending", id)
           true
         }
     }

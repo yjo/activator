@@ -16,6 +16,7 @@ import play.api.libs.json.Json._
 import play.api.libs.functional.syntax._
 import sbt.client._
 import sbt.protocol._
+import scala.reflect.ClassTag
 
 sealed trait AppRequest
 
@@ -127,11 +128,14 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
         projectWatcher ! SetSourceFilesRequest(files)
       case ReloadSbtBuild => // TODO FIXME
       case OpenClient(client) =>
+        log.debug(s"Old client actor was ${clientActor}")
         clientActor.foreach(_ ! PoisonPill) // shouldn't happen - paranoia
         clientCount += 1
+        log.debug(s"Opening new client actor for sbt client ${client}")
         clientActor = Some(context.actorOf(Props(new SbtClientActor(client)), name = s"client-$clientCount"))
         clientActor.foreach(context.watch(_))
       case CloseClient =>
+        log.debug(s"Closing client actor ${clientActor}")
         clientActor.foreach(_ ! PoisonPill) // shouldn't be needed - paranoia
         clientActor = None
     }
@@ -153,7 +157,8 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
   }
 
   override def postStop(): Unit = {
-    log.debug("postStop")
+    log.debug("postStop, closing sbt connector")
+    connector.close()
   }
 
   class AppSocketActor extends WebSocketActor[JsValue] with ActorLogging {
@@ -177,6 +182,8 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
   }
 
   class SbtClientActor(val client: SbtClient) extends Actor with ActorLogging {
+    override val supervisorStrategy = SupervisorStrategy.stoppingStrategy
+
     val eventsSub = client.handleEvents { event =>
       self ! event
     }
@@ -184,7 +191,11 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
       self ! structure
     }
 
-    override val supervisorStrategy = SupervisorStrategy.stoppingStrategy
+    // TODO remove this, it's just to work on event handling
+    // without having to implement making requests
+    client.requestExecution("compile", interaction = None) onComplete { result =>
+      log.info("Result from compile: " + result)
+    }
 
     override def postStop(): Unit = {
       log.debug("postStop")
@@ -195,7 +206,7 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
       client.close()
     }
 
-    private def forwardOverSocket[T <: Event: Format](event: T): Unit = {
+    private def forwardOverSocket[T <: Event: Format: ClassTag](event: T): Unit = {
       context.parent ! NotifyWebSocket(Sbt.wrapEvent(event))
     }
 
@@ -206,14 +217,14 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
         case _: BuildStructureChanged | _: ValueChanged[_] =>
           log.error(s"Received event which should have been filtered out by SbtClient ${event}")
         case entry: LogEvent => forwardOverSocket(entry)
-        case fail: CompilationFailure => // TODO
-        case fail: ExecutionFailure => // TODO
-        case yay: ExecutionSuccess => // TODO
-        case starting: ExecutionStarting => // TODO
-        case waiting: ExecutionWaiting => // TODO
-        case finished: TaskFinished => // TODO
-        case started: TaskStarted => // TODO
-        case test: TestEvent => // TODO
+        case fail: CompilationFailure => forwardOverSocket(fail)
+        case fail: ExecutionFailure => forwardOverSocket(fail)
+        case yay: ExecutionSuccess => forwardOverSocket(yay)
+        case starting: ExecutionStarting => forwardOverSocket(starting)
+        case waiting: ExecutionWaiting => forwardOverSocket(waiting)
+        case finished: TaskFinished => forwardOverSocket(finished)
+        case started: TaskStarted => forwardOverSocket(started)
+        case test: TestEvent => forwardOverSocket(test)
       }
       case structure: MinimalBuildStructure => // TODO
     }

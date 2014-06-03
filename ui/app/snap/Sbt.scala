@@ -2,10 +2,14 @@ package snap
 
 import sbt.protocol._
 import play.api.libs.json._
+import scala.reflect.ClassTag
 
 object Sbt {
-  def wrapEvent[T <: Event: Format](event: T): JsObject = {
+  def wrapEvent[T <: Event: Format: ClassTag](event: T): JsObject = {
+    val klassName = implicitly[ClassTag[T]].runtimeClass.getName
+    val subType = klassName.substring(klassName.lastIndexOf('.') + 1)
     JsObject(Seq("type" -> JsString("sbt"),
+      "subType" -> JsString(subType),
       "event" -> Json.toJson(event)))
   }
 

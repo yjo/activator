@@ -30,6 +30,7 @@ var commons = [
 
 var services = [
     'services/oldSbt',
+    'services/sbt',
     'services/build',
     'services/log',
     'services/tutorial',
