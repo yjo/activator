@@ -3,8 +3,6 @@
  */
 define(['commons/streams', 'commons/events', 'commons/utils'], function(streams, events, utils) {
 
-  console.log("loading sbt.js");
-
   function sbtRequest(what, o) {
     o.appId = serverAppModel.id
 
@@ -33,8 +31,22 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
     });
   }
 
+  var legacyLogHandlers = [];
+  function legacySubscribeLog(handler) {
+    legacyLogHandlers.push(handler);
+  }
+
   function eventHandler(obj) {
     console.log("sbt event " + obj.subType, obj.event);
+    if (obj.subType == 'LogEvent') {
+      // forward legacy log event TODO this is just a demo hack
+      $.each(legacyLogHandlers, function(index, subscriber) {
+          subscriber({
+            'type' : 'LogEvent',
+            'entry' : obj.event.entry
+          });
+      });
+    }
   }
 
   function isSbtEvent(obj) {
@@ -54,6 +66,7 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
 
   return {
     possibleAutocompletions: possibleAutocompletions,
-    requestExecution: requestExecution
+    requestExecution: requestExecution,
+    legacySubscribeLog: legacySubscribeLog
   };
 })

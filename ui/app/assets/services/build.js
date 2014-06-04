@@ -2,8 +2,8 @@
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
 
-define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './oldSbt', 'commons/markers', './connection'],
-    function(ko, settings, Log, utils, events, sbt, markers, Connection){
+define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './oldSbt', 'commons/markers', './connection', 'services/sbt'],
+    function(ko, settings, Log, utils, events, sbt, markers, Connection, newSbt){
 
   var rerunOnBuild = settings.observable("build.rerunOnBuild", true);
   var retestOnSuccessfulBuild = settings.observable("build.retestOnSuccessfulBuild", false);
@@ -80,6 +80,9 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
   };
 
   var log = new Log();
+  newSbt.legacySubscribeLog(function(event) {
+    log.event(event);
+  });
 
   var markerOwner = "build-log";
 
