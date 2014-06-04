@@ -1,7 +1,7 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['services/search'], function(search) {
+define(['services/search', 'services/sbt'], function(search, sbt) {
 
   var searchString = ko.observable("");
   var searchStringLast = "";
@@ -9,6 +9,33 @@ define(['services/search'], function(search) {
   var active = ko.observable(false);
   var options = ko.observableArray([]);
   var selected = ko.observable(0);
+
+  var combinedSearch = function(keywords) {
+    console.log("starting search on " + keywords);
+    return ($.when(search.doSearch(keywords), sbt.possibleAutocompletions(keywords))
+    .then(function(searchValues, sbtCompletions) {
+        // TODO not handling errors here...
+        var sbtValues = $.map(sbtCompletions[0].choices, function(completion, i) {
+          return {
+            title: completion.display,
+            subtitle: "run sbt task " + completion.display,
+            type: "Sbt",
+            url: false,
+            execute: keywords + completion.append
+          };
+        });
+        var values = sbtValues.concat(searchValues[0]);
+        return values;
+    }));
+  };
+
+  var activate = function(item) {
+    if (item.url) {
+      location.href = item.url;
+    } else if (item.execute) {
+      sbt.requestExecution(item.execute);
+    }
+  }
 
   var onKeyUp = function(data, event){
     switch (event.keyCode) {
@@ -18,9 +45,9 @@ define(['services/search'], function(search) {
         break;
       // Return
       case 13:
-        var selectedUrl = options()[selected()].url;
-        if (selectedUrl) {
-          location.href = selectedUrl;
+        var selectedItem = options()[selected()];
+        if (selectedItem) {
+          activate(selectedItem);
           event.target.blur();
         }
         break;
@@ -47,7 +74,7 @@ define(['services/search'], function(search) {
         // Don't search until at least two characters are entered and search string isn't the same as last
         if (keywords.length >= 2 && keywords != searchStringLast) {
           busy(true);
-          search.doSearch(keywords)
+          combinedSearch(keywords)
           .done(function(values) {
             // No values returned
             if (values.length == 0) {
@@ -83,8 +110,8 @@ define(['services/search'], function(search) {
   }
   var onOptionSelected = function(data){
     var self = this;
-    if (data.url) {
-      location.href = data.url;
+    if (data) {
+      activate(data);
     }
   }
   var onBlur = function(data, event){

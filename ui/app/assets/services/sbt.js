@@ -60,10 +60,6 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
 
   // TODO do something with the events (like track a model or stream of tasks and logs)
 
-  // TODO this is just a temporary hack so we can see something happen
-  // without wiring up the compile button...
-  requestExecution('compile');
-
   return {
     possibleAutocompletions: possibleAutocompletions,
     requestExecution: requestExecution,
