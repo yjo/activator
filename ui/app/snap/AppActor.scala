@@ -5,6 +5,7 @@ package snap
 
 import com.typesafe.sbtrc._
 import akka.actor._
+import akka.pattern._
 import java.io.File
 import java.net.URLEncoder
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -28,6 +29,12 @@ case class UpdateSourceFiles(files: Set[File]) extends AppRequest
 case object ReloadSbtBuild extends AppRequest
 case class OpenClient(client: SbtClient) extends AppRequest
 case object CloseClient extends AppRequest
+
+// requests that need a client
+sealed trait ClientAppRequest extends AppRequest
+
+case class RequestExecution(command: String) extends ClientAppRequest
+case class PossibleAutocompletions(partialCommand: String, detailLevel: Option[Int] = None) extends ClientAppRequest
 
 sealed trait AppReply
 
@@ -65,6 +72,8 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
 
   var webSocketCreated = false
 
+  var pending = Vector.empty[(ActorRef, ClientAppRequest)]
+
   context.watch(socket)
   context.watch(projectWatcher)
 
@@ -74,6 +83,7 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
 
   override val supervisorStrategy = SupervisorStrategy.stoppingStrategy
 
+  log.debug("Opening SbtConnector")
   connector.open({ client =>
     log.debug(s"Opened connection to sbt for ${location} AppActor=${self.path.name}")
     self ! NotifyWebSocket(Sbt.synthesizeLogEvent(LogMessage.DEBUG, s"Opened sbt at '${location}'"))
@@ -134,10 +144,22 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
         log.debug(s"Opening new client actor for sbt client ${client}")
         clientActor = Some(context.actorOf(Props(new SbtClientActor(client)), name = s"client-$clientCount"))
         clientActor.foreach(context.watch(_))
+        flushPending()
       case CloseClient =>
         log.debug(s"Closing client actor ${clientActor}")
         clientActor.foreach(_ ! PoisonPill) // shouldn't be needed - paranoia
         clientActor = None
+      case r: ClientAppRequest =>
+        pending = pending :+ (sender -> r)
+        flushPending()
+    }
+  }
+
+  private def flushPending(): Unit = {
+    while (clientActor.isDefined && pending.nonEmpty) {
+      val req = pending.head
+      pending = pending.tail
+      clientActor.foreach(actor => actor.tell(req._2, req._1))
     }
   }
 
@@ -178,10 +200,14 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
 
     override def postStop(): Unit = {
       log.debug("postStop")
+      for (p <- pending)
+        p._1 ! Status.Failure(new RuntimeException("app shut down"))
     }
   }
 
   class SbtClientActor(val client: SbtClient) extends Actor with ActorLogging {
+    log.debug(s"Creating SbtClientActor ${self.path.name}")
+
     override val supervisorStrategy = SupervisorStrategy.stoppingStrategy
 
     val eventsSub = client.handleEvents { event =>
@@ -189,12 +215,6 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
     }
     val buildSub = client.watchBuild { structure =>
       self ! structure
-    }
-
-    // TODO remove this, it's just to work on event handling
-    // without having to implement making requests
-    client.requestExecution("compile", interaction = None) onComplete { result =>
-      log.info("Result from compile: " + result)
     }
 
     override def postStop(): Unit = {
@@ -227,6 +247,14 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
         case test: TestEvent => forwardOverSocket(test)
       }
       case structure: MinimalBuildStructure => // TODO
+      case req: ClientAppRequest => {
+        req match {
+          case RequestExecution(command) =>
+            client.requestExecution(command, interaction = None)
+          case PossibleAutocompletions(partialCommand, detailLevelOption) =>
+            client.possibleAutocompletions(partialCommand, detailLevel = detailLevelOption.getOrElse(0))
+        }
+      } pipeTo sender
     }
   }
 }

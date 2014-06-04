@@ -15,7 +15,8 @@ DELETE      /api/app/history/*id                         controllers.Application
 GET         /api/app/connect/*id                         controllers.Application.connectApp(id)
 
 # sbt things
-# (no sbt things right now)
+POST        /api/sbt/requestExecution                    controllers.api.Sbt.requestExecution
+POST        /api/sbt/possibleAutocompletions             controllers.api.Sbt.possibleAutocompletions
 
 # Local system operations
 GET         /api/local/env                               controllers.api.Local.getEnv
