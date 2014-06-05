@@ -4,7 +4,6 @@
 define(['services/build', 'services/newrelic', 'text!./run.html', 'css!./run.css', "widgets/navigation/menu"],
     function(build, newrelic, template, LogView, css){
 
-  console.log("Here in run!!!");
   var RunState = (function(){
     var self = {};
     self.monitoringOptions = ko.computed(function() {

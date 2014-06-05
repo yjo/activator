@@ -53,13 +53,10 @@ define([
 
 // });
 
-  console.log("HELLO!");
-
   var MonitorWidget = utils.Class(Widget, {
     id: 'monitor-widget',
     template: widgetTemplate,
     init: function(args) {
-      console.log("In init!!");
       var self = this;
       self.crumbs = ko.observableArray([]);
       self.views = {
@@ -92,7 +89,6 @@ define([
       return $monitor;
     },
     route: plugins.memorizeUrl(function(url, breadcrumb) {
-      console.log("In Route -- ");
       if (url.parameters == undefined || url.parameters.length == 0) {
         MonitorState.provider(null);
       } else {
