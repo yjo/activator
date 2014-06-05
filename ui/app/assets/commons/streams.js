@@ -152,11 +152,11 @@ define(function() {
   function onOpen(event) {
     debug && console.log("WS opened: ", event)
     checkPing();
-    // re-ping every few minutes to catch it if the socket dies
+    // re-ping to catch it if the socket dies
     setInterval(function() {
       debug && console.log("Periodic websocket re-ping WS.OPEN=" + WS.OPEN + " readyState=" + socket.readyState);
       checkPing();
-    }, 1000 * 60 * 5);
+    }, 1000 * 25); // IE11 needs < 30s ping time, see: https://projects.tigase.org/boards/15/topics/1982?r=1985
   }
 
   function onClose(event) {
