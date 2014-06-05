@@ -8,14 +8,15 @@ import akka.actor.{ ActorRef, ActorSystem }
 import com.typesafe.config.Config
 import console.ConsolePlugin
 import play.api.libs.json.JsValue
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ConsoleController extends ConsoleController {
   /**
    * Connects console websocket.
    */
   def connectConsole(id: String) = snap.WebSocketUtil.socketCSRFCheck {
-    WebSocket.async[JsValue] { req =>
-      console.ClientController.join(id)
+    WebSocket.tryAccept[JsValue] { req =>
+      console.ClientController.join(id).map(Right(_))
     }
   }
 }
