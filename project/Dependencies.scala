@@ -29,8 +29,7 @@ object Dependencies {
 
   // 2.11 sbt
   val sbtIo                = "org.scala-sbt" %% "io" % sbtVersion
-  // this doesn't actually exist for 2.11 yet
-  //val sbtCompletion        = "org.scala-sbt" %% "completion" % sbtVersion
+  val sbtCompletion        = "org.scala-sbt" %% "completion" % sbtVersion
 
   // sbtrc projects
   val sbtrcClient          = "com.typesafe.sbtrc" % "client-2-11" % sbtRcVersion

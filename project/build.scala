@@ -55,7 +55,7 @@ object TheActivatorBuild extends Build {
   )
 
   // These are the projects we want in the local repository we deploy.
-  lazy val publishedProjects: Seq[Project] = Seq(ui, uiCommon, /* launcher,*/ props)
+  lazy val publishedProjects: Seq[Project] = Seq(ui, uiCommon, launcher, props)
 
   // basic project that gives us properties to use in other projects.
   lazy val props = (
@@ -143,10 +143,9 @@ object TheActivatorBuild extends Build {
     )
   )
 
-  lazy val launcherDisabled = (
+  lazy val launcher = (
     ActivatorProject("launcher")
-    // this is broken until we get sbtCompletion for 2.11
-    dependsOnRemote(sbtLauncherInterface /*, sbtCompletion */)
+    dependsOnRemote(sbtLauncherInterface, sbtCompletion)
     dependsOn(props, uiCommon)
   )
 
