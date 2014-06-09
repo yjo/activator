@@ -94,20 +94,25 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
       },
       ExecutionWaiting: function(event) {
         debug && console.log("ExecutionWaiting ", event);
-        // event.id
-        // event.command
-      },
-      ExecutionStarting: function(event) {
-        debug && console.log("ExecutionStarting ", event);
         var execution = {
             executionId: event.id,
+            command: event.command,
+            started: ko.observable(false),
             finished: ko.observable(false),
             succeeded: ko.observable(false)
         };
+        console.log("Waiting execution ", execution);
         // we want to be in the by-id hash before we notify
         // on the executions array
         executionsById[execution.executionId] = execution;
         executions.push(execution);
+      },
+      ExecutionStarting: function(event) {
+        debug && console.log("ExecutionStarting ", event);
+        var execution = executionsById[event.executionId];
+        if (execution) {
+          execution.started(true);
+        }
       },
       ExecutionFailure: function(event) {
         debug && console.log("ExecutionFailure ", event);
