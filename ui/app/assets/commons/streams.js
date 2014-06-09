@@ -191,7 +191,7 @@ define(function() {
 
   subscribe({
     handler: function(event) {
-      alert("Connection lost; you will need to reload the page or restart Activator. It's also possible that Activator is open in another tab, which causes this error.");
+      alert("Connection lost; you will need to reload the page or restart Activator.");
     },
     filter: function(event) {
       return event.type == WEB_SOCKET_CLOSED;

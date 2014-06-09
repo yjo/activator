@@ -9,11 +9,23 @@ import ExecutionContext.Implicits.global
 import java.io._
 import activator.properties.ActivatorProperties.ACTIVATOR_USER_CONFIG_FILE
 import activator.properties.ActivatorProperties.ACTIVATOR_PREVIOUS_USER_CONFIG_FILE
+import activator.properties.ActivatorProperties.TEMPLATE_UUID_PROPERTY_NAME
 import scala.concurrent.duration._
 import sbt.IO
 
 // createdTime and usedTime are only optional due to legacy config files
-case class AppConfig(location: File, id: String, createdTime: Option[Long], usedTime: Option[Long], cachedName: Option[String] = None)
+case class AppConfig(location: File, id: String, createdTime: Option[Long], usedTime: Option[Long], cachedName: Option[String] = None) {
+  // TODO - this method is dangerous, as it hits the file system.
+  // Figure out when it should initialize/run.
+  val templateID: Option[String] =
+    try {
+      val props = new java.util.Properties
+      sbt.IO.load(props, new java.io.File(location, "project/build.properties"))
+      Option(props.getProperty(TEMPLATE_UUID_PROPERTY_NAME, null))
+    } catch {
+      case e: java.io.IOException => None // TODO - Log?
+    }
+}
 
 object AppConfig {
   import play.api.data.validation.ValidationError

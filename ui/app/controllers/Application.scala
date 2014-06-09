@@ -17,9 +17,11 @@ import play.api.Mode
 import play.filters.csrf._
 import java.util.concurrent.atomic.AtomicInteger
 import activator.cache.TemplateMetadata
+import java.util.UUID
 
 case class ApplicationModel(
   id: String,
+  socketId: String,
   location: String,
   plugins: Seq[String],
   name: String,
@@ -124,7 +126,7 @@ object Application extends Controller {
     Action.async { implicit request =>
       // TODO - Different results of attempting to load the application....
       Logger.debug("Loading app for /app html page")
-      AppManager.loadApp(id).map { theApp =>
+      AppManager.loadApp(snap.SocketId(id, UUID.randomUUID())).map { theApp =>
         Logger.debug(s"loaded for html page: ${theApp}")
         Ok(views.html.main(getApplicationModel(theApp)))
       } recover {
@@ -155,8 +157,8 @@ object Application extends Controller {
   def search(id: String, search: String) = Action.async { implicit request =>
     // Logger.debug(s"Searching for actions on app [$id]: $search")
 
-    AppManager.loadApp(id).map { theApp =>
-      val fileResults = searchFileResults(search, theApp.config.location)
+    AppManager.loadConfigFromAppId(id).map { config =>
+      val fileResults = searchFileResults(search, config.location)
       import play.api.libs.json._
       Ok(Json toJson fileResults)
     } recover {
@@ -202,7 +204,7 @@ object Application extends Controller {
     } yield file
   }
 
-  private def connectionStreams(id: String): Future[(Iteratee[JsValue, _], Enumerator[JsValue])] = {
+  private def connectionStreams(id: snap.SocketId): Future[(Iteratee[JsValue, _], Enumerator[JsValue])] = {
     Logger.debug(s"Computing connection streams for app ID $id")
     val streamsFuture = AppManager.loadApp(id) flatMap { app =>
       Logger.debug(s"Loaded app for connection: $app")
@@ -235,12 +237,14 @@ object Application extends Controller {
    * Connects from an application page to the "stateful" actor/server we use
    * per-application for information.
    */
-  def connectApp(id: String) = snap.WebSocketUtil.socketCSRFCheck {
+  def connectApp(appId: String, socketId: String) = snap.WebSocketUtil.socketCSRFCheck {
+
+    val id = snap.SocketId(appId, UUID.fromString(socketId))
 
     WebSocket.tryAccept[JsValue] { request =>
       Logger.debug("Connect request for app id: " + id)
-      // we kill off any previous browser tab
-      AppManager.loadTakingOverApp(id) flatMap { theApp =>
+
+      AppManager.loadApp(id) flatMap { theApp =>
         val streamsFuture = snap.Akka.retryOverMilliseconds(2000)(connectionStreams(id))
 
         streamsFuture onFailure {
@@ -275,33 +279,34 @@ object Application extends Controller {
    */
   def getApplicationModel(app: snap.App) =
     ApplicationModel(
-      app.config.id,
+      app.id.appId,
+      app.id.socketId.toString(),
       Platform.getClientFriendlyFilename(app.config.location),
       // TODO - These should be drawn from the template itself...
       Seq("plugins/welcome/welcome", "plugins/code/code", "plugins/compile/compile", "plugins/test/test", "plugins/run/run", "plugins/inspect/inspect"),
       app.config.cachedName getOrElse app.config.id,
       // TODO - something less lame than exception here...
-      app.templateID,
+      app.config.templateID,
       getAppsThatExist(RootConfig.user.applications),
-      hasLocalTutorial(app))
+      hasLocalTutorial(app.config))
 
-  def hasLocalTutorial(app: snap.App): Boolean = {
-    val tutorialConfig = new java.io.File(app.config.location, activator.cache.Constants.METADATA_FILENAME)
+  def hasLocalTutorial(config: snap.AppConfig): Boolean = {
+    val tutorialConfig = new java.io.File(config.location, activator.cache.Constants.METADATA_FILENAME)
     tutorialConfig.exists
   }
 
   def appTutorialFile(id: String, location: String) = CSRFAddToken {
     Action.async { request =>
-      AppManager.loadApp(id) map { theApp =>
+      AppManager.loadConfigFromAppId(id) map { config =>
         // If we're debugging locally, pull the local tutorial, otherwise redirect
         // to the templates tutorial file.
-        if (hasLocalTutorial(theApp)) {
+        if (hasLocalTutorial(config)) {
           // TODO - Don't hardcode tutorial directory name!
-          val localTutorialDir = new File(theApp.config.location, "tutorial")
+          val localTutorialDir = new File(config.location, "tutorial")
           val file = new File(localTutorialDir, location)
           if (file.exists) Ok sendFile file
           else NotFound
-        } else theApp.templateID match {
+        } else config.templateID match {
           case Some(template) => Redirect(api.routes.Templates.tutorial(template, location))
           case None => NotFound
         }

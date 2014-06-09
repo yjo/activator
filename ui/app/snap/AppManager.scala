@@ -3,6 +3,7 @@
  */
 package snap
 
+import java.util.UUID
 import scala.concurrent.Future
 import java.io.File
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -19,8 +20,8 @@ import activator._
 
 sealed trait AppCacheRequest
 
-case class GetApp(id: String) extends AppCacheRequest
-case class ForgetApp(id: String) extends AppCacheRequest
+case class GetApp(id: SocketId) extends AppCacheRequest
+case class ForgetApp(appId: String) extends AppCacheRequest
 case object Cleanup extends AppCacheRequest
 
 sealed trait AppCacheReply
@@ -29,7 +30,7 @@ case class GotApp(app: snap.App) extends AppCacheReply
 case object ForgotApp extends AppCacheReply
 
 class AppCacheActor extends Actor with ActorLogging {
-  var appCache: Map[String, Future[snap.App]] = Map.empty
+  var appCache: Map[SocketId, Future[snap.App]] = Map.empty
 
   override val supervisorStrategy = SupervisorStrategy.stoppingStrategy
 
@@ -74,18 +75,11 @@ class AppCacheActor extends Actor with ActorLogging {
               GotApp(a)
             } pipeTo sender
           case None => {
-            val appFuture: Future[snap.App] = RootConfig.user.applications.find(_.id == id) match {
-              case Some(config) =>
-                if (!new java.io.File(config.location, "project/build.properties").exists()) {
-                  Promise.failed(new RuntimeException(s"${config.location} does not contain a valid sbt project")).future
-                } else {
-                  val app = new snap.App(config, snap.Akka.system)
-                  log.debug(s"creating a new app for $id, $app")
-                  Promise.successful(app).future
-                }
-              case whatever =>
-                Promise.failed(new RuntimeException("No such app with id: '" + id + "'")).future
+            val appFuture: Future[snap.App] = AppManager.loadConfigFromAppId(id.appId) map { config =>
+              log.debug(s"creating a new app for $id")
+              new snap.App(id, config, snap.Akka.system)
             }
+
             appCache += (id -> appFuture)
 
             // set up to watch the app's actor, or forget the future
@@ -102,9 +96,9 @@ class AppCacheActor extends Actor with ActorLogging {
           }
         }
       case ForgetApp(id) =>
-        appCache.get(id) match {
+        appCache.find(_._1.appId == id) match {
           case Some(_) =>
-            log.debug("Attempt to forget in-use app")
+            log.debug(s"Attempt to forget in-use app $id")
             sender ! Status.Failure(new Exception("This app is currently in use"))
           case None =>
             RootConfig.rewriteUser { root =>
@@ -204,31 +198,10 @@ object AppManager {
   //    Return error
   // If it exists
   //    Return the app
-  def loadApp(id: String): Future[snap.App] = {
+  def loadApp(id: SocketId): Future[snap.App] = {
     implicit val timeout = Akka.longTimeoutThatIsAProblem
     (appCache ? GetApp(id)).map {
       case GotApp(app) => app
-    }
-  }
-
-  // If the app actor is already in use, disconnect
-  // it and make a new one.
-  def loadTakingOverApp(id: String): Future[snap.App] = {
-    Akka.retryOverMilliseconds(4000) {
-      loadApp(id) flatMap { app =>
-        implicit val timeout = akka.util.Timeout(5.seconds)
-        DeathReportingProxy.ask(Akka.system, app.actor, GetWebSocketCreated) map {
-          case WebSocketCreatedReply(created) =>
-            if (created) {
-              Logger.debug(s"browser tab already connected to $app, disconnecting it")
-              app.actor ! PoisonPill
-              throw new Exception("retry after killing app actor")
-            } else {
-              Logger.debug(s"app looks shiny and new! $app")
-              app
-            }
-        }
-      }
     }
   }
 
@@ -244,6 +217,20 @@ object AppManager {
       case None => {
         doInitialAppAnalysis(location, eventHandler) map { _.map(_.id) }
       }
+    }
+  }
+
+  def loadConfigFromAppId(id: String): Future[snap.AppConfig] = {
+    RootConfig.user.applications.find(_.id == id) match {
+      case Some(config) =>
+        if (!new java.io.File(config.location, "project/build.properties").exists()) {
+          Promise.failed(new RuntimeException(s"${config.location} does not contain a valid sbt project")).future
+        } else {
+
+          Promise.successful(config).future
+        }
+      case whatever =>
+        Promise.failed(new RuntimeException("No such app with id: '" + id + "'")).future
     }
   }
 

@@ -34,11 +34,16 @@ object Sbt extends Controller {
     }
   }
 
-  def requestExecution() = jsonAction { json =>
+  private def withApp(json: JsValue)(body: snap.App => Future[Result]): Future[Result] = {
     val appId = (json \ "appId").as[String]
+    val socketId = java.util.UUID.fromString((json \ "socketId").as[String])
+    AppManager.loadApp(snap.SocketId(appId, socketId)) flatMap body
+  }
+
+  def requestExecution() = jsonAction { json =>
     val command = (json \ "command").as[String]
 
-    val resultFuture = AppManager.loadApp(appId) flatMap { app =>
+    withApp(json) { app =>
       app.actor.ask(snap.RequestExecution(command)) map {
         case executionId: Long =>
           Ok(Json.obj("id" -> JsNumber(executionId)))
@@ -46,14 +51,12 @@ object Sbt extends Controller {
           throw new RuntimeException("Unexpected reply to request execution " + other)
       }
     }
-    resultFuture
   }
 
   def possibleAutocompletions() = jsonAction { json =>
-    val appId = (json \ "appId").as[String]
     val partialCommand = (json \ "partialCommand").as[String]
 
-    val resultFuture = AppManager.loadApp(appId) flatMap { app =>
+    withApp(json) { app =>
       app.actor.ask(snap.PossibleAutocompletions(partialCommand)) map {
         case choicesAny: Set[_] =>
           val choices = choicesAny.map(_.asInstanceOf[sbt.protocol.Completion])
@@ -65,6 +68,5 @@ object Sbt extends Controller {
           throw new RuntimeException("Unexpected reply to autocompletions " + other)
       }
     }
-    resultFuture
   }
 }
