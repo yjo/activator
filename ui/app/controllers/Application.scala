@@ -126,7 +126,7 @@ object Application extends Controller {
     Action.async { implicit request =>
       // TODO - Different results of attempting to load the application....
       Logger.debug("Loading app for /app html page")
-      AppManager.loadApp(snap.SocketId(id, UUID.randomUUID())).map { theApp =>
+      AppManager.getOrCreateApp(snap.AppIdSocketId(id, UUID.randomUUID())).map { theApp =>
         Logger.debug(s"loaded for html page: ${theApp}")
         Ok(views.html.main(getApplicationModel(theApp)))
       } recover {
@@ -204,9 +204,9 @@ object Application extends Controller {
     } yield file
   }
 
-  private def connectionStreams(id: snap.SocketId): Future[(Iteratee[JsValue, _], Enumerator[JsValue])] = {
-    Logger.debug(s"Computing connection streams for app ID $id")
-    val streamsFuture = AppManager.loadApp(id) flatMap { app =>
+  private def connectionStreams(socketId: UUID): Future[(Iteratee[JsValue, _], Enumerator[JsValue])] = {
+    Logger.debug(s"Computing connection streams for app ID $socketId")
+    val streamsFuture = AppManager.getApp(socketId) flatMap { app =>
       Logger.debug(s"Loaded app for connection: $app")
       // this is just easier to debug than a timeout; it isn't reliable
       if (app.isTerminated) throw new RuntimeException("App is dead")
@@ -237,14 +237,14 @@ object Application extends Controller {
    * Connects from an application page to the "stateful" actor/server we use
    * per-application for information.
    */
-  def connectApp(appId: String, socketId: String) = snap.WebSocketUtil.socketCSRFCheck {
+  def connectApp(socketId: String) = snap.WebSocketUtil.socketCSRFCheck {
 
-    val id = snap.SocketId(appId, UUID.fromString(socketId))
+    val id = UUID.fromString(socketId)
 
     WebSocket.tryAccept[JsValue] { request =>
       Logger.debug("Connect request for app id: " + id)
 
-      AppManager.loadApp(id) flatMap { theApp =>
+      AppManager.getApp(id) flatMap { theApp =>
         val streamsFuture = snap.Akka.retryOverMilliseconds(2000)(connectionStreams(id))
 
         streamsFuture onFailure {

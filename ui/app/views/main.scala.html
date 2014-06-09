@@ -20,7 +20,7 @@
     <script type="text/javascript">
       // put ?debug in your query string to enable debug mode
       window.debug = (location.search.indexOf("debug") >= 0);
-      window.wsUrl = '@webSocketURLWithCSRF(routes.Application.connectApp(model.id, model.socketId))';
+      window.wsUrl = '@webSocketURLWithCSRF(routes.Application.connectApp(model.socketId))';
       window.consoleWsUrl = '@webSocketURLWithCSRF(routes.ConsoleController.connectConsole(model.id))';
       @* The @Html thing prevents the Json from being escaped *@
       window.serverAppModel = @Html(Json.toJson(model).toString())

@@ -9,9 +9,9 @@ import java.util.concurrent.atomic.AtomicInteger
 import activator.properties.ActivatorProperties
 import java.net.URLEncoder
 
-final case class SocketId(appId: String, socketId: UUID)
+final case class AppIdSocketId(appId: String, socketId: UUID)
 
-class App(val id: SocketId, val config: AppConfig, val system: ActorSystem) extends ActorWrapper {
+class App(val id: AppIdSocketId, val config: AppConfig, val system: ActorSystem) extends ActorWrapper {
   require(config.id == id.appId)
 
   val appInstance = App.nextInstanceId.getAndIncrement()

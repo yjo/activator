@@ -4,7 +4,6 @@
 define(['commons/streams', 'commons/events', 'commons/utils'], function(streams, events, utils) {
 
   function sbtRequest(what, o) {
-    o.appId = serverAppModel.id;
     o.socketId = serverAppModel.socketId;
 
     var areq = {

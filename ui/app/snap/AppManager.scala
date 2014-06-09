@@ -20,7 +20,8 @@ import activator._
 
 sealed trait AppCacheRequest
 
-case class GetApp(id: SocketId) extends AppCacheRequest
+case class GetOrCreateApp(id: AppIdSocketId) extends AppCacheRequest
+case class GetApp(socketId: UUID) extends AppCacheRequest
 case class ForgetApp(appId: String) extends AppCacheRequest
 case object Cleanup extends AppCacheRequest
 
@@ -29,18 +30,20 @@ sealed trait AppCacheReply
 case class GotApp(app: snap.App) extends AppCacheReply
 case object ForgotApp extends AppCacheReply
 
+private case class CachedApp(appId: String, futureApp: Future[snap.App])
+
 class AppCacheActor extends Actor with ActorLogging {
-  var appCache: Map[SocketId, Future[snap.App]] = Map.empty
+  private var appCache: Map[UUID, CachedApp] = Map.empty
 
   override val supervisorStrategy = SupervisorStrategy.stoppingStrategy
 
   private def cleanup(deadRef: Option[ActorRef]): Unit = {
     appCache = appCache.filter {
-      case (id, futureApp) =>
-        if (futureApp.isCompleted) {
+      case (socketId, cached) =>
+        if (cached.futureApp.isCompleted) {
           try {
             // this should be "instant" but 5 seconds to be safe
-            val app = Await.result(futureApp, 5.seconds)
+            val app = Await.result(cached.futureApp, 5.seconds)
             if (Some(app.actor) == deadRef || app.isTerminated) {
               //log.debug("cleaning up terminated app actor {} {}", id, app.actor)
               false
@@ -50,7 +53,7 @@ class AppCacheActor extends Actor with ActorLogging {
             }
           } catch {
             case e: Exception =>
-              log.warning("cleaning up app {} which failed to load due to '{}'", id, e.getMessage)
+              log.warning("cleaning up app {} which failed to load due to '{}'", socketId, e.getMessage)
               false
           }
         } else {
@@ -66,12 +69,12 @@ class AppCacheActor extends Actor with ActorLogging {
       cleanup(Some(ref))
 
     case req: AppCacheRequest => req match {
-      case GetApp(id) =>
-        appCache.get(id) match {
-          case Some(f) =>
+      case GetOrCreateApp(id) =>
+        appCache.get(id.socketId) match {
+          case Some(cached) =>
             log.debug(s"returning existing app from app cache for $id")
-            f map { a =>
-              log.debug(s"existing app $a terminated=${a.isTerminated}")
+            cached.futureApp map { a =>
+              log.debug(s"existing app ${a.id} terminated=${a.isTerminated}")
               GotApp(a)
             } pipeTo sender
           case None => {
@@ -80,7 +83,7 @@ class AppCacheActor extends Actor with ActorLogging {
               new snap.App(id, config, snap.Akka.system)
             }
 
-            appCache += (id -> appFuture)
+            appCache += (id.socketId -> CachedApp(id.appId, appFuture))
 
             // set up to watch the app's actor, or forget the future
             // if the app is never created
@@ -95,14 +98,26 @@ class AppCacheActor extends Actor with ActorLogging {
             appFuture.map(GotApp(_)).pipeTo(sender)
           }
         }
-      case ForgetApp(id) =>
-        appCache.find(_._1.appId == id) match {
+      case GetApp(socketId) =>
+        appCache.get(socketId) match {
+          case Some(cached) =>
+            log.debug(s"returning existing app from app cache for $socketId")
+            cached.futureApp map { a =>
+              log.debug(s"existing app ${a.id} terminated=${a.isTerminated}")
+              GotApp(a)
+            } pipeTo sender
+          case None => {
+            sender ! Status.Failure(new RuntimeException(s"No app found with socket ID $socketId"))
+          }
+        }
+      case ForgetApp(appId) =>
+        appCache.find(_._2.appId == appId) match {
           case Some(_) =>
-            log.debug(s"Attempt to forget in-use app $id")
+            log.debug(s"Attempt to forget in-use app $appId")
             sender ! Status.Failure(new Exception("This app is currently in use"))
           case None =>
             RootConfig.rewriteUser { root =>
-              root.copy(applications = root.applications.filterNot(_.id == id))
+              root.copy(applications = root.applications.filterNot(_.id == appId))
             } map { _ =>
               ForgotApp
             } pipeTo sender
@@ -198,9 +213,16 @@ object AppManager {
   //    Return error
   // If it exists
   //    Return the app
-  def loadApp(id: SocketId): Future[snap.App] = {
+  def getOrCreateApp(id: AppIdSocketId): Future[snap.App] = {
     implicit val timeout = Akka.longTimeoutThatIsAProblem
-    (appCache ? GetApp(id)).map {
+    (appCache ? GetOrCreateApp(id)).map {
+      case GotApp(app) => app
+    }
+  }
+
+  def getApp(socketId: UUID): Future[snap.App] = {
+    implicit val timeout = Akka.longTimeoutThatIsAProblem
+    (appCache ? GetApp(socketId)).map {
       case GotApp(app) => app
     }
   }

@@ -11,7 +11,7 @@ GET         /api/templates/:id/tutorial/*location        controllers.api.Templat
 # Operations on an app
 GET         /api/app/history                             controllers.Application.getHistory
 DELETE      /api/app/history/*appId                      controllers.Application.forgetApp(appId)
-GET         /api/app/connect/:appId/:socket              controllers.Application.connectApp(appId, socket)
+GET         /api/app/connect/*socketId                   controllers.Application.connectApp(socketId)
 
 # sbt things
 POST        /api/sbt/requestExecution                    controllers.api.Sbt.requestExecution

@@ -35,9 +35,8 @@ object Sbt extends Controller {
   }
 
   private def withApp(json: JsValue)(body: snap.App => Future[Result]): Future[Result] = {
-    val appId = (json \ "appId").as[String]
     val socketId = java.util.UUID.fromString((json \ "socketId").as[String])
-    AppManager.loadApp(snap.SocketId(appId, socketId)) flatMap body
+    AppManager.getApp(socketId) flatMap body
   }
 
   def requestExecution() = jsonAction { json =>
