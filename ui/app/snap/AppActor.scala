@@ -34,6 +34,7 @@ case object CloseClient extends AppRequest
 sealed trait ClientAppRequest extends AppRequest
 
 case class RequestExecution(command: String) extends ClientAppRequest
+case class CancelExecution(executionId: Long) extends ClientAppRequest
 case class PossibleAutocompletions(partialCommand: String, detailLevel: Option[Int] = None) extends ClientAppRequest
 
 sealed trait AppReply
@@ -251,6 +252,8 @@ class AppActor(val config: AppConfig) extends Actor with ActorLogging {
         req match {
           case RequestExecution(command) =>
             client.requestExecution(command, interaction = None)
+          case CancelExecution(executionId) =>
+            client.cancelExecution(executionId)
           case PossibleAutocompletions(partialCommand, detailLevelOption) =>
             client.possibleAutocompletions(partialCommand, detailLevel = detailLevelOption.getOrElse(0))
         }

@@ -52,6 +52,19 @@ object Sbt extends Controller {
     }
   }
 
+  def cancelExecution() = jsonAction { json =>
+    val executionId = (json \ "executionId").as[Long]
+
+    withApp(json) { app =>
+      app.actor.ask(snap.CancelExecution(executionId)) map {
+        case result: Boolean =>
+          Ok(Json.obj("result" -> JsBoolean(result)))
+        case other =>
+          throw new RuntimeException("Unexpected reply to request execution " + other)
+      }
+    }
+  }
+
   def possibleAutocompletions() = jsonAction { json =>
     val partialCommand = (json \ "partialCommand").as[String]
 

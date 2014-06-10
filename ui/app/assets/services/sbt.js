@@ -31,6 +31,13 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
     });
   }
 
+  function cancelExecution(id) {
+    // TODO return something better (with the return value already parsed)
+    return sbtRequest('cancelExecution', {
+      executionId: id
+    });
+  }
+
   var executionsById = {};
   var executions = ko.observable([]);
   var tasksById = {};
@@ -151,6 +158,7 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
   return {
     possibleAutocompletions: possibleAutocompletions,
     requestExecution: requestExecution,
+    cancelExecution: cancelExecution,
     legacySubscribeLog: legacySubscribeLog,
     executions: executions,
     tasks: tasks

@@ -15,6 +15,7 @@ GET         /api/app/connect/*socketId                   controllers.Application
 
 # sbt things
 POST        /api/sbt/requestExecution                    controllers.api.Sbt.requestExecution
+POST        /api/sbt/cancelExecution                     controllers.api.Sbt.cancelExecution
 POST        /api/sbt/possibleAutocompletions             controllers.api.Sbt.possibleAutocompletions
 
 # Local system operations
