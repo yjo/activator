@@ -1036,38 +1036,46 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
     inspect: inspect.status
   };
 
+  var findExecution = function(command) {
+    return $.grep(newSbt.executions(), function(item, i) {
+      return item.command == command || (item.command.indexOf(':' + command) >= 0);
+    });
+  };
+
+  var executionExists = function(command) {
+    var matching = findExecution(command);
+    return matching.length > 0;
+  };
+
+  var isTaskActive = function(name) {
+    return executionExists(name);
+  };
+
   // a different way to view status with just booleans
   var activity = {
+      // TODO ideally "compiling" would mean "an execution is running
+      // which has the compile task involved and we aren't up to the compile
+      // task yet" or something like that, so that when doing "test" we would
+      // also show for a bit that we are doing a compile.
       compiling: ko.computed(function() {
-        return compile.haveActiveTask();
+        return isTaskActive('compile');
       }),
       running: ko.computed(function() {
-        var playStarted = run.playAppStarted();
-        var status = run.status();
-        // this play-specific logic should really be moved
-        // into run.status() computation but it will be
-        // easier to do that when we switch to sbt server
-        if (false && app.hasPlay()) // TODO disabled because echo:run breaks it.
-          return playStarted;
-        else
-          return status == Status.RUNNING;
+        // TODO see 'launching' below, this needs to be sorted out.
+        return isTaskActive('run');
       }),
       testing: ko.computed(function() {
-        return test.haveActiveTask();
+        return isTaskActive('test');
       }),
-      inspecting: ko.observable(false)
+      inspecting: ko.observable(false) // FIXME
   };
   activity.busy = ko.computed(function() {
-    // we need to always look at all dependencies so
-    // knockout knows what they are
-    var c = activity.compiling();
-    var r = activity.running();
-    var t = activity.testing();
-    return c || r || t;
+    return newSbt.executions().length > 0;
   });
   // this is meant to be "we are working on running but
   // not started up yet" (mutually exclusive with "running")
   activity.launching = ko.computed(function() {
+    // TODO update this for newSbt
     var status = run.status();
     if (activity.running())
       return false;
@@ -1077,54 +1085,18 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
     }
   });
 
-  var isTaskActive = function(name) {
-    // eventually this should just pass the task name
-    // on to sbt...
-    if (name == 'run') {
-      return activity.running() || activity.launching();
-    } else if (name == 'compile') {
-      return activity.compiling();
-    } else if (name == 'test') {
-      return activity.testing();
-    } else {
-      throw new Error("Unknown task name: " + name);
-    }
-  };
-
   var startTask = function(name) {
-    if (isTaskActive(name))
-      return;
-
-    // eventually this should just pass the task name
-    // on to sbt...
-    if (name == 'run') {
-        run.doRun();
-    } else if (name == 'compile') {
-        compile.doCompile();
-    } else if (name == 'test') {
-        test.doTest();
-    } else {
-      throw new Error("Unknown task name: " + name);
-    }
+    newSbt.requestExecution(name);
   };
+
+  var restartsPending = {};
 
   var stopTask = function(name) {
-    if (!isTaskActive(name))
-      return;
-
-    // eventually this should just pass the task name
-    // on to sbt...
-    if (name == 'run') {
-      run.restartPending(false);
-      run.doStop();
-    } else if (name == 'compile') {
-      compile.stopCompile();
-    } else if (name == 'test') {
-      test.restartPending(false);
-      test.doTest(false);
-    } else {
-      throw new Error("Unknown task name: " + name);
-    }
+    restartsPending[name] = false;
+    var matching = findExecution(name);
+    $.each(matching, function(i, item) {
+      newSbt.cancelExecution(item.executionId);
+    });
   };
 
   var toggleTask = function(name) {
@@ -1135,28 +1107,21 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
   };
 
   var restartTask = function(name) {
-    if (name == 'run') {
-      run.doRestart();
-    } else if (name == 'compile') {
-      compile.doRestart();
-    } else if (name == 'test') {
-      test.doRestart();
-    } else {
-      throw new Error("Unknown task name: " + name);
-    }
+    stopTask(name); // sets restartsPending to false
+    restartsPending[name] = true;
+    // FIXME we need to observe when the task completes
+    // and then start it again if a restart is pending
   };
 
-  var allTasks = ['run', 'test', 'compile'];
-
   var stopAllTasks = function() {
-    $.each(allTasks, function(i, item) {
-      stopTask(item);
+    $.each(newSbt.executions(), function(i, item) {
+      newSbt.cancelExecution(item.executionId);
     });
   };
 
   var restartAllTasks = function() {
-    $.each(allTasks, function(i, item) {
-      restartTask(item);
+    $.each(newSbt.executions(), function(i, item) {
+      restartTask(item.command);
     });
   };
 
@@ -1205,6 +1170,8 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
     TestOutcome: TestOutcome,
     TestResult: TestResult,
     // launch/stop compile, test, run
+    // FIXME TODO all of these methods currently affect executions, not tasks.
+    // Need to be renamed.
     startTask: startTask,
     stopTask: stopTask,
     toggleTask: toggleTask,

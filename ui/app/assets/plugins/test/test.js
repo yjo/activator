@@ -21,7 +21,7 @@ define([
       self.results = build.test.results;
       self.testStatus = build.test.testStatus;
       self.hasResults = build.test.hasResults;
-      self.haveActiveTask = build.test.haveActiveTask;
+      self.haveActiveTask = build.activity.testing;
       self.rerunOnBuild = build.test.rerunOnBuild;
       self.restartPending = build.test.restartPending;
       self.resultStats = build.test.resultStats;

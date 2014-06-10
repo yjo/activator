@@ -32,7 +32,7 @@ define(['services/build', 'text!./run.html', 'css!./run.css', "widgets/navigatio
     // We want to just change the whole 'build' API anyway.
     self.playAppLink = build.run.playAppLink;
     self.playAppStarted = build.run.playAppStarted;
-    self.haveActiveTask = build.run.haveActiveTask;
+    self.haveActiveTask = build.activity.running;
     self.haveMainClass = build.run.haveMainClass;
     self.currentMainClass = build.run.currentMainClass;
     self.mainClasses = build.run.mainClasses;

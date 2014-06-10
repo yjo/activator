@@ -13,7 +13,7 @@ define(['text!./compile.html', 'main/plugins', 'services/build', 'css!./compile.
 
       self.title = ko.observable("Compile");
       self.startStopLabel = ko.computed(function() {
-        if (build.compile.haveActiveTask())
+        if (build.activity.compiling())
           return "Stop compiling";
         else
           return "Start compiling";
