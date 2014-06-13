@@ -8,6 +8,7 @@ import scala.concurrent.{ Future, Await }
 import scala.util.{ Try, Failure, Success }
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.iteratee._
+import play.api.libs.ws.WSRequestHolder
 import akka.util.Timeout
 import scala.concurrent.duration._
 import java.io._
@@ -83,7 +84,7 @@ object HttpHelper {
   def doGet(
     destination: File,
     outputStream: FileOutputStream,
-    holder: WS.WSRequestHolder,
+    holder: WSRequestHolder,
     observer: ProgressObserver): Future[Iteratee[Array[Byte], File]] = {
     holder.get {
       case DefaultWSResponseHeaders(200, rh) =>
@@ -96,7 +97,7 @@ object HttpHelper {
   def doPost[T](body: T)(
     destination: File,
     outputStream: FileOutputStream,
-    holder: WS.WSRequestHolder,
+    holder: WSRequestHolder,
     observer: ProgressObserver)(implicit wrt: Writeable[T], ct: ContentTypeOf[T]): Future[Iteratee[Array[Byte], File]] = {
     holder.postAndRetrieveStream(body) {
       case DefaultWSResponseHeaders(200, rh) =>
@@ -107,10 +108,10 @@ object HttpHelper {
   }
 
   def retrieveFileHttp(
-    holder: WS.WSRequestHolder,
+    holder: WSRequestHolder,
     observer: ProgressObserver,
     destination: File = File.createTempFile("activator_", ".tmp"),
-    executor: (File, FileOutputStream, WS.WSRequestHolder, ProgressObserver) => Future[Iteratee[Array[Byte], File]] = doGet,
+    executor: (File, FileOutputStream, WSRequestHolder, ProgressObserver) => Future[Iteratee[Array[Byte], File]] = doGet,
     timeout: akka.util.Timeout = Akka.longTimeoutThatIsAProblem): Future[File] = {
     // import com.ning.http.client.Realm.AuthScheme
     val outputStream = new FileOutputStream(destination)

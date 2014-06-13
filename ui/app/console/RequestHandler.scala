@@ -12,7 +12,7 @@ trait RequestHandlerLike[S <: ModuleInformationBase] {
 
 trait RequestHandler[S <: ModuleInformationBase] extends Actor with ActorLogging with RequestHandlerLike[S] {
   def receive = {
-    case mi: S => onModuleInformation(sender, mi)
+    case mi: S @unchecked => onModuleInformation(sender, mi)
   }
 }
 

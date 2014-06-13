@@ -70,6 +70,14 @@ object FileHelper {
     }
   }
 
+  def getFiles(source: File): Set[File] = {
+    if (source.isFile()) Set(source)
+    else Option(source.listFiles).map { lf =>
+      val (newFiles, dirs) = lf.toSeq.partition(_.isFile())
+      (newFiles ++ dirs.flatMap(d => getFiles(d))).toSet
+    } getOrElse (Set.empty[File])
+  }
+
   def copyFile(source: File, destination: File, replaceDestination: Boolean = true): Unit =
     (source.exists(), source.isFile()) match {
       case (true, true) =>

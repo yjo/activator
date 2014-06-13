@@ -28,6 +28,14 @@ case class NewRelic(configFile: File, agentJar: File, environment: String = "dev
     s"-Dnewrelic.environment=$environment")
 }
 
+case class AppDynamics(agentJar: File, applicationName: String, nodeName: String, tierName: String) extends Instrumentation(Instrumentations.AppDynamicsTag) {
+  def jvmArgs: Seq[String] = Seq(
+    s"-javaagent:${agentJar.getPath}",
+    s"-Dappdynamics.agent.tierName=${tierName}",
+    s"-Dappdynamics.agent.nodeName=${nodeName}",
+    s"-Dappdynamics.agent.applicationName=${applicationName}")
+}
+
 object NewRelic {
   sealed abstract class CheckResult(val message: String)
   case object MissingConfigFile extends CheckResult("Missing configuration file")
@@ -201,6 +209,59 @@ object NewRelic {
   }
 }
 
+object AppDynamics {
+  sealed abstract class CheckResult(val message: String)
+  case object IncompleteProvisioning extends CheckResult("AppDynamics provisioning incomplete")
+
+  def fromConfig(in: TSConfig): Config = {
+    import Instrumentations.withMonitoringConfig
+    withMonitoringConfig(in) { configRoot =>
+      val config = configRoot.getConfig("appdynamics")
+      Config(downloadUrlTemplate = config.getString("download-template"),
+        timeout = Timeout(config.getMilliseconds("timeout").intValue.millis),
+        extractRootTemplate = config.getString("extract-root-template"))
+    }
+  }
+
+  def provisionAppDynamics(source: File, destination: File, key: String, appName: String): Unit = {
+    val destRelative = FileHelper.relativeTo(destination)_
+    val sourceRelative = FileHelper.relativeTo(FileHelper.relativeTo(source)("appdynamics"))_
+    val appDynamics = destRelative("appdynamics")
+    val appDynamicsRelative = FileHelper.relativeTo(appDynamics)_
+    appDynamics.mkdirs()
+    getFiles().foreach(f => FileHelper.copyFile(sourceRelative(f), appDynamicsRelative(f)))
+  }
+
+  def isProjectEnabled(source: File)(target: File): Boolean = {
+    val prefix = FileHelper.relativeTo(source)("appdynamics")
+    val targetDir = FileHelper.relativeTo(target)("appdynamics")
+    val prefexRegex = s"^$prefix".r
+    val sourceView = FileHelper.getFiles(prefix).map(f => new File(prefexRegex.replaceFirstIn(f.toString)))
+    FileHelper.getFiles(targetDir).toSeq.sortBy(_.getAbsolutePath()).zip(sourceView.toSeq.sortBy(_.getAbsolutePath())).forall {
+      case (t, s) => t.toString.endsWith(s.toString)
+    }
+  }
+
+  def hasAppDynamics(source: File): Boolean = {
+    val sourceView = FileHelper.relativeTo(source)("appdynamics")
+    sourceView.exists() && sourceView.isDirectory() && !sourceView.listFiles().isEmpty
+  }
+
+  private lazy val activatorHome: File = new File(ActivatorProperties.ACTIVATOR_HOME_FILENAME)
+
+  case class Config(
+    downloadUrlTemplate: String,
+    timeout: Timeout,
+    extractRootTemplate: String) {
+    val url: String = downloadUrlTemplate
+
+    def extractRoot(relativeTo: File = activatorHome): File = new File(relativeTo, extractRootTemplate)
+
+    def extractFile(in: File, relativeTo: File = activatorHome): File =
+      FileHelper.unZipFile(in, extractRoot(relativeTo = relativeTo))
+  }
+}
+
 object Instrumentations {
   import play.api.libs.json._
   import play.api.libs.functional.syntax._
@@ -208,10 +269,12 @@ object Instrumentations {
 
   case object InspectTag extends InstrumentationTag("inspect")
   case object NewRelicTag extends InstrumentationTag("newRelic")
+  case object AppDynamicsTag extends InstrumentationTag("appDynamics")
 
   def fromString(in: String): InstrumentationTag = in.trim() match {
     case InspectTag.name => InspectTag
     case NewRelicTag.name => NewRelicTag
+    case AppDynamicsTag.name => AppDynamicsTag
   }
 
   def withMonitoringConfig[T](in: TSConfig)(body: TSConfig => T): T = {
