@@ -186,7 +186,7 @@ object Packaging {
     // TODO - Add a local repository for resolving...
     if(!tprops.exists) IO.write(tprops, """
 [scala]
-  version: %s
+  version: ${sbt.scala.version-auto}
 
 [app]
   org: com.typesafe.activator
@@ -212,7 +212,7 @@ object Packaging {
   checksums: ${sbt.checksums-sha1,md5}
   override-build-repos: ${sbt.override.build.repos-false}
   repository-config: ${sbt.repository.config-${sbt.global.base-${user.home}/.sbt}/repositories}
-""" format(scalaVersion, version, launcherGeneration))
+""" format(version, launcherGeneration))
     tprops -> "sbt/sbt.boot.properties"
   }
 

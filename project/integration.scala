@@ -135,7 +135,7 @@ case class IntegrationContext(launchJar: File,
   
   private def makePropertiesString(name: String, cwd: File): String =
     """|[scala]
-       |  version: %s
+       |  version: ${sbt.scala.version-auto}
        |
        |[app]
        |  org: com.typesafe.activator
@@ -156,5 +156,5 @@ case class IntegrationContext(launchJar: File,
        |  ivy-home: %s/.ivy2
        |  checksums: ${sbt.checksums-sha1,md5}
        |  override-build-repos: ${sbt.override.build.repos-false}
-       |""".stripMargin format (scalaVersion, version, name, cleanUriFileString(repository.getAbsolutePath), cleanUriFileString(cwd.getAbsolutePath), cwd.getAbsolutePath)
+       |""".stripMargin format (version, name, cleanUriFileString(repository.getAbsolutePath), cleanUriFileString(cwd.getAbsolutePath), cwd.getAbsolutePath)
 }
