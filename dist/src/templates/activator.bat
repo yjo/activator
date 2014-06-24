@@ -153,6 +153,16 @@ rem Loop through the arguments, building remaining args in args variable
 set args=
 :argsloop
 if not "%~1"=="" (
+  rem Checks if the argument contains "-D" and if true, adds argument 1 with 2 and puts an equal sign between them.
+  rem This is done since batch considers "=" to be a delimiter so we need to circumvent this behavior with a small hack.
+  set arg1=%~1
+  if "!arg1:~0,2!"=="-D" (
+   	set "args=%args% "%~1"="%~2""
+    shift
+    shift
+    goto argsloop
+  )
+
   if "%~1"=="-jvm-debug" (
     if not "%~2"=="" (
       rem This piece of magic somehow checks that an argument is a number
