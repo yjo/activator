@@ -136,7 +136,7 @@ object ActivatorCli extends ActivatorCliHelper {
       Duration(5, MINUTES))
 
     result match {
-      case _: ProcessSuccess => printUsage(pName, projectDir)
+      case _: ProcessSuccess[_] => printUsage(pName, projectDir)
       case f: ProcessFailure =>
         f.failures.foreach { System.err.println(_) }
         System.err.println("Failed to clone the template. Make sure you have internet access and please try again.")
