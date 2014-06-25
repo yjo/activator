@@ -14,15 +14,6 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
   var appDynamics = utils.Singleton({
     init: function() {
       var self = this;
-      self.isProjectEnabled = ko.observable("unknown");
-      self.checkIsProjectEnabled = function() {
-        streams.send(adMessage("isProjectEnabled"));
-      };
-      self.enableProject = function(key,name) {
-        var message = adMessageWith("enable",{key: key, name: name});
-        console.log("message: "+JSON.stringify(message,null,2));
-        streams.send(message);
-      };
       self.observeProvision = function(observable) {
         return streams.subscribe({
           filter: function(event) {
@@ -49,14 +40,6 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
           if (event.type == "provisioned") {
             console.log("AppDynamics provisioned");
             streams.send(adMessage("available"));
-          }
-          if (event.type == "isProjectEnabledResponse") {
-            console.log("Setting isProjectEnabled to: " + event.result);
-            self.isProjectEnabled(event.result);
-          }
-          if (event.type == "projectEnabled") {
-            console.log("Project enabled for AppDynamics");
-            self.checkIsProjectEnabled();
           }
         }
       });

@@ -32,7 +32,7 @@ case class NotifyWebSocket(json: JsObject) extends AppRequest
 case object InitialTimeoutExpired extends AppRequest
 case class ForceStopTask(id: String) extends AppRequest
 case class UpdateSourceFiles(files: Set[File]) extends AppRequest
-case class ProvisionSbtPool(instrumentation: InstrumentationTag, originalMessage: GetTaskActor, sender: ActorRef) extends AppRequest
+case class ProvisionSbtPool(instrumentation: InstrumentationRequestType, originalMessage: GetTaskActor, sender: ActorRef) extends AppRequest
 
 sealed trait AppReply
 
@@ -40,7 +40,19 @@ case class TaskActorReply(ref: ActorRef) extends AppReply
 case object WebSocketAlreadyUsed extends AppReply
 case class WebSocketCreatedReply(created: Boolean) extends AppReply
 
+class InstrumentationRequestException(message: String) extends Exception(message)
+
+object RequestHelpers {
+  def extractTypeOnly[T](typeName: String, value: T): Reads[T] =
+    extractTagged("type", typeName)(Reads[T](_ => JsSuccess(value)))
+
+  def extractType[T](typeName: String)(reads: Reads[T]): Reads[T] =
+    extractTagged("type", typeName)(reads)
+}
+
 object NewRelicRequest {
+  import RequestHelpers._
+
   val requestTag = "NewRelicRequest"
   val responseTag = "NewRelicResponse"
 
@@ -72,85 +84,153 @@ object NewRelicRequest {
   case class ProjectEnabled(request: Request) extends Response
   case class IsProjectEnabledResponse(result: Boolean, request: Request) extends Response
 
-  def extractTypeOnly[T](typeName: String, value: T): Reads[T] =
-    extractTagged("type", typeName)(Reads[T](_ => JsSuccess(value)))
-
-  def extractType[T](typeName: String)(reads: Reads[T]): Reads[T] =
-    extractTagged("type", typeName)(reads)
-
-  implicit val provisionReads: Reads[Provision.type] =
+  implicit val newRelicProvisionReads: Reads[Provision.type] =
     extractRequest[Provision.type](requestTag)(extractTypeOnly("provision", Provision))
 
-  implicit val isProjectEnabledReads: Reads[IsProjectEnabled.type] =
+  implicit val newRelicIsProjectEnabledReads: Reads[IsProjectEnabled.type] =
     extractRequest[IsProjectEnabled.type](requestTag)(extractTypeOnly("isProjectEnabled", IsProjectEnabled))
 
-  implicit val provisionWrites: Writes[Provision.type] =
+  implicit val newRelicProvisionWrites: Writes[Provision.type] =
     emitRequest(requestTag)(_ => Json.obj("type" -> "provision"))
 
-  implicit val isProjectEnabledWrites: Writes[IsProjectEnabled.type] =
+  implicit val newRelicIsProjectEnabledWrites: Writes[IsProjectEnabled.type] =
     emitRequest(requestTag)(_ => Json.obj("type" -> "isProjectEnabled"))
 
-  implicit val availableReads: Reads[Available.type] =
+  implicit val newRelicAvailableReads: Reads[Available.type] =
     extractRequest[Available.type](requestTag)(extractTypeOnly("available", Available))
 
-  implicit val availableWrites: Writes[Available.type] =
+  implicit val newRelicAvailableWrites: Writes[Available.type] =
     emitRequest(requestTag)(_ => Json.obj("type" -> "available"))
 
-  implicit val enableProjectReads: Reads[EnableProject] =
+  implicit val newRelicEnableProjectReads: Reads[EnableProject] =
     extractRequest[EnableProject](requestTag)(extractType("enable")(((__ \ "key").read[String] and
       (__ \ "name").read[String])(EnableProject.apply _)))
 
-  implicit val enableProjectWrites: Writes[EnableProject] =
+  implicit val newRelicEnableProjectWrites: Writes[EnableProject] =
     emitRequest(requestTag)(in => Json.obj("type" -> "enable",
       "key" -> in.key,
       "name" -> in.appName))
 
   implicit val newRelicRequestReads: Reads[Request] = {
-    val pr = provisionReads.asInstanceOf[Reads[Request]]
-    val ar = availableReads.asInstanceOf[Reads[Request]]
-    val epr = enableProjectReads.asInstanceOf[Reads[Request]]
-    val iper = isProjectEnabledReads.asInstanceOf[Reads[Request]]
+    val pr = newRelicProvisionReads.asInstanceOf[Reads[Request]]
+    val ar = newRelicAvailableReads.asInstanceOf[Reads[Request]]
+    val epr = newRelicEnableProjectReads.asInstanceOf[Reads[Request]]
+    val iper = newRelicIsProjectEnabledReads.asInstanceOf[Reads[Request]]
     extractRequest[Request](requestTag)(pr.orElse(ar).orElse(epr).orElse(iper))
   }
 
-  implicit val provisionedWrites: Writes[Provisioned.type] =
+  implicit val newRelicProvisionedWrites: Writes[Provisioned.type] =
     emitResponse(responseTag)(in => Json.obj("type" -> "provisioned",
       "request" -> in.request))
 
-  implicit val isProjectEnabledResponseWrites: Writes[IsProjectEnabledResponse] =
+  implicit val newRelicIsProjectEnabledResponseWrites: Writes[IsProjectEnabledResponse] =
     emitResponse(responseTag)(in => Json.obj("type" -> "isProjectEnabledResponse",
       "result" -> in.result,
       "request" -> in.request))
 
-  implicit val availableResponseWrites: Writes[AvailableResponse] =
+  implicit val newRelicAvailableResponseWrites: Writes[AvailableResponse] =
     emitResponse(responseTag)(in => Json.obj("type" -> "availableResponse",
       "result" -> in.result,
       "request" -> in.request))
 
-  implicit val projectEnabledWrites: Writes[ProjectEnabled] =
+  implicit val newRelicProjectEnabledWrites: Writes[ProjectEnabled] =
     emitResponse(responseTag)(in => Json.obj("type" -> "projectEnabled",
       "request" -> in.request))
 
-  implicit val errorResponseWrites: Writes[ErrorResponse] =
+  implicit val newRelicErrorResponseWrites: Writes[ErrorResponse] =
     emitResponse(responseTag)(in => Json.obj("type" -> "error",
       "message" -> in.message,
       "request" -> in.request))
 
   implicit val newRelicRequestWrites: Writes[Request] =
     Writes {
-      case x: EnableProject => enableProjectWrites.writes(x)
-      case x @ IsProjectEnabled => isProjectEnabledWrites.writes(x)
-      case x @ Provision => provisionWrites.writes(x)
-      case x @ Available => availableWrites.writes(x)
+      case x: EnableProject => newRelicEnableProjectWrites.writes(x)
+      case x @ IsProjectEnabled => newRelicIsProjectEnabledWrites.writes(x)
+      case x @ Provision => newRelicProvisionWrites.writes(x)
+      case x @ Available => newRelicAvailableWrites.writes(x)
     }
 
   implicit val newRelicResponseWrites: Writes[Response] =
     Writes {
-      case x @ Provisioned => provisionedWrites.writes(x)
-      case x: IsProjectEnabledResponse => isProjectEnabledResponseWrites.writes(x)
-      case x: AvailableResponse => availableResponseWrites.writes(x)
-      case x: ProjectEnabled => projectEnabledWrites.writes(x)
-      case x: ErrorResponse => errorResponseWrites.writes(x)
+      case x @ Provisioned => newRelicProvisionedWrites.writes(x)
+      case x: IsProjectEnabledResponse => newRelicIsProjectEnabledResponseWrites.writes(x)
+      case x: AvailableResponse => newRelicAvailableResponseWrites.writes(x)
+      case x: ProjectEnabled => newRelicProjectEnabledWrites.writes(x)
+      case x: ErrorResponse => newRelicErrorResponseWrites.writes(x)
+    }
+
+  def unapply(in: JsValue): Option[Request] = Json.fromJson[Request](in).asOpt
+}
+
+object AppDynamicsRequest {
+  import RequestHelpers._
+
+  val requestTag = "AppDynamicsRequest"
+  val responseTag = "AppDynamicsResponse"
+
+  sealed trait Request {
+    def error(message: String): Response =
+      ErrorResponse(message, this)
+  }
+  case object Provision extends Request {
+    def response: Response = Provisioned
+  }
+  case object Available extends Request {
+    def response(result: Boolean): Response = AvailableResponse(result, this)
+  }
+
+  sealed trait Response {
+    def request: Request
+  }
+  case object Provisioned extends Response {
+    final val request: Request = Provision
+  }
+  case class ErrorResponse(message: String, request: Request) extends Response
+  case class AvailableResponse(result: Boolean, request: Request) extends Response
+
+  implicit val appDynamicsProvisionReads: Reads[Provision.type] =
+    extractRequest[Provision.type](requestTag)(extractTypeOnly("provision", Provision))
+
+  implicit val appDynamicsProvisionWrites: Writes[Provision.type] =
+    emitRequest(requestTag)(_ => Json.obj("type" -> "provision"))
+
+  implicit val appDynamicsAvailableReads: Reads[Available.type] =
+    extractRequest[Available.type](requestTag)(extractTypeOnly("available", Available))
+
+  implicit val appDynamicsAvailableWrites: Writes[Available.type] =
+    emitRequest(requestTag)(_ => Json.obj("type" -> "available"))
+
+  implicit val appDynamicsRequestReads: Reads[Request] = {
+    val pr = appDynamicsProvisionReads.asInstanceOf[Reads[Request]]
+    val ar = appDynamicsAvailableReads.asInstanceOf[Reads[Request]]
+    extractRequest[Request](requestTag)(pr.orElse(ar))
+  }
+
+  implicit val appDynamicsProvisionedWrites: Writes[Provisioned.type] =
+    emitResponse(responseTag)(in => Json.obj("type" -> "provisioned",
+      "request" -> in.request))
+
+  implicit val appDynamicsAvailableResponseWrites: Writes[AvailableResponse] =
+    emitResponse(responseTag)(in => Json.obj("type" -> "availableResponse",
+      "result" -> in.result,
+      "request" -> in.request))
+
+  implicit val appDynamicsErrorResponseWrites: Writes[ErrorResponse] =
+    emitResponse(responseTag)(in => Json.obj("type" -> "error",
+      "message" -> in.message,
+      "request" -> in.request))
+
+  implicit val appDynamicsRequestWrites: Writes[Request] =
+    Writes {
+      case x @ Provision => appDynamicsProvisionWrites.writes(x)
+      case x @ Available => appDynamicsAvailableWrites.writes(x)
+    }
+
+  implicit val appDynamicsResponseWrites: Writes[Response] =
+    Writes {
+      case x @ Provisioned => appDynamicsProvisionedWrites.writes(x)
+      case x: AvailableResponse => appDynamicsAvailableResponseWrites.writes(x)
+      case x: ErrorResponse => appDynamicsErrorResponseWrites.writes(x)
     }
 
   def unapply(in: JsValue): Option[Request] = Json.fromJson[Request](in).asOpt
@@ -167,6 +247,31 @@ object InspectRequest {
     emitRequest(tag)(in => obj("location" -> in.json))
 
   def unapply(in: JsValue): Option[InspectRequest] = Json.fromJson[InspectRequest](in).asOpt
+}
+
+sealed abstract class InstrumentationRequestType(val tag: InstrumentationTag) {
+  def name: String = tag.name
+}
+
+object InstrumentationRequestTypes {
+  case object Inspect extends InstrumentationRequestType(Instrumentations.InspectTag)
+  case object NewRelic extends InstrumentationRequestType(Instrumentations.NewRelicTag)
+  case class AppDynamics(applicationName: String, nodeName: String, tierName: String) extends InstrumentationRequestType(Instrumentations.AppDynamicsTag)
+
+  def fromParams(params: Map[String, Any]): InstrumentationRequestType =
+    params.get("instrumentation").asInstanceOf[Option[String]].map(Instrumentations.validate).getOrElse(Instrumentations.InspectTag) match {
+      case Instrumentations.InspectTag => InstrumentationRequestTypes.Inspect
+      case Instrumentations.NewRelicTag => InstrumentationRequestTypes.NewRelic
+      case Instrumentations.AppDynamicsTag =>
+        (for {
+          applicationName <- params.get("applicationName").asInstanceOf[Option[String]]
+          nodeName <- params.get("nodeName").asInstanceOf[Option[String]]
+          tierName <- params.get("tierName").asInstanceOf[Option[String]]
+        } yield InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName)).getOrElse {
+          throw new InstrumentationRequestException(s"Invalid request for AppDynamics instrumentation.  Request must include: 'applicationName', 'nodeName', and 'tierName'.  Got: $params")
+        }
+
+    }
 }
 
 object AppActor {
@@ -187,9 +292,8 @@ object AppActor {
     case _ => false
   }
 
-  def getRunInstrumentation(request: protocol.Request): InstrumentationTag = request match {
-    case protocol.GenericRequest(_, command, params) if runTasks(command) =>
-      params.get("instrumentation").asInstanceOf[Option[String]].map(Instrumentations.validate).getOrElse(Instrumentations.InspectTag)
+  def getRunInstrumentation(request: protocol.Request): InstrumentationRequestType = request match {
+    case protocol.GenericRequest(_, command, params) if runTasks(command) => InstrumentationRequestTypes.fromParams(params)
     case _ => throw new RuntimeException(s"Cannot get instrumentation from a non-run request: $request")
   }
 
@@ -199,6 +303,8 @@ object AppActor {
       else r
     case r => r
   }
+
+  val fallbackMachineName = "activator-machine"
 }
 
 class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher) extends Actor with ActorLogging {
@@ -273,7 +379,7 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
     case req: AppRequest => req match {
       case m @ GetTaskActor(taskId, description, request) if isRunRequest(request) =>
         val instrumentation = getRunInstrumentation(request)
-        getSbtPoolFor(instrumentation) match {
+        getSbtPoolFor(instrumentation.tag) match {
           case None =>
             self ! ProvisionSbtPool(instrumentation, m, sender)
           case Some(pool) =>
@@ -285,17 +391,24 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
             sender ! TaskActorReply(task)
         }
       case ProvisionSbtPool(instrumentation, originalMessage, originalSender) =>
-        getSbtPoolFor(instrumentation) match {
+        getSbtPoolFor(instrumentation.tag) match {
           case Some(_) =>
             self.tell(originalMessage, originalSender)
           case None =>
             instrumentation match {
-              case Instrumentations.InspectTag =>
-              case Instrumentations.NewRelicTag =>
+              case InstrumentationRequestTypes.Inspect =>
+              case InstrumentationRequestTypes.NewRelic =>
                 val realitiveToRoot = FileHelper.relativeTo(config.location)_
                 val nrConfigFile = realitiveToRoot("conf/newrelic.yml")
                 val nrJar = realitiveToRoot("lib/newrelic.jar")
                 val inst = NewRelic(nrConfigFile, nrJar)
+                val processFactory = new DefaultSbtProcessFactory(location, sbtProcessLauncher, inst.jvmArgs)
+                addInstrumentedSbtPool(Instrumentations.NewRelicTag, processFactory)
+                self.tell(originalMessage, originalSender)
+              case InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName) =>
+                val relativeToActivator = FileHelper.relativeTo(Instrumentation.activatorHome)_
+                val adJar = relativeToActivator("monitoring/appdynamics/javaagent.jar")
+                val inst = AppDynamics(adJar, applicationName, nodeName, tierName)
                 val processFactory = new DefaultSbtProcessFactory(location, sbtProcessLauncher, inst.jvmArgs)
                 addInstrumentedSbtPool(Instrumentations.NewRelicTag, processFactory)
                 self.tell(originalMessage, originalSender)

@@ -34,22 +34,12 @@ object AppDynamics {
     def response(result: Boolean): Response = AvailableResponse(result, this)
   }
 
-  case class EnableProject(destination: File, key: String, appName: String) extends Request {
-    def response: Response = ProjectEnabled(this)
-  }
-
-  case class IsProjectEnabled(destination: File) extends Request {
-    def response(result: Boolean): Response = IsProjectEnabledResult(result, this)
-  }
-
   sealed trait Response {
     def request: Request
   }
   case class Provisioned(request: Provision) extends Response
   case class ErrorResponse(message: String, request: Request) extends Response
   case class AvailableResponse(result: Boolean, request: Request) extends Response
-  case class ProjectEnabled(request: Request) extends Response
-  case class IsProjectEnabledResult(result: Boolean, request: Request) extends Response
 
   class Underlying(config: AD.Config)(log: LoggingAdapter)(implicit ec: ExecutionContext) {
     def onMessage(request: Request, sender: ActorRef, self: ActorRef, context: ActorContext): Unit = request match {
@@ -68,22 +58,8 @@ object AppDynamics {
         Try(AD.hasAppDynamics(config.extractRoot())) match {
           case Success(v) => sender ! r.response(v)
           case Failure(e) =>
-            log.error(e, "Failure during New Relic availability check")
-            sender ! r.error(s"Failure during New Relic availability check: ${e.getMessage}")
-        }
-      case r @ EnableProject(destination, key, name) =>
-        Try(AD.provisionAppDynamics(config.extractRoot(), destination, key, name)) match {
-          case Success(_) => sender ! r.response
-          case Failure(e) =>
-            log.error(e, "Failure during enabling project")
-            sender ! r.error(s"Failure during enabling project: ${e.getMessage}")
-        }
-      case r @ IsProjectEnabled(destination) =>
-        Try(AD.isProjectEnabled(config.extractRoot(),destination)) match {
-          case Success(x) => sender ! r.response(x)
-          case Failure(e) =>
-            log.error(e, "Failure testing if project enabled for New Relic")
-            sender ! r.error(s"Failure testing if project enabled for New Relic: ${e.getMessage}")
+            log.error(e, "Failure during AppDynamics availability check")
+            sender ! r.error(s"Failure during AppDynamics availability check: ${e.getMessage}")
         }
     }
   }
@@ -93,6 +69,6 @@ class AppDynamics(newRelicBuilder: LoggingAdapter => AppDynamics.Underlying) ext
   val newRelic = newRelicBuilder(log)
 
   def receive: Receive = {
-    case r: AppDynamics.Request => newRelic.onMessage(r, sender, self, context)
+    case r: AppDynamics.Request => newRelic.onMessage(r, sender(), self, context)
   }
 }

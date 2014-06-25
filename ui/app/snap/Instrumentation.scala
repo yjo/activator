@@ -4,17 +4,22 @@
 package snap
 
 import java.io._
-import akka.util.Timeout
-import scala.concurrent.duration._
-import scala.concurrent.Future
-import com.typesafe.config.{ Config => TSConfig }
+
 import activator.properties.ActivatorProperties
+import akka.util.Timeout
+import com.typesafe.config.{ Config => TSConfig }
+
+import scala.concurrent.duration._
 
 sealed abstract class InstrumentationTag(val name: String)
 
 sealed abstract class Instrumentation(val tag: InstrumentationTag) {
   def name: String = tag.name
   def jvmArgs: Seq[String]
+}
+
+object Instrumentation {
+  lazy val activatorHome: File = new File(ActivatorProperties.ACTIVATOR_HOME_FILENAME)
 }
 
 case object Inspect extends Instrumentation(Instrumentations.InspectTag) {
@@ -44,7 +49,7 @@ object NewRelic {
   final val versionRegex = "\\{version\\}".r
 
   def fromConfig(in: TSConfig): Config = {
-    import Instrumentations.withMonitoringConfig
+    import snap.Instrumentations.withMonitoringConfig
     withMonitoringConfig(in) { configRoot =>
       val config = configRoot.getConfig("new-relic")
       Config(downloadUrlTemplate = config.getString("download-template"),
@@ -189,14 +194,14 @@ object NewRelic {
     }
   }
 
-  private lazy val activatorHome: File = new File(ActivatorProperties.ACTIVATOR_HOME_FILENAME)
-
   case class Config(
     downloadUrlTemplate: String,
     version: String,
     sha: String,
     timeout: Timeout,
     extractRootTemplate: String) {
+    import Instrumentation._
+
     val url: String = versionRegex.replaceAllIn(downloadUrlTemplate, version)
 
     def extractRoot(relativeTo: File = activatorHome): File = new File(relativeTo, versionRegex.replaceAllIn(extractRootTemplate, version))
@@ -214,45 +219,28 @@ object AppDynamics {
   case object IncompleteProvisioning extends CheckResult("AppDynamics provisioning incomplete")
 
   def fromConfig(in: TSConfig): Config = {
-    import Instrumentations.withMonitoringConfig
+    import snap.Instrumentations.withMonitoringConfig
     withMonitoringConfig(in) { configRoot =>
       val config = configRoot.getConfig("appdynamics")
-      Config(downloadUrlTemplate = config.getString("download-template"),
+      Config(loginUrl = config.getString("login-url"),
+        downloadUrlTemplate = config.getString("download-template"),
         timeout = Timeout(config.getMilliseconds("timeout").intValue.millis),
         extractRootTemplate = config.getString("extract-root-template"))
     }
   }
 
-  def provisionAppDynamics(source: File, destination: File, key: String, appName: String): Unit = {
-    val destRelative = FileHelper.relativeTo(destination)_
-    val sourceRelative = FileHelper.relativeTo(FileHelper.relativeTo(source)("appdynamics"))_
-    val appDynamics = destRelative("appdynamics")
-    val appDynamicsRelative = FileHelper.relativeTo(appDynamics)_
-    appDynamics.mkdirs()
-    getFiles().foreach(f => FileHelper.copyFile(sourceRelative(f), appDynamicsRelative(f)))
-  }
-
-  def isProjectEnabled(source: File)(target: File): Boolean = {
-    val prefix = FileHelper.relativeTo(source)("appdynamics")
-    val targetDir = FileHelper.relativeTo(target)("appdynamics")
-    val prefexRegex = s"^$prefix".r
-    val sourceView = FileHelper.getFiles(prefix).map(f => new File(prefexRegex.replaceFirstIn(f.toString)))
-    FileHelper.getFiles(targetDir).toSeq.sortBy(_.getAbsolutePath()).zip(sourceView.toSeq.sortBy(_.getAbsolutePath())).forall {
-      case (t, s) => t.toString.endsWith(s.toString)
-    }
-  }
-
   def hasAppDynamics(source: File): Boolean = {
     val sourceView = FileHelper.relativeTo(source)("appdynamics")
-    sourceView.exists() && sourceView.isDirectory() && !sourceView.listFiles().isEmpty
+    sourceView.exists() && sourceView.isDirectory && sourceView.listFiles().nonEmpty
   }
 
-  private lazy val activatorHome: File = new File(ActivatorProperties.ACTIVATOR_HOME_FILENAME)
-
   case class Config(
+    loginUrl: String,
     downloadUrlTemplate: String,
     timeout: Timeout,
     extractRootTemplate: String) {
+    import Instrumentation._
+
     val url: String = downloadUrlTemplate
 
     def extractRoot(relativeTo: File = activatorHome): File = new File(relativeTo, extractRootTemplate)
@@ -263,9 +251,9 @@ object AppDynamics {
 }
 
 object Instrumentations {
-  import play.api.libs.json._
   import play.api.libs.functional.syntax._
-  import JsonHelper._
+  import play.api.libs.json._
+  import snap.JsonHelper._
 
   case object InspectTag extends InstrumentationTag("inspect")
   case object NewRelicTag extends InstrumentationTag("newRelic")
@@ -282,7 +270,7 @@ object Instrumentations {
     body(c)
   }
 
-  final val allInstrumentations = Set(InspectTag, NewRelicTag).map(_.name)
+  final val allInstrumentations = Set(InspectTag, NewRelicTag, AppDynamicsTag).map(_.name)
 
   def validate(in: String): InstrumentationTag = {
     val n = in.trim()
@@ -301,6 +289,15 @@ object Instrumentations {
           "environment" -> environment)
     }
 
+  implicit val appDynamicsWrites: Writes[AppDynamics] =
+    emitTagged("type", AppDynamicsTag.name) {
+      case AppDynamics(agentJar, applicationName, nodeName, tierName) =>
+        Json.obj("agentJar" -> agentJar,
+          "applicationName" -> applicationName,
+          "nodeName" -> nodeName,
+          "tierName" -> tierName)
+    }
+
   implicit val inspectReads: Reads[Inspect.type] =
     extractTagged("type", InspectTag.name)(Reads(_ => JsSuccess(Inspect)))
 
@@ -311,14 +308,21 @@ object Instrumentations {
         (__ \ "environment").read[String])(NewRelic.apply _)
     }
 
+  implicit val appDynamicsReads: Reads[AppDynamics] =
+    extractTagged("type", AppDynamicsTag.name) {
+      ((__ \ "agentJar").read[File] and
+        (__ \ "applicationName").read[String] and
+        (__ \ "nodeName").read[String] and
+        (__ \ "tierName").read[String])(AppDynamics.apply _)
+    }
+
   implicit val instrumentationWrites: Writes[Instrumentation] =
-    Writes(_ match {
+    Writes {
       case Inspect => inspectWrites.writes(Inspect)
       case x: NewRelic => newRelicWrites.writes(x)
-    })
+      case x: AppDynamics => appDynamicsWrites.writes(x)
+    }
 
   implicit val instrumentationReads: Reads[Instrumentation] =
-    inspectReads.asInstanceOf[Reads[Instrumentation]] orElse newRelicReads.asInstanceOf[Reads[Instrumentation]]
-
-  private def fileExists(dir: File, in: String): Boolean = new File(dir, in).exists()
+    inspectReads.asInstanceOf[Reads[Instrumentation]] orElse newRelicReads.asInstanceOf[Reads[Instrumentation]] orElse appDynamicsReads.asInstanceOf[Reads[Instrumentation]]
 }
