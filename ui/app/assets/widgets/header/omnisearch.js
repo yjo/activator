@@ -11,7 +11,7 @@ define(['services/search', 'services/sbt'], function(search, sbt) {
   var selected = ko.observable(0);
 
   var combinedSearch = function(keywords) {
-    console.log("starting search on " + keywords);
+    debug && console.log("starting search on " + keywords);
     return ($.when(search.doSearch(keywords), sbt.possibleAutocompletions(keywords))
     .then(function(searchValues, sbtCompletions) {
         // TODO not handling errors here...

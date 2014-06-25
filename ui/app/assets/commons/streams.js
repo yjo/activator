@@ -2,6 +2,8 @@
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
 define(function() {
+  // var debug = true;
+
   var WEB_SOCKET_CLOSED = 'WebSocketClosed';
   var id = window.wsUrl;
   // We can probably just connect immediately.

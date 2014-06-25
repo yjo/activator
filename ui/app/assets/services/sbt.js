@@ -41,7 +41,35 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
   var executionsById = {};
   var executions = ko.observable([]);
   var tasksById = {};
-  var tasks = ko.observable([]);
+  var tasks = ko.observableArray([]);
+
+  var statuses = {
+    isActive: ko.computed(function() {
+      return tasks().length;
+    }),
+    isCompiling: ko.computed(function() {
+      return tasks().filter(function(t) { return t.key == "compile" }).length;
+    }),
+    isRunning: ko.computed(function() {
+      return tasks().filter(function(t) { return t.key == "run" }).length;
+    }),
+    isTesting: ko.computed(function() {
+      return tasks().filter(function(t) { return t.key == "test" }).length;
+    }),
+    lol: "LOL"
+  }
+
+  function makeCommand(name){
+    return function(){
+      requestExecution(name);
+    }
+  }
+  var commands = {
+    compile: makeCommand("compile"),
+    run: makeCommand("run"),
+    test: makeCommand("test"),
+  }
+
 
   var legacyLogHandlers = [];
   function legacySubscribeLog(handler) {
@@ -80,7 +108,7 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
             finished: ko.observable(false),
             succeeded: ko.observable(false)
         };
-        console.log("Starting task ", task);
+        debug && console.log("Starting task ", task);
         // we want to be in the by-id hash before we notify
         // on the tasks array
         tasksById[task.taskId] = task;
@@ -108,7 +136,7 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
             finished: ko.observable(false),
             succeeded: ko.observable(false)
         };
-        console.log("Waiting execution ", execution);
+        debug && console.log("Waiting execution ", execution);
         // we want to be in the by-id hash before we notify
         // on the executions array
         executionsById[execution.executionId] = execution;
@@ -161,6 +189,8 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
     cancelExecution: cancelExecution,
     legacySubscribeLog: legacySubscribeLog,
     executions: executions,
-    tasks: tasks
+    tasks: tasks,
+    statuses: statuses,
+    commands: commands
   };
 })

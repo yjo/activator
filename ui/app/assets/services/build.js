@@ -2,8 +2,8 @@
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
 
-define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './oldSbt', 'commons/markers', './connection', 'services/sbt'],
-    function(ko, settings, Log, utils, events, sbt, markers, Connection, newSbt){
+define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './sbt', './oldSbt', 'commons/markers', './connection', 'services/sbt'],
+    function(ko, settings, Log, utils, events, sbtX, sbt, markers, Connection, newSbt){
 
   var rerunOnBuild = settings.observable("build.rerunOnBuild", true);
   var retestOnSuccessfulBuild = settings.observable("build.retestOnSuccessfulBuild", false);
@@ -1155,6 +1155,8 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
     }
   };
 
+  console.log(sbt.statuses)
+
   var build = utils.Singleton({
     init: function() {
     },
@@ -1191,7 +1193,9 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
       retestOnSuccessfulBuild: retestOnSuccessfulBuild,
       automaticResetInspect: automaticResetInspect,
       recompileOnChange: recompileOnChange
-    }
+    },
+    statuses: sbtX.statuses,
+    commands: sbtX.commands,
   });
 
   return build;

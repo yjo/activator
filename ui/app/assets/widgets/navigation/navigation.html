@@ -11,6 +11,18 @@
       </dl>
 
       <div id="appStatus">
+        <button class="running" data-bind="click: build.onToggleRun, css: { active: build.statuses.isActive }"></button>
+        <span class="tooltip running">is active (todo)</span>
+        <button class="refresh" data-bind="click: build.commands.compile, css: { active: build.statuses.isCompiling }"></button>
+        <span class="tooltip refresh">Compile</span>
+        <button class="console" data-bind="click: build.commands.run, css: { active: build.statuses.isRunning }"></button>
+        <span class="tooltip console">Run</span>
+        <button class="testing" data-bind="click: build.commands.test, css: { active: build.statuses.isTesting }"></button>
+        <span class="tooltip testing">Test</span>
+      </div>
+
+<!-- 
+      <div id="appStatus">
         <button class="running" data-bind="click: build.onToggleRun, css: {active: build.activity.running, working: build.activity.busy() && !build.activity.running() }"></button>
         <span class="tooltip running" data-bind="text: build.statusTooltips.run "></span>
         <button class="refresh" data-bind="toggle: build.settings.recompileOnChange, css: {active: build.settings.recompileOnChange }"></button>
@@ -20,6 +32,8 @@
         <button class="testing" data-bind="toggle: build.settings.retestOnSuccessfulBuild, css: {active: build.settings.retestOnSuccessfulBuild}"></button>
         <span class="tooltip testing" data-bind="text: build.settings.retestOnSuccessfulBuild() ? 'Test on rebuild enabled':'Test on rebuild disabled' "></span>
       </div>
+
+ -->
 
       <dl id="rockets">
         <dt>Learn</dt>
