@@ -3,6 +3,9 @@
  */
 define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'], function(utils, streams, settings, build) {
 
+  var nodeName = settings.observable("appDynamics.nodeName", "activator-"+new Date().getTime());
+  var tierName = settings.observable("appDynamics.tierName", "development");
+
   function adMessage(type) {
     return { request: 'AppDynamicsRequest', type: type };
   }
@@ -11,9 +14,20 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
     return jQuery.extend(adMessage(type), attributes);
   }
 
+  var validNodeName = /^[0-9a-z@\._-]{1,40}$/i;
+  var validTierName = /^[0-9a-z@\._-]{1,40}$/i;
+  var validUsername = /^.{1,40}$/i;
+  var validPassword = /^[0-9a-z@\.,-\/#!$%\^&\*;:{}=\-_`~()]{1,40}$/i;
+
   var appDynamics = utils.Singleton({
     init: function() {
       var self = this;
+      self.validNodeName = validNodeName;
+      self.validTierName = validTierName;
+      self.validUsername = validUsername;
+      self.validPassword = validPassword;
+      self.nodeName = nodeName;
+      self.tierName = tierName;
       self.observeProvision = function(observable) {
         return streams.subscribe({
           filter: function(event) {
@@ -45,9 +59,17 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
       });
       console.log("Making initial request to check AD availability");
       streams.send(adMessage("available"));
-      self.provision = function() {
-        streams.send(adMessage("provision"))
+      self.provision = function(username,password) {
+        streams.send(adMessageWith("provision",{username: username, password: password}))
       };
+      self.nodeNameSaved = ko.computed(function() {
+        var name = self.nodeName();
+        return self.validNodeName.test(name);
+      }, self);
+      self.tierNameSaved = ko.computed(function() {
+        var name = self.tierName();
+        return self.validTierName.test(name);
+      }, self);
     }
   });
 

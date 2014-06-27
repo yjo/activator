@@ -11,6 +11,25 @@ import scala.util.{ Try, Failure, Success }
 import scala.concurrent.ExecutionContext
 import akka.event.LoggingAdapter
 
+import akka.actor.ActorRef
+import java.io.File
+import play.api.libs.ws.ssl.{ DefaultSSLLooseConfig, DefaultSSLConfig, DefaultSSLConfigParser }
+import snap.HttpHelper.ProgressObserver
+
+import scala.concurrent.{ ExecutionContext, Future }
+import play.api.libs.ws._
+import snap.{ JsonHelper, FileHelper }
+import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.util.{ Failure, Success }
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+import play.api.libs.json.Json._
+import JsonHelper._
+import play.api.Play.current
+import play.api.libs.ws.ning._
+import com.ning.http.client.AsyncHttpClientConfig
+
 object NewRelic {
   def props(config: NR.Config,
     executionContext: ExecutionContext): Props =
@@ -52,13 +71,15 @@ object NewRelic {
   case class IsProjectEnabledResult(result: Boolean, request: Request) extends Response
 
   class Underlying(config: NR.Config)(log: LoggingAdapter)(implicit ec: ExecutionContext) {
+    import Provisioning._
     def onMessage(request: Request, sender: ActorRef, self: ActorRef, context: ActorContext): Unit = request match {
       case r @ Provision(sink) =>
-        Provisioning.provision(config.url,
+        val ns = actorWrapper(sink)
+        provision(
+          simpleDownloadExecutor(defaultWSClient,
+            config.url, ns, config.timeout),
           FileHelper.verifyFile(_, config.sha),
-          config.extractRoot(),
-          sink,
-          config.timeout) onComplete {
+          config.extractRoot(), ns) onComplete {
             case Success(_) => sender ! r.response
             case Failure(error) =>
               log.error(error, "Failure during provisioning")

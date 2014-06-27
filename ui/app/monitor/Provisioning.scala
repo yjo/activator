@@ -6,6 +6,7 @@ package monitor
 
 import akka.actor.ActorRef
 import java.io.File
+import play.api.libs.ws.ssl.{ DefaultSSLLooseConfig, DefaultSSLConfig, DefaultSSLConfigParser }
 import snap.HttpHelper.ProgressObserver
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -19,26 +20,59 @@ import play.api.libs.json._
 import play.api.libs.json.Json._
 import JsonHelper._
 import play.api.Play.current
+import play.api.libs.ws.ning._
+import com.ning.http.client.AsyncHttpClientConfig
 
 object Provisioning {
   import snap.HttpHelper._
   val responseTag = "ProvisioningStatus"
 
-  trait Credentials {
-    def apply(request: WSRequestHolder)(implicit ec: ExecutionContext): Future[WSResponse]
+  trait StatusNotifier {
+    def provisioningError(message: String, exception: Throwable): Unit
+    def authenticating(diagnostics: String, url: String): Unit
+    def downloading(url: String): Unit
+    def progress(value: Either[Int, Double]): Unit
+    def downloadComplete(url: String): Unit
+    def validating(): Unit
+    def extracting(): Unit
+    def complete(): Unit
+  }
+
+  def actorWrapper(sink: ActorRef): StatusNotifier = new StatusNotifier {
+    def provisioningError(message: String, exception: Throwable): Unit =
+      sink ! ProvisioningError(message, exception)
+    def authenticating(diagnostics: String, url: String): Unit =
+      sink ! Authenticating(diagnostics, url)
+    def extracting(): Unit =
+      sink ! Extracting
+    def progress(value: Either[Int, Double]): Unit =
+      sink ! Progress(value)
+    def downloading(url: String): Unit =
+      sink ! Downloading(url)
+    def validating(): Unit =
+      sink ! Validating
+    def complete(): Unit =
+      sink ! Complete
+    def downloadComplete(url: String): Unit =
+      sink ! DownloadComplete(url)
+  }
+
+  case class AuthenticationException(message: String, failureDiagnostics: String, url: String) extends Exception(message)
+
+  trait DownloadPrepExecutor {
+    def execute(): Future[DownloadExecutor]
     def failureDiagnostics: String
   }
 
-  case class UsernamePasswordCredentials(username: String, password: String, usernameKey: String = "username", passwordKey: String = "password") extends Credentials {
-    def apply(request: WSRequestHolder)(implicit ec: ExecutionContext): Future[WSResponse] = request.post(Map(usernameKey -> Seq(username), passwordKey -> Seq(password)))
-    def failureDiagnostics: String = s"Username: $username"
+  trait DownloadExecutor {
+    def downloadUrl: String
+    def execute(): Future[File]
+    def failureDiagnostics: String
   }
-
-  case class LoginException(message: String, failureDiagnostics: String, url: String) extends Exception(message)
 
   sealed trait Status
   case class ProvisioningError(message: String, exception: Throwable) extends Status
-  case class LoggingIn(diagnostics: String, url: String) extends Status
+  case class Authenticating(diagnostics: String, url: String) extends Status
   case class Downloading(url: String) extends Status
   case class Progress(value: Either[Int, Double]) extends Status
   case class DownloadComplete(url: String) extends Status
@@ -53,9 +87,9 @@ object Provisioning {
     emitResponse(responseTag)(in => Json.obj("type" -> "provisioningError",
       "message" -> in.message))
 
-  implicit val loggingInWrites: Writes[LoggingIn] =
-    emitResponse(responseTag)(in => Json.obj("type" -> "loggingIn",
-      "username" -> in.diagnostics,
+  implicit val authenticatingWrites: Writes[Authenticating] =
+    emitResponse(responseTag)(in => Json.obj("type" -> "authenticating",
+      "diagnostics" -> in.diagnostics,
       "url" -> in.url))
 
   implicit val downloadingWrites: Writes[Downloading] =
@@ -83,100 +117,82 @@ object Provisioning {
     emitResponse(responseTag)(_ => Json.obj("type" -> "complete"))
 
   def notificationProgressBuilder(url: String,
-    notificationSink: ActorRef): ProgressObserver = new ProgressObserver {
+    notificationSink: StatusNotifier): ProgressObserver = new ProgressObserver {
     def onCompleted(): Unit =
-      notificationSink ! DownloadComplete(url)
+      notificationSink.downloadComplete(url)
 
     def onError(error: Throwable): Unit =
-      notificationSink ! ProvisioningError(s"Error downloading $url: ${error.getMessage}", error)
+      notificationSink.provisioningError(s"Error downloading $url: ${error.getMessage}", error)
 
     def onNext(data: ChunkData): Unit = {
       data.contentLength match {
         case None =>
-          notificationSink ! Progress(Left(data.total))
+          notificationSink.progress(Left(data.total))
         case Some(cl) =>
-          notificationSink ! Progress(Right((data.total.toDouble / cl.toDouble) * 100.0))
+          notificationSink.progress(Right((data.total.toDouble / cl.toDouble) * 100.0))
       }
+    }
+  }
+
+  lazy val defaultWSClient: WSClient = {
+    val configParser = new DefaultWSConfigParser(current.configuration, current.classloader)
+    val sslConfigParser = new DefaultSSLConfigParser(current.configuration, current.classloader)
+    val initialBuilder = new AsyncHttpClientConfig.Builder()
+      .setMaximumNumberOfRedirects(50)
+    val builder = new NingAsyncHttpClientConfigBuilder(configParser.parse().asInstanceOf[DefaultWSClientConfig].copy(acceptAnyCertificate = Some(true)), initialBuilder)
+    builder.configureSSL(sslConfigParser.parse().asInstanceOf[DefaultSSLConfig].copy(loose = Some(DefaultSSLLooseConfig(
+      allowWeakCiphers = Some(true),
+      allowWeakProtocols = Some(true),
+      allowLegacyHelloMessages = Some(true),
+      allowUnsafeRenegotiation = Some(true),
+      disableHostnameVerification = Some(true)))))
+    new NingWSClient(builder.build())
+  }
+
+  def simpleDownloadExecutor(client: WSClient,
+    downloadUrl: String,
+    notificationSink: StatusNotifier,
+    timeout: Timeout = Timeout(30.seconds)): DownloadExecutor = {
+    val dl = downloadUrl
+    new DownloadExecutor {
+      def downloadUrl: String = dl
+      def execute(): Future[File] =
+        retrieveFileHttp(client.url(downloadUrl).withFollowRedirects(true),
+          notificationProgressBuilder(downloadUrl, notificationSink),
+          timeout = timeout)
+
+      def failureDiagnostics: String = s"Download url: $downloadUrl"
     }
   }
 
   private def postprocessResults(expected: Future[File],
     validator: File => File,
     targetLocation: File,
-    notificationSink: ActorRef)(implicit ec: ExecutionContext): Future[File] = {
+    notificationSink: StatusNotifier)(implicit ec: ExecutionContext): Future[File] = {
     expected.transform(x => x, e => DownloadException(e)).map { file =>
-      notificationSink ! Validating
+      notificationSink.validating()
       validator(file)
-      notificationSink ! Extracting
+      notificationSink.extracting()
       FileHelper.unZipFile(file, targetLocation)
     }
     expected.onComplete {
-      case Success(_) => notificationSink ! Complete
-      case Failure(error @ LoginException(message, username, url)) =>
-        notificationSink ! ProvisioningError(s"Cannot login to $url with username: $username and password given: $message", error)
+      case Success(_) => notificationSink.complete()
+      case Failure(error @ AuthenticationException(message, username, url)) =>
+        notificationSink.provisioningError(s"Cannot login to $url with username: $username and password given: $message", error)
       case Failure(DownloadException(_)) => // Already reported
-      case Failure(error) => notificationSink ! ProvisioningError(s"Error provisioning: ${error.getMessage}", error)
+      case Failure(error) => notificationSink.provisioningError(s"Error provisioning: ${error.getMessage}", error)
     }
     expected
   }
 
-  def provision(downloadUrl: String,
+  def provision(executor: DownloadExecutor,
     validator: File => File,
     targetLocation: File,
-    notificationSink: ActorRef,
-    timeout: Timeout = Timeout(30.seconds))(implicit ec: ExecutionContext): Future[File] = {
-    notificationSink ! Downloading(downloadUrl)
-    postprocessResults(retrieveFileHttp(WS.url(downloadUrl).withFollowRedirects(true),
-      notificationProgressBuilder(downloadUrl, notificationSink),
-      timeout = timeout),
+    notificationSink: StatusNotifier)(implicit ec: ExecutionContext): Future[File] = {
+    notificationSink.downloading(executor.downloadUrl)
+    postprocessResults(executor.execute(),
       validator,
       targetLocation,
       notificationSink)
-  }
-
-  //Set-Cookie: value[; expires=date][; domain=domain][; path=path][; secure]
-  private def serializeCookie(in: WSCookie): String = {
-    import java.text.SimpleDateFormat
-    import java.util.{ Date, Locale, TimeZone }
-    val sdf = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss zzz", Locale.ROOT)
-    sdf.setTimeZone(TimeZone.getTimeZone("GMT"))
-    List[Option[String]](
-      (in.name, in.value) match {
-        case (Some(n), Some(v)) => Some(s"$n=$v")
-        case (Some(n), None) => Some(s"$n=")
-        case (None, Some(v)) => Some(v)
-        case _ => None
-      },
-      in.expires.map { e =>
-        val d = new Date(e)
-        sdf.format(d)
-      },
-      in.maxAge.map(m => s"MAX-AGE=$m"),
-      Some(s"DOMAIN=${in.domain}"),
-      Some(s"PATH=${in.path}"),
-      if (in.secure) Some("secure") else None).flatten.mkString("; ")
-  }
-
-  def provisionWithLogin(credentials: Credentials,
-    loginUrl: String,
-    downloadUrl: String,
-    validator: File => File,
-    targetLocation: File,
-    notificationSink: ActorRef,
-    timeout: Timeout = Timeout(30.seconds))(implicit ec: ExecutionContext): Future[File] = {
-    // wget --save-cookies cookies.txt  --post-data 'username=jim.powers@typesafe.com&password=xxxxx' --no-check-certificate https://login.appdynamics.com/sso/login/
-    notificationSink ! LoggingIn(credentials.failureDiagnostics, loginUrl)
-    for {
-      login <- credentials(WS.url(loginUrl).withFollowRedirects(true))
-      cookies = login.cookies.map(serializeCookie)
-      () = if (cookies.isEmpty) throw new LoginException(s"Confirm that you can log into: $loginUrl", credentials.failureDiagnostics, loginUrl)
-      () = notificationSink ! Downloading(downloadUrl)
-      file <- postprocessResults(retrieveFileHttp(WS.url(downloadUrl).withHeaders(cookies.map(c => "Set-Cookie" -> c): _*).withFollowRedirects(true),
-        notificationProgressBuilder(downloadUrl, notificationSink),
-        timeout = timeout),
-        validator,
-        targetLocation,
-        notificationSink)
-    } yield file
   }
 }

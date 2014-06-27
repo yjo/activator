@@ -69,7 +69,7 @@ define(['commons/utils', 'commons/widget', 'services/newrelic', 'text!./newrelic
         self.provisionNewRelic = function () {
           if (self.downloadEnabled()) {
             self.provisionDownloadSubscription(newrelic.observeProvision(self.provisionObserver));
-            newrelic.provision()
+            newrelic.provision();
           }
         };
         self.saveLicenseKey = function () {

@@ -14,29 +14,34 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
           return !self.available();
         }, self);
         self.downloadEnabled = ko.observable(false);
-        self.developerKeyEnabled = ko.observable(false);
-        self.licenseKey = ko.observable(appdynamics.licenseKey());
         self.downloadClass = ko.computed(function() {
           var enabled = (self.available() == false);
           self.downloadEnabled(enabled);
           return enabled ? "enabled" : "disabled";
         }, self);
-        self.developerKeyClass = ko.computed(function() {
-          var enabled = (self.available() == true);
-          self.developerKeyEnabled(enabled);
-          return enabled ? "enabled" : "disabled";
-        }, self);
         self.provisionDownloadSubscription = ko.observable(null);
         self.downloading = ko.observable("");
+        self.username = ko.observable("");
+        self.usernameInvalid = ko.computed(function() {
+          var key = self.username();
+          return !appdynamics.validUsername.test(key);
+        }, self);
+        self.password = ko.observable("");
+        self.passwordInvalid = ko.computed(function() {
+          var key = self.password();
+          return !appdynamics.validPassword.test(key);
+        }, self);
         self.downloading.subscribe(function(value) {
           console.log("downloading: "+value);
         });
         self.provisionObserver = function(value) {
           var message = "";
           if (value.type == "provisioningError") {
-            message = "Error provisioning New Relic: "+value.message
+            message = "Error provisioning New Relic: "+value.message;
             self.downloading(message);
             self.error(message);
+          } else if (value.type == "authenticating") {
+            self.downloading("Authenticating");
           } else if (value.type == "downloading") {
             self.downloading("Downloading: "+value.url);
           } else if (value.type == "progress") {
@@ -68,21 +73,36 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
         self.provisionAppDynamics = function () {
           if (self.downloadEnabled()) {
             self.provisionDownloadSubscription(appdynamics.observeProvision(self.provisionObserver));
-            appdynamics.provision()
+            appdynamics.provision(self.username(),self.password());
           }
         };
-        self.saveLicenseKey = function () {
-          if (self.developerKeyEnabled() && !self.licenseKeyInvalid()) {
-            appdynamics.licenseKey(self.licenseKey());
+        self.nodeName = ko.observable(appdynamics.nodeName());
+        self.nodeName.subscribe(function (newValue) {
+            self.saveNodeName(newValue);
+          });
+        self.tierName = ko.observable(appdynamics.tierName());
+        self.tierName.subscribe(function (newValue) {
+          self.saveTierName(newValue);
+        });
+        self.saveNodeName = function (newValue) {
+          if (appdynamics.validNodeName.test(newValue)) {
+            console.log("saving nodeName: "+newValue);
+            appdynamics.nodeName(newValue);
           }
         };
-        self.resetKey = function () {
-          self.licenseKey("");
-          appdynamics.licenseKey("");
+        self.saveTierName = function (newValue) {
+          if (appdynamics.validTierName.test(newValue)) {
+            console.log("saving tierName: "+newValue);
+            appdynamics.tierName(newValue);
+          }
         };
-        self.licenseKeyInvalid = ko.computed(function() {
-          var key = self.licenseKey();
-          return !appdynamics.validKey.test(key);
+        self.nodeNameInvalid = ko.computed(function() {
+          var key = self.nodeName();
+          return !appdynamics.validNodeName.test(key);
+        }, self);
+        self.tierNameInvalid = ko.computed(function() {
+          var key = self.tierName();
+          return !appdynamics.validTierName.test(key);
         }, self);
       }
     });

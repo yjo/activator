@@ -6,24 +6,29 @@
   Third-party monitoring disables the local inspector.
 </section>
 <section class="activate">
+  <div class="row">
+    <span class="label">Node name:</span><input type="text" id="nodeName" data-bind="value: nodeName, valueUpdate: 'input', css: {error: nodeNameInvalid() }"/>
+  </div>
+  <div class="row">
+    <span class="label">Tier name:</span><input type="text" id="tierName" data-bind="value: tierName, valueUpdate: 'input',  css: {error: tierNameInvalid() }"/>
+  </div>
   <!-- ko if: needProvision -->
   <h2>Get the AppDynamics Agent</h2>
   <p>The AppDynamics Agent collects data about your application.  This data is sent to AppDynamics for analysis.</p>
   <h2>Enter your AppDynamics account information</h2>
   <p>In order to download the AppDynamics agent you need to supply you AppDynamics credentials (this information will not be stored).  If you do not have an AppDynamics account, you can <a href="https://portal.appdynamics.com/account/signup/signupForm/" target="_blank">signup here</a></p>
   <p>
-    <input type="text" id="username" data-bind="value: username, valueUpdate: 'input'"/>
-    <input type="password" id="password" data-bind="value: password, valueUpdate: 'input'"/>
-    <button class="button big install" data-bind="click: provisionAppDynamics">Download</button>
+    <div class="row">
+      <span class="label">Username:</span><input type="text" id="username" data-bind="value: username, valueUpdate: 'input', css: {error: usernameInvalid() }"/>
+    </div>
+    <div class="row">
+      <span class="label">Password:</span><input type="password" id="password" data-bind="value: password, valueUpdate: 'input', css: {error: passwordInvalid() }"/>
+    </div>
+    <button class="button big install" data-bind="click: provisionAppDynamics, visible: !usernameInvalid() && !passwordInvalid() ">Download</button>
     <span data-bind="visible: downloading"><span data-bind="text: downloading"></span></span>
   </p>
   <!-- /ko -->
   <!-- ko ifnot: needProvision-->
-  <h2>You're ready to go!</h2>
-  <p>
-    Your customized AppDynamics Agent has been downloaded.  You may enable AppDynamics monitoring from the <a href="#run">run</a> tab.
-  </p>
-  <p><button data-bind="click: resetKey">Re-download agent</button></p>
   <!-- /ko -->
 </section>
 <section class="error" data-bind="visible: error, text: error"></section>

@@ -172,8 +172,8 @@ object AppDynamicsRequest {
     def error(message: String): Response =
       ErrorResponse(message, this)
   }
-  case object Provision extends Request {
-    def response: Response = Provisioned
+  case class Provision(username: monitor.AppDynamics.Username, password: monitor.AppDynamics.Password) extends Request {
+    def response: Response = Provisioned(this)
   }
   case object Available extends Request {
     def response(result: Boolean): Response = AvailableResponse(result, this)
@@ -182,17 +182,16 @@ object AppDynamicsRequest {
   sealed trait Response {
     def request: Request
   }
-  case object Provisioned extends Response {
-    final val request: Request = Provision
-  }
+  case class Provisioned(request: Provision) extends Response
   case class ErrorResponse(message: String, request: Request) extends Response
   case class AvailableResponse(result: Boolean, request: Request) extends Response
 
-  implicit val appDynamicsProvisionReads: Reads[Provision.type] =
-    extractRequest[Provision.type](requestTag)(extractTypeOnly("provision", Provision))
+  implicit val appDynamicsProvisionReads: Reads[Provision] =
+    extractRequest[Provision](requestTag)(extractType("provision")(((__ \ "username").read[String] and
+      (__ \ "password").read[String])((u, p) => Provision.apply(monitor.AppDynamics.Username(u), monitor.AppDynamics.Password(p)))))
 
-  implicit val appDynamicsProvisionWrites: Writes[Provision.type] =
-    emitRequest(requestTag)(_ => Json.obj("type" -> "provision"))
+  implicit val appDynamicsProvisionWrites: Writes[Provision] =
+    emitRequest(requestTag)(p => Json.obj("type" -> "provision", "username" -> p.username.value, "password" -> p.password.value))
 
   implicit val appDynamicsAvailableReads: Reads[Available.type] =
     extractRequest[Available.type](requestTag)(extractTypeOnly("available", Available))
@@ -206,7 +205,7 @@ object AppDynamicsRequest {
     extractRequest[Request](requestTag)(pr.orElse(ar))
   }
 
-  implicit val appDynamicsProvisionedWrites: Writes[Provisioned.type] =
+  implicit val appDynamicsProvisionedWrites: Writes[Provisioned] =
     emitResponse(responseTag)(in => Json.obj("type" -> "provisioned",
       "request" -> in.request))
 
@@ -222,13 +221,13 @@ object AppDynamicsRequest {
 
   implicit val appDynamicsRequestWrites: Writes[Request] =
     Writes {
-      case x @ Provision => appDynamicsProvisionWrites.writes(x)
+      case x: Provision => appDynamicsProvisionWrites.writes(x)
       case x @ Available => appDynamicsAvailableWrites.writes(x)
     }
 
   implicit val appDynamicsResponseWrites: Writes[Response] =
     Writes {
-      case x @ Provisioned => appDynamicsProvisionedWrites.writes(x)
+      case x: Provisioned => appDynamicsProvisionedWrites.writes(x)
       case x: AvailableResponse => appDynamicsAvailableResponseWrites.writes(x)
       case x: ErrorResponse => appDynamicsErrorResponseWrites.writes(x)
     }
@@ -336,7 +335,8 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
   }
 
   val newRelicActor: ActorRef = context.actorOf(monitor.NewRelic.props(NewRelic.fromConfig(Play.current.configuration.underlying), defaultContext))
-  val socket = context.actorOf(Props(new AppSocketActor(newRelicActor)), name = "socket")
+  val appDynamicsActor: ActorRef = context.actorOf(monitor.AppDynamics.props(AppDynamics.fromConfig(Play.current.configuration.underlying), defaultContext))
+  val socket = context.actorOf(Props(new AppSocketActor(newRelicActor, appDynamicsActor)), name = "socket")
 
   val projectWatcher = context.actorOf(Props(new ProjectWatcher(location, newSourcesSocket = socket, sbtPool = uninstrumentedSbts)),
     name = "projectWatcher")
@@ -580,6 +580,9 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
   class ProvisioningSinkUnderlying(log: LoggingAdapter, produce: JsValue => Unit) {
     import monitor.Provisioning._
     def onMessage(state: ProvisioningSinkState, status: Status, sender: ActorRef, self: ActorRef, context: ActorContext): ProvisioningSinkState = status match {
+      case x @ Authenticating(diagnostics, url) =>
+        produce(toJson(x))
+        state
       case x @ ProvisioningError(message, exception) =>
         produce(toJson(x))
         log.error(exception, message)
@@ -625,12 +628,13 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
 
       {
         case x: Status =>
+          println(s"Status: $x")
           state = underlying.onMessage(state, x, sender, self, context)
       }
     }
   }
 
-  class AppSocketActor(newRelicActor: ActorRef) extends WebSocketActor[JsValue] with ActorLogging {
+  class AppSocketActor(newRelicActor: ActorRef, appDynamicsActor: ActorRef) extends WebSocketActor[JsValue] with ActorLogging {
 
     import WebSocketActor.timeout
 
@@ -639,6 +643,19 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
         case Success(r: monitor.NewRelic.ErrorResponse) => produce(toJson(omsg.error(r.message)))
         case Success(`tag`(r)) => body(r)
         case Success(r: monitor.NewRelic.Response) =>
+          log.error(s"Unexpected response from request: $msg got: $r expected: ${tag.toString()}")
+        case Failure(f) =>
+          val errorMsg = onFailure(f)
+          log.error(f, errorMsg)
+          produce(toJson(omsg.error(errorMsg)))
+      }
+    }
+
+    def askAppDynamics[T <: monitor.AppDynamics.Response](msg: monitor.AppDynamics.Request, omsg: AppDynamicsRequest.Request, onFailure: Throwable => String)(body: T => Unit)(implicit tag: ClassTag[T]): Unit = {
+      appDynamicsActor.ask(msg).mapTo[monitor.AppDynamics.Response].onComplete {
+        case Success(r: monitor.AppDynamics.ErrorResponse) => produce(toJson(omsg.error(r.message)))
+        case Success(`tag`(r)) => body(r)
+        case Success(r: monitor.AppDynamics.Response) =>
           log.error(s"Unexpected response from request: $msg got: $r expected: ${tag.toString()}")
         case Failure(f) =>
           val errorMsg = onFailure(f)
@@ -666,9 +683,24 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
       }
     }
 
+    def handleAppDynamicsRequest(in: AppDynamicsRequest.Request): Unit = {
+      import monitor.AppDynamics._
+      println(s"processing request $in")
+      in match {
+        case x @ AppDynamicsRequest.Provision(username, password) =>
+          val sink = context.actorOf(Props(new ProvisioningSink(ProvisioningSinkState(), log => new ProvisioningSinkUnderlying(log, produce))))
+          askAppDynamics[Provisioned](monitor.AppDynamics.Provision(sink, username, password), x,
+            f => s"Failed to provision AppDynamics: ${f.getMessage}")(_ => produce(toJson(x.response)))
+        case x @ AppDynamicsRequest.Available =>
+          askAppDynamics[AvailableResponse](monitor.AppDynamics.Available, x,
+            f => s"Failed AppDynamics availability check: ${f.getMessage}")(r => produce(toJson(x.response(r.result))))
+      }
+    }
+
     override def onMessage(json: JsValue): Unit = {
       json match {
         case NewRelicRequest(m) => handleNewRelicRequest(m)
+        case AppDynamicsRequest(m) => handleAppDynamicsRequest(m)
         case InspectRequest(m) => for (cActor <- consoleActor) cActor ! HandleRequest(json)
         case WebSocketActor.Ping(ping) => produce(WebSocketActor.Pong(ping.cookie))
         case _ => log.info("unhandled message on web socket: {}", json)
