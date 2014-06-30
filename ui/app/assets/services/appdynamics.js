@@ -59,8 +59,18 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
           }
         }
       });
-      console.log("Making initial request to check AD availability");
-      streams.send(adMessage("available"));
+      self.onStreamOpen = function (handler) {
+        var subscription = streams.subscribe(function (event) {
+            if (event.type == 'SourcesMayHaveChanged') {
+              handler(event);
+            }
+          }
+        );
+      };
+      self.onStreamOpen(function (event) {
+        console.log("Making initial request to check AD availability");
+        streams.send(adMessage("available"));
+      });
       self.provision = function(username,password) {
         streams.send(adMessageWith("provision",{username: username, password: password}))
       };

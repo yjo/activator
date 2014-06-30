@@ -285,10 +285,12 @@ object InstrumentationRequestTypes {
           applicationName <- params.get("applicationName").asInstanceOf[Option[String]]
           nodeName <- params.get("nodeName").asInstanceOf[Option[String]]
           tierName <- params.get("tierName").asInstanceOf[Option[String]]
-        } yield InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName)).getOrElse {
+        } yield {
+          println(s"****** InstrumentationRequestTypes.AppDynamics($applicationName, $nodeName, $tierName)")
+          InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName)
+        }).getOrElse {
           throw new InstrumentationRequestException(s"Invalid request for AppDynamics instrumentation.  Request must include: 'applicationName', 'nodeName', and 'tierName'.  Got: $params")
         }
-
     }
 }
 
@@ -426,11 +428,13 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
                 addInstrumentedSbtPool(Instrumentations.NewRelicTag, processFactory)
                 self.tell(originalMessage, originalSender)
               case InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName) =>
+                println(s"**** provisioning InstrumentationRequestTypes.AppDynamics($applicationName, $nodeName, $tierName)")
                 val relativeToActivator = FileHelper.relativeTo(Instrumentation.activatorHome)_
                 val adJar = relativeToActivator("monitoring/appdynamics/javaagent.jar")
+                println(s"**** adJar: $adJar")
                 val inst = AppDynamics(adJar, applicationName, nodeName, tierName)
                 val processFactory = new DefaultSbtProcessFactory(location, sbtProcessLauncher, inst.jvmArgs)
-                addInstrumentedSbtPool(Instrumentations.NewRelicTag, processFactory)
+                addInstrumentedSbtPool(Instrumentations.AppDynamicsTag, processFactory)
                 self.tell(originalMessage, originalSender)
             }
         }

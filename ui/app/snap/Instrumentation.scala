@@ -38,7 +38,8 @@ case class AppDynamics(agentJar: File, applicationName: String, nodeName: String
     s"-javaagent:${agentJar.getPath}",
     s"-Dappdynamics.agent.tierName=${tierName}",
     s"-Dappdynamics.agent.nodeName=${nodeName}",
-    s"-Dappdynamics.agent.applicationName=${applicationName}")
+    s"-Dappdynamics.agent.applicationName=${applicationName}",
+    s"-Dappdynamics.agent.runtime.dir=${agentJar.getParentFile.getPath}")
 }
 
 object NewRelic {

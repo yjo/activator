@@ -1,8 +1,8 @@
 /*
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
-define(['services/build', 'services/newrelic', 'text!./run.html', 'css!./run.css', "widgets/navigation/menu"],
-    function(build, newrelic, template, LogView, css){
+define(['services/build', 'services/newrelic', 'services/appdynamics', 'text!./run.html', 'css!./run.css', "widgets/navigation/menu"],
+    function(build, newrelic, appdynamics, template, LogView, css){
 
   var RunState = (function(){
     var self = {};
@@ -16,6 +16,12 @@ define(['services/build', 'services/newrelic', 'text!./run.html', 'css!./run.css
         result.push({ name: "New Relic", id: "newRelic", enabled: enabled, enable: function() {
             newrelic.enableProject(newrelic.licenseKey(), build.app.name());
             self.currentMonitoringOption("newRelic");
+          }
+        });
+      }
+      if (appdynamics.available()) {
+        result.push({ name: "AppDynamics", id: "appDynamics", enabled: false, enable: function() {
+            self.currentMonitoringOption("appDynamics");
           }
         });
       }

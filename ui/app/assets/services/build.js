@@ -2,8 +2,8 @@
  Copyright (C) 2013 Typesafe, Inc <http://typesafe.com>
  */
 
-define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './sbt', 'commons/markers', './connection'],
-    function(ko, settings, Log, utils, events, sbt, markers, Connection){
+define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/utils', 'commons/events', './sbt', 'commons/markers', './connection', 'services/appdynamics'],
+    function(ko, settings, Log, utils, events, sbt, markers, Connection, appdynamics){
 
   var rerunOnBuild = settings.observable("build.rerunOnBuild", true);
   var retestOnSuccessfulBuild = settings.observable("build.retestOnSuccessfulBuild", false);
@@ -638,7 +638,16 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
         task.task = 'echo:' + task.task;
       }
 
-      task.params = {instrumentation: build.run.instrumentation()};
+      if (build.run.instrumentation() == "newRelic") {
+        task.params = {instrumentation: build.run.instrumentation()};
+      } else if (build.run.instrumentation() == "appDynamics") {
+        task.params = {
+          instrumentation: build.run.instrumentation(),
+          applicationName: app.name(),
+          nodeName: appdynamics.nodeName(),
+          tierName: appdynamics.tierName()
+        };
+      }
 
       debug && console.log("launching " + task.task + " task");
       var taskId = sbt.runTask({

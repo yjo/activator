@@ -68,6 +68,7 @@ define(['commons/utils', 'commons/widget', 'services/newrelic', 'text!./newrelic
         self.error = ko.observable();
         self.provisionNewRelic = function () {
           if (self.downloadEnabled()) {
+            self.error("");
             self.provisionDownloadSubscription(newrelic.observeProvision(self.provisionObserver));
             newrelic.provision();
           }
