@@ -113,6 +113,12 @@ object AppDynamics {
 
   class Underlying(config: AD.Config)(log: LoggingAdapter)(implicit ec: ExecutionContext) {
     import Provisioning._
+
+    def reportError(error: Throwable, message: String, request: Request, sender: ActorRef): Unit = {
+      log.error(error, message)
+      val r = request.error(message)
+    }
+
     def onMessage(request: Request, sender: ActorRef, self: ActorRef, context: ActorContext): Unit = request match {
       case r @ Provision(sink, username, password) =>
         val ns = actorWrapper(sink)
@@ -124,8 +130,9 @@ object AppDynamics {
           config.timeout).execute().flatMap(de => provision(de, x => x, config.extractRoot(), ns)) onComplete {
             case Success(_) => sender ! r.response
             case Failure(error) =>
-              log.error(error, s"Failure during provisioning: ${error.getMessage}")
-              sender ! r.error(s"Error processing provisioning request: ${error.getMessage}")
+              reportError(error, s"Failure during provisioning: ${error.getMessage}", r, sender)
+              // This shouldn't be necessary.  Somewhere an exception if being eaten.
+              ns.provisioningError(s"Failure during provisioning: ${error.getMessage}", error)
           }
       case r @ Available =>
         Try(AD.hasAppDynamics(config.extractRoot())) match {
@@ -142,6 +149,6 @@ class AppDynamics(newRelicBuilder: LoggingAdapter => AppDynamics.Underlying) ext
   val newRelic = newRelicBuilder(log)
 
   def receive: Receive = {
-    case r: AppDynamics.Request => newRelic.onMessage(r, sender(), self, context)
+    case r: AppDynamics.Request => newRelic.onMessage(r, sender, self, context)
   }
 }

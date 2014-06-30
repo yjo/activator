@@ -37,7 +37,7 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
         self.provisionObserver = function(value) {
           var message = "";
           if (value.type == "provisioningError") {
-            message = "Error provisioning New Relic: "+value.message;
+            message = "Error provisioning AppDynamics: "+value.message;
             self.downloading(message);
             self.error(message);
           } else if (value.type == "authenticating") {

@@ -334,8 +334,9 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
     case i => instrumentedSbtPools.get(i)
   }
 
-  val newRelicActor: ActorRef = context.actorOf(monitor.NewRelic.props(NewRelic.fromConfig(Play.current.configuration.underlying), defaultContext))
-  val appDynamicsActor: ActorRef = context.actorOf(monitor.AppDynamics.props(AppDynamics.fromConfig(Play.current.configuration.underlying), defaultContext))
+  lazy val newRelicActor: ActorRef = context.actorOf(monitor.NewRelic.props(NewRelic.fromConfig(Play.current.configuration.underlying), defaultContext))
+  lazy val appDynamicsActor: ActorRef = context.actorOf(monitor.AppDynamics.props(AppDynamics.fromConfig(Play.current.configuration.underlying), defaultContext))
+
   val socket = context.actorOf(Props(new AppSocketActor(newRelicActor, appDynamicsActor)), name = "socket")
 
   val projectWatcher = context.actorOf(Props(new ProjectWatcher(location, newSourcesSocket = socket, sbtPool = uninstrumentedSbts)),

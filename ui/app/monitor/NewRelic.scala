@@ -72,6 +72,12 @@ object NewRelic {
 
   class Underlying(config: NR.Config)(log: LoggingAdapter)(implicit ec: ExecutionContext) {
     import Provisioning._
+
+    def reportError(error: Throwable, message: String, request: Request, sender: ActorRef): Unit = {
+      log.error(error, message)
+      sender ! request.error(message)
+    }
+
     def onMessage(request: Request, sender: ActorRef, self: ActorRef, context: ActorContext): Unit = request match {
       case r @ Provision(sink) =>
         val ns = actorWrapper(sink)
@@ -82,8 +88,7 @@ object NewRelic {
           config.extractRoot(), ns) onComplete {
             case Success(_) => sender ! r.response
             case Failure(error) =>
-              log.error(error, "Failure during provisioning")
-              sender ! r.error(s"Error processing provisioning request: ${error.getMessage}")
+              reportError(error, s"Error processing provisioning request: ${error.getMessage}", r, sender)
           }
       case r @ Available =>
         Try(NR.hasNewRelic(config.extractRoot())) match {
