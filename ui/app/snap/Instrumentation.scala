@@ -230,8 +230,7 @@ object AppDynamics {
   }
 
   def hasAppDynamics(source: File): Boolean = {
-    val sourceView = FileHelper.relativeTo(source)("appdynamics")
-    sourceView.exists() && sourceView.isDirectory && sourceView.listFiles().nonEmpty
+    source.exists() && source.isDirectory && source.listFiles().nonEmpty
   }
 
   case class Config(
