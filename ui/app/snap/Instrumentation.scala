@@ -230,8 +230,12 @@ object AppDynamics {
   }
 
   def hasAppDynamics(source: File): Boolean = {
-    source.exists() && source.isDirectory && source.listFiles().nonEmpty
+    val result = source.exists() && source.isDirectory && source.listFiles().nonEmpty
+    println(s"Checking $source - result: $result")
+    result
   }
+
+  def deprovision(target: File): Unit = FileHelper.deleteAll(target)
 
   case class Config(
     loginUrl: String,

@@ -72,8 +72,14 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
         self.error = ko.observable();
         self.provisionAppDynamics = function () {
           if (self.downloadEnabled()) {
+            self.error("");
             self.provisionDownloadSubscription(appdynamics.observeProvision(self.provisionObserver));
             appdynamics.provision(self.username(),self.password());
+          }
+        };
+        self.deprovisionAppDynamics = function () {
+          if (!self.downloadEnabled()) {
+            appdynamics.deprovision();
           }
         };
         self.nodeName = ko.observable(appdynamics.nodeName());

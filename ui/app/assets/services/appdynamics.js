@@ -50,9 +50,11 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
           if (event.type == "availableResponse") {
             console.log("setting available to: " + event.result);
             self.available(event.result);
-          }
-          if (event.type == "provisioned") {
+          } else if (event.type == "provisioned") {
             console.log("AppDynamics provisioned");
+            streams.send(adMessage("available"));
+          } else if (event.type == "deprovisioned") {
+            console.log("AppDynamics de-provisioned");
             streams.send(adMessage("available"));
           }
         }
@@ -61,6 +63,9 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
       streams.send(adMessage("available"));
       self.provision = function(username,password) {
         streams.send(adMessageWith("provision",{username: username, password: password}))
+      };
+      self.deprovision = function() {
+        streams.send(adMessage("deprovision"));
       };
       self.nodeNameSaved = ko.computed(function() {
         var name = self.nodeName();

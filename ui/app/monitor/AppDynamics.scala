@@ -53,6 +53,10 @@ object AppDynamics {
     def response: Response = Provisioned(this)
   }
 
+  case object Deprovision extends Request {
+    def response: Response = Deprovisioned
+  }
+
   case object Available extends Request {
     def response(result: Boolean): Response = AvailableResponse(result, this)
   }
@@ -61,6 +65,9 @@ object AppDynamics {
     def request: Request
   }
   case class Provisioned(request: Provision) extends Response
+  case object Deprovisioned extends Response {
+    val request: Request = Deprovision
+  }
   case class ErrorResponse(message: String, request: Request) extends Response
   case class AvailableResponse(result: Boolean, request: Request) extends Response
 
@@ -134,6 +141,13 @@ object AppDynamics {
               // This shouldn't be necessary.  Somewhere an exception if being eaten.
               ns.provisioningError(s"Failure during provisioning: ${error.getMessage}", error)
           }
+      case r @ Deprovision =>
+        Try(AD.deprovision(config.extractRoot())) match {
+          case Success(v) => sender ! r.response
+          case Failure(e) =>
+            log.error(e, "Failure deprovisioning AppDynamics")
+            sender ! r.error(s"Failure deprovisioning AppDynamics: ${e.getMessage}")
+        }
       case r @ Available =>
         Try(AD.hasAppDynamics(config.extractRoot())) match {
           case Success(v) => sender ! r.response(v)

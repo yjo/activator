@@ -29,6 +29,11 @@
   </p>
   <!-- /ko -->
   <!-- ko ifnot: needProvision-->
+  <h2>You're ready to go!</h2>
+  <p>
+    The AppDynamics Agent has been downloaded and your key configured.  You may enable AppDynamics for from the <a href="#run">run</a> tab.
+  </p>
+  <p><button data-bind="click: deprovisionAppDynamics">Re-download agent</button></p>
   <!-- /ko -->
 </section>
 <section class="error" data-bind="visible: error, text: error"></section>

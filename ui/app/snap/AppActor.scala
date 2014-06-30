@@ -178,6 +178,9 @@ object AppDynamicsRequest {
   case object Available extends Request {
     def response(result: Boolean): Response = AvailableResponse(result, this)
   }
+  case object Deprovision extends Request {
+    def response: Response = Deprovisioned
+  }
 
   sealed trait Response {
     def request: Request
@@ -185,6 +188,9 @@ object AppDynamicsRequest {
   case class Provisioned(request: Provision) extends Response
   case class ErrorResponse(message: String, request: Request) extends Response
   case class AvailableResponse(result: Boolean, request: Request) extends Response
+  case object Deprovisioned extends Response {
+    val request: Request = Deprovision
+  }
 
   implicit val appDynamicsProvisionReads: Reads[Provision] =
     extractRequest[Provision](requestTag)(extractType("provision")(((__ \ "username").read[String] and
@@ -199,10 +205,17 @@ object AppDynamicsRequest {
   implicit val appDynamicsAvailableWrites: Writes[Available.type] =
     emitRequest(requestTag)(_ => Json.obj("type" -> "available"))
 
+  implicit val appDynamicsDeprovisionReads: Reads[Deprovision.type] =
+    extractRequest[Deprovision.type](requestTag)(extractTypeOnly("deprovision", Deprovision))
+
+  implicit val appDynamicsDeprovisionWrites: Writes[Deprovision.type] =
+    emitRequest(requestTag)(_ => Json.obj("type" -> "deprovision"))
+
   implicit val appDynamicsRequestReads: Reads[Request] = {
     val pr = appDynamicsProvisionReads.asInstanceOf[Reads[Request]]
     val ar = appDynamicsAvailableReads.asInstanceOf[Reads[Request]]
-    extractRequest[Request](requestTag)(pr.orElse(ar))
+    val de = appDynamicsDeprovisionReads.asInstanceOf[Reads[Request]]
+    extractRequest[Request](requestTag)(pr.orElse(ar).orElse(de))
   }
 
   implicit val appDynamicsProvisionedWrites: Writes[Provisioned] =
@@ -214,6 +227,10 @@ object AppDynamicsRequest {
       "result" -> in.result,
       "request" -> in.request))
 
+  implicit val appDynamicsDeprovisionResponseWrites: Writes[Deprovisioned.type] =
+    emitResponse(responseTag)(in => Json.obj("type" -> "deprovisioned",
+      "request" -> in.request))
+
   implicit val appDynamicsErrorResponseWrites: Writes[ErrorResponse] =
     emitResponse(responseTag)(in => Json.obj("type" -> "error",
       "message" -> in.message,
@@ -223,10 +240,12 @@ object AppDynamicsRequest {
     Writes {
       case x: Provision => appDynamicsProvisionWrites.writes(x)
       case x @ Available => appDynamicsAvailableWrites.writes(x)
+      case x @ Deprovision => appDynamicsDeprovisionWrites.writes(x)
     }
 
   implicit val appDynamicsResponseWrites: Writes[Response] =
     Writes {
+      case x @ Deprovisioned => appDynamicsDeprovisionResponseWrites.writes(x)
       case x: Provisioned => appDynamicsProvisionedWrites.writes(x)
       case x: AvailableResponse => appDynamicsAvailableResponseWrites.writes(x)
       case x: ErrorResponse => appDynamicsErrorResponseWrites.writes(x)
@@ -695,6 +714,9 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
         case x @ AppDynamicsRequest.Available =>
           askAppDynamics[AvailableResponse](monitor.AppDynamics.Available, x,
             f => s"Failed AppDynamics availability check: ${f.getMessage}")(r => produce(toJson(x.response(r.result))))
+        case x @ AppDynamicsRequest.Deprovision =>
+          askAppDynamics[Deprovisioned.type](monitor.AppDynamics.Deprovision, x,
+            f => s"Failed AppDynamics deprovisioning: ${f.getMessage}")(r => produce(toJson(x.response)))
       }
     }
 
