@@ -8,7 +8,7 @@ define(['services/build', 'services/newrelic', 'services/appdynamics', 'text!./r
     var self = {};
     self.monitoringOptions = ko.computed(function() {
       var result = [{ name: "Inspect", id: "inspect", enabled: true}];
-      if (appdynamics.available()) {
+      if (appdynamics.available() && appdynamics.configured()) {
         result.push({ name: "AppDynamics", id: "appDynamics", enabled: true, enable: function() {
             self.currentMonitoringOption("appDynamics");
           }

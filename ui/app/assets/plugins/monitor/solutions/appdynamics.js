@@ -82,14 +82,6 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
             appdynamics.deprovision();
           }
         };
-        self.nodeName = ko.observable(appdynamics.nodeName());
-        self.nodeName.subscribe(function (newValue) {
-            self.saveNodeName(newValue);
-          });
-        self.tierName = ko.observable(appdynamics.tierName());
-        self.tierName.subscribe(function (newValue) {
-          self.saveTierName(newValue);
-        });
         self.saveNodeName = function (newValue) {
           if (appdynamics.validNodeName.test(newValue)) {
             console.log("saving nodeName: "+newValue);
@@ -102,14 +94,70 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
             appdynamics.tierName(newValue);
           }
         };
+        self.saveHostName = function (newValue) {
+          if (appdynamics.validHostName.test(newValue)) {
+            console.log("saving hostName: "+newValue);
+            appdynamics.hostName(newValue);
+          }
+        };
+        self.savePort = function (newValue) {
+          if (appdynamics.validPort.test(newValue)) {
+            console.log("saving port: "+newValue);
+            appdynamics.port(newValue);
+          }
+        };
+        self.saveAccountName = function (newValue) {
+          if (appdynamics.validAccountName.test(newValue)) {
+            console.log("saving accountName: "+newValue);
+            appdynamics.accountName(newValue);
+          }
+        };
+        self.saveAccessKey = function (newValue) {
+          if (appdynamics.validAccessKey.test(newValue)) {
+            console.log("saving accessKey: "+newValue);
+            appdynamics.accessKey(newValue);
+          }
+        };
+
+        self.hostName = ko.observable((function () {
+          var hn = appdynamics.hostName();
+          if (typeof(hn) == 'undefined' || hn == null || hn == "") {
+            return ".saas.appdynamics.com";
+          } else {
+            return hn;
+          }
+        })());
+        self.hostName.subscribe(self.saveHostName);
+        self.port = ko.observable(appdynamics.port());
+        self.port.subscribe(self.savePort);
+        self.sslEnabled = appdynamics.sslEnabled;
+        self.accountName = ko.observable(appdynamics.accountName());
+        self.accountName.subscribe(self.saveAccountName);
+        self.accessKey = ko.observable(appdynamics.accessKey());
+        self.accessKey.subscribe(self.saveAccessKey);
+        self.nodeName = ko.observable(appdynamics.nodeName());
+        self.nodeName.subscribe(self.saveNodeName);
+        self.tierName = ko.observable(appdynamics.tierName());
+        self.tierName.subscribe(self.saveTierName);
+
         self.nodeNameInvalid = ko.computed(function() {
-          var key = self.nodeName();
-          return !appdynamics.validNodeName.test(key);
+          return !appdynamics.validNodeName.test(self.nodeName());
         }, self);
         self.tierNameInvalid = ko.computed(function() {
-          var key = self.tierName();
-          return !appdynamics.validTierName.test(key);
+          return !appdynamics.validTierName.test(self.tierName());
         }, self);
+        self.hostNameInvalid = ko.computed(function() {
+          return !appdynamics.validHostName.test(self.hostName());
+        }, self);
+        self.portInvalid = ko.computed(function () {
+          return (!appdynamics.validPort.test(self.port()));
+        },self);
+        self.accountNameInvalid = ko.computed(function () {
+          return (!appdynamics.validAccountName.test(self.accountName()));
+        },self);
+        self.accessKeyInvalid = ko.computed(function () {
+          return (!appdynamics.validAccessKey.test(self.accessKey()));
+        },self);
       }
     });
 

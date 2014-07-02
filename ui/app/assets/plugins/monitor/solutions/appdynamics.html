@@ -7,6 +7,21 @@
 </section>
 <section class="activate">
   <div class="row">
+    <span class="label">Collector host name:</span><input type="text" id="hostName" data-bind="value: hostName, valueUpdate: 'input', css: {error: hostNameInvalid() }"/>
+  </div>
+  <div class="row">
+    <span class="label">Collector port:</span><input type="text" id="port" data-bind="value: port, valueUpdate: 'input', css: {error: portInvalid() }"/>
+  </div>
+  <div class="row">
+    <span class="label">SSL enabled:</span><input type="checkbox" id="sslEnabled" data-bind="checked: sslEnabled"/>
+  </div>
+  <div class="row">
+    <span class="label">Account name:</span><input type="text" id="accountName" data-bind="value: accountName, valueUpdate: 'input', css: {error: accountNameInvalid() }"/>
+  </div>
+  <div class="row">
+    <span class="label">Access key:</span><input type="text" id="accessKey" data-bind="value: accessKey, valueUpdate: 'input', css: {error: accessKeyInvalid() }"/>
+  </div>
+  <div class="row">
     <span class="label">Node name:</span><input type="text" id="nodeName" data-bind="value: nodeName, valueUpdate: 'input', css: {error: nodeNameInvalid() }"/>
   </div>
   <div class="row">

@@ -645,7 +645,12 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
           instrumentation: build.run.instrumentation(),
           applicationName: app.name(),
           nodeName: appdynamics.nodeName(),
-          tierName: appdynamics.tierName()
+          tierName: appdynamics.tierName(),
+          hostName: appdynamics.hostName(),
+          port: appdynamics.port(),
+          sslEnabled: appdynamics.sslEnabled(),
+          accountName: appdynamics.accountName(),
+          accessKey: appdynamics.accessKey()
         };
       }
 

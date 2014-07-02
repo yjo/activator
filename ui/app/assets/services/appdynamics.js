@@ -5,6 +5,11 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
 
   var nodeName = settings.observable("appDynamics.nodeName", "activator-"+new Date().getTime());
   var tierName = settings.observable("appDynamics.tierName", "development");
+  var hostName = settings.observable("appDynamics.hostName", "");
+  var port = settings.observable("appDynamics.port", 443);
+  var sslEnabled = settings.observable("appDynamics.sslEnabled", true);
+  var accountName = settings.observable("appDynamics.accountName", "");
+  var accessKey = settings.observable("appDynamics.accessKey", "");
 
   function adMessage(type) {
     return { request: 'AppDynamicsRequest', type: type };
@@ -18,6 +23,15 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
   var validTierName = /^[0-9a-z@\._-]{1,40}$/i;
   var validUsername = /^.{1,40}$/i;
   var validPassword = /^[0-9a-z@\.,-\/#!$%\^&\*;:{}=\-_`~()]{1,40}$/i;
+  var validPort = {
+    test: function(v) {
+      var n = Number(v);
+      return (n > 0) && (n < 65536);
+    }
+  };
+  var validAccountName = validNodeName;
+  var validAccessKey = /^[0-9a-z]{12}$/i;
+  var validHostName = /^[0-9a-z][0-9a-z\.\-$*_]{1,128}/i;
 
   var appDynamics = utils.Singleton({
     init: function() {
@@ -26,8 +40,26 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
       self.validTierName = validTierName;
       self.validUsername = validUsername;
       self.validPassword = validPassword;
+      self.validPort = validPort;
+      self.validAccountName = validAccountName;
+      self.validAccessKey = validAccessKey;
+      self.validHostName = validHostName;
+
+      self.hostName = hostName;
+      self.port = port;
+      self.sslEnabled = sslEnabled;
+      self.accountName = accountName;
+      self.accessKey = accessKey;
       self.nodeName = nodeName;
       self.tierName = tierName;
+      self.configured = ko.computed(function () {
+        return (self.validNodeName.test(self.nodeName()) &&
+        self.validTierName.test(self.tierName()) &&
+        self.validPort.test(self.port()) &&
+        self.validAccountName.test(self.accountName()) &&
+        self.validAccessKey.test(self.accessKey()) &&
+        self.validHostName.test(self.hostName()));
+      });
       self.observeProvision = function(observable) {
         return streams.subscribe({
           filter: function(event) {

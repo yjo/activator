@@ -274,7 +274,14 @@ sealed abstract class InstrumentationRequestType(val tag: InstrumentationTag) {
 object InstrumentationRequestTypes {
   case object Inspect extends InstrumentationRequestType(Instrumentations.InspectTag)
   case object NewRelic extends InstrumentationRequestType(Instrumentations.NewRelicTag)
-  case class AppDynamics(applicationName: String, nodeName: String, tierName: String) extends InstrumentationRequestType(Instrumentations.AppDynamicsTag)
+  case class AppDynamics(applicationName: String,
+    nodeName: String,
+    tierName: String,
+    accountName: String,
+    accessKey: String,
+    hostName: String,
+    port: Int,
+    sslEnabled: Boolean) extends InstrumentationRequestType(Instrumentations.AppDynamicsTag)
 
   def fromParams(params: Map[String, Any]): InstrumentationRequestType =
     params.get("instrumentation").asInstanceOf[Option[String]].map(Instrumentations.validate).getOrElse(Instrumentations.InspectTag) match {
@@ -285,11 +292,16 @@ object InstrumentationRequestTypes {
           applicationName <- params.get("applicationName").asInstanceOf[Option[String]]
           nodeName <- params.get("nodeName").asInstanceOf[Option[String]]
           tierName <- params.get("tierName").asInstanceOf[Option[String]]
+          accountName <- params.get("accountName").asInstanceOf[Option[String]]
+          accessKey <- params.get("accessKey").asInstanceOf[Option[String]]
+          hostName <- params.get("hostName").asInstanceOf[Option[String]]
+          port <- params.get("port").asInstanceOf[Option[BigDecimal]].map(_.intValue())
+          sslEnabled <- params.get("sslEnabled").asInstanceOf[Option[Boolean]]
         } yield {
-          println(s"****** InstrumentationRequestTypes.AppDynamics($applicationName, $nodeName, $tierName)")
-          InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName)
+          println(s"****** InstrumentationRequestTypes.AppDynamics($applicationName, $nodeName, $tierName, $accountName, $accessKey, $hostName, $port, $sslEnabled)")
+          InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled)
         }).getOrElse {
-          throw new InstrumentationRequestException(s"Invalid request for AppDynamics instrumentation.  Request must include: 'applicationName', 'nodeName', and 'tierName'.  Got: $params")
+          throw new InstrumentationRequestException(s"Invalid request for AppDynamics instrumentation.  Request must include: 'applicationName', 'nodeName', 'tierName', 'accountName', 'accessKey', 'hostName', 'port', and 'sslEnabled'.  Got: $params")
         }
     }
 }
@@ -427,12 +439,12 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
                 val processFactory = new DefaultSbtProcessFactory(location, sbtProcessLauncher, inst.jvmArgs)
                 addInstrumentedSbtPool(Instrumentations.NewRelicTag, processFactory)
                 self.tell(originalMessage, originalSender)
-              case InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName) =>
+              case InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled) =>
                 println(s"**** provisioning InstrumentationRequestTypes.AppDynamics($applicationName, $nodeName, $tierName)")
                 val relativeToActivator = FileHelper.relativeTo(Instrumentation.activatorHome)_
                 val adJar = relativeToActivator("monitoring/appdynamics/javaagent.jar")
                 println(s"**** adJar: $adJar")
-                val inst = AppDynamics(adJar, applicationName, nodeName, tierName)
+                val inst = AppDynamics(adJar, applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled)
                 val processFactory = new DefaultSbtProcessFactory(location, sbtProcessLauncher, inst.jvmArgs)
                 addInstrumentedSbtPool(Instrumentations.AppDynamicsTag, processFactory)
                 self.tell(originalMessage, originalSender)

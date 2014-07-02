@@ -33,13 +33,26 @@ case class NewRelic(configFile: File, agentJar: File, environment: String = "dev
     s"-Dnewrelic.environment=$environment")
 }
 
-case class AppDynamics(agentJar: File, applicationName: String, nodeName: String, tierName: String) extends Instrumentation(Instrumentations.AppDynamicsTag) {
+case class AppDynamics(agentJar: File,
+  applicationName: String,
+  nodeName: String,
+  tierName: String,
+  accountName: String,
+  accessKey: String,
+  hostName: String,
+  port: Int,
+  sslEnabled: Boolean) extends Instrumentation(Instrumentations.AppDynamicsTag) {
   def jvmArgs: Seq[String] = Seq(
     s"-javaagent:${agentJar.getPath}",
     s"-Dappdynamics.agent.tierName=${tierName}",
     s"-Dappdynamics.agent.nodeName=${nodeName}",
     s"-Dappdynamics.agent.applicationName=${applicationName}",
-    s"-Dappdynamics.agent.runtime.dir=${agentJar.getParentFile.getPath}")
+    s"-Dappdynamics.agent.runtime.dir=${agentJar.getParentFile.getPath}",
+    s"-Dappdynamics.agent.accountName=$accountName",
+    s"-Dappdynamics.agent.accountAccessKey=$accessKey",
+    s"-Dappdynamics.controller.hostName=$hostName",
+    s"-Dappdynamics.controller.port=$port",
+    s"-Dappdynamics.controller.ssl.enabled=$sslEnabled")
 }
 
 object NewRelic {
@@ -295,11 +308,16 @@ object Instrumentations {
 
   implicit val appDynamicsWrites: Writes[AppDynamics] =
     emitTagged("type", AppDynamicsTag.name) {
-      case AppDynamics(agentJar, applicationName, nodeName, tierName) =>
+      case AppDynamics(agentJar, applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled) =>
         Json.obj("agentJar" -> agentJar,
           "applicationName" -> applicationName,
           "nodeName" -> nodeName,
-          "tierName" -> tierName)
+          "tierName" -> tierName,
+          "accountName" -> accountName,
+          "accessKey" -> accessKey,
+          "hostName" -> hostName,
+          "port" -> port,
+          "sslEnabled" -> sslEnabled)
     }
 
   implicit val inspectReads: Reads[Inspect.type] =
@@ -317,7 +335,12 @@ object Instrumentations {
       ((__ \ "agentJar").read[File] and
         (__ \ "applicationName").read[String] and
         (__ \ "nodeName").read[String] and
-        (__ \ "tierName").read[String])(AppDynamics.apply _)
+        (__ \ "tierName").read[String] and
+        (__ \ "accountName").read[String] and
+        (__ \ "accessKey").read[String] and
+        (__ \ "hostName").read[String] and
+        (__ \ "port").read[Int] and
+        (__ \ "sslEnabled").read[Boolean])(AppDynamics.apply _)
     }
 
   implicit val instrumentationWrites: Writes[Instrumentation] =
