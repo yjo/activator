@@ -70,18 +70,8 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
           }
         }
       });
-      self.onStreamOpen = function (handler) {
-        var subscription = streams.subscribe(function (event) {
-            if (event.type == 'SourcesMayHaveChanged') {
-              handler(event);
-            }
-          }
-        );
-      };
-      self.onStreamOpen(function (event) {
-        console.log("Making initial request to check NR availability");
-        streams.send(nrMessage("available"));
-      });
+      console.log("Making initial request to check NR availability");
+      streams.send(nrMessage("available"));
       self.licenseKey = licenseKey;
       self.provision = function() {
         streams.send(nrMessage("provision"))

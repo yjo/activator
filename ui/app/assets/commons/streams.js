@@ -3,7 +3,6 @@
  */
 define(function() {
   var WEB_SOCKET_CLOSED = 'WebSocketClosed';
-  var WEB_SOCKET_OPENED = 'WebSocketOpened';
   var id = window.wsUrl;
   // We can probably just connect immediately.
   var WS;
