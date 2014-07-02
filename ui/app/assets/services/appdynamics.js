@@ -60,12 +60,11 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
         }
       });
       self.onStreamOpen = function (handler) {
-        var subscription = streams.subscribe(function (event) {
-            if (event.type == 'SourcesMayHaveChanged') {
-              handler(event);
-            }
+        streams.subscribe(function (event) {
+          if (event.type == 'SourcesMayHaveChanged') {
+            handler(event);
           }
-        );
+        });
       };
       self.onStreamOpen(function (event) {
         console.log("Making initial request to check AD availability");

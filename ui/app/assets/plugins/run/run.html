@@ -42,7 +42,7 @@
           <!-- ko foreach: monitoringOptions -->
           <li>
             <!-- ko if: $data.enabled -->
-            <input type="radio" name="monitoringOption" data-bind="value: $data.id, checked: $parent.currentMonitoringOption, attr: {id: $data.id}"  class="radio-input">
+            <input type="radio" name="monitoringOption" data-bind="value: $data.id, checked: $parent.currentMonitoringOption, attr: {id: $data.id}"  class="radio-input"/>
             <label class="radio" data-bind="attr: { for: $data.id }">
               <span class="outer"><span class="inner"></span></span>
               <p data-bind="text: $data.name, attr: {title: $data.name}"></p>

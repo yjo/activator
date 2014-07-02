@@ -8,17 +8,17 @@ define(['services/build', 'services/newrelic', 'services/appdynamics', 'text!./r
     var self = {};
     self.monitoringOptions = ko.computed(function() {
       var result = [{ name: "Inspect", id: "inspect", enabled: true}];
-      if (newrelic.hasPlay() && newrelic.available() && newrelic.licenseKeySaved()) {
-        result.push({ name: "New Relic", id: "newRelic", enabled: (newrelic.isProjectEnabled() == true), enable: function() {
-            newrelic.enableProject(newrelic.licenseKey(), build.app.name());
-            self.currentMonitoringOption("newRelic");
-          }
-        });
-      }
       if (appdynamics.available()) {
         result.push({ name: "AppDynamics", id: "appDynamics", enabled: true, enable: function() {
             self.currentMonitoringOption("appDynamics");
           }
+        });
+      }
+      if (newrelic.hasPlay() && newrelic.available() && newrelic.licenseKeySaved()) {
+        result.push({ name: "New Relic", id: "newRelic", enabled: newrelic.isProjectEnabled(), enable: function() {
+          newrelic.enableProject(newrelic.licenseKey(), build.app.name());
+          self.currentMonitoringOption("newRelic");
+        }
         });
       }
       return result;
@@ -39,7 +39,7 @@ define(['services/build', 'services/newrelic', 'services/appdynamics', 'text!./r
         return "Stop";
       else
         return "Start";
-    }, this);
+    }, self);
 
     self.log = build.run.outputLog;
 
