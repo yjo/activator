@@ -39,9 +39,8 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
   }
 
   var executionsById = {};
-  var executions = ko.observable([]);
+  var executions = ko.observableArray();
   var tasksById = {};
-  var tasks = ko.observable([]);
 
   var legacyLogHandlers = [];
   function legacySubscribeLog(handler) {
@@ -73,24 +72,29 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
       },
       TaskStarted: function(event) {
         debug && console.log("TaskStarted ", event);
-        var task = {
-            execution: executionsById[event.executionId],
-            taskId: event.taskId,
-            key: event.key ? event.key.key.name : null,
-            finished: ko.observable(false),
-            succeeded: ko.observable(false)
-        };
-        console.log("Starting task ", task);
-        // we want to be in the by-id hash before we notify
-        // on the tasks array
-        tasksById[task.taskId] = task;
-        tasks.push(task);
+        var execution = executionsById[event.executionId]
+        if (execution) {
+          var task = {
+              execution: execution,
+              taskId: event.taskId,
+              key: event.key ? event.key.key.name : null,
+              finished: ko.observable(false),
+              succeeded: ko.observable(false)
+          };
+          console.log("Starting task ", task);
+          // we want to be in the by-id hash before we notify
+          // on the tasks array
+          tasksById[task.taskId] = task;
+          execution.tasks.push(task);
+        } else {
+          console.log("Ignoring task for unknown execution " + event.executionId)
+        }
       },
       TaskFinished: function(event) {
         debug && console.log("TaskFinished ", event);
         var task = tasksById[event.taskId];
         if (task) {
-          tasks.remove(function(item) {
+          task.execution.tasks.remove(function(item) {
             return item.taskId == task.taskId;
           });
           // we want succeeded flag up-to-date when finished notifies
@@ -106,7 +110,8 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
             command: event.command,
             started: ko.observable(false),
             finished: ko.observable(false),
-            succeeded: ko.observable(false)
+            succeeded: ko.observable(false),
+            tasks: ko.observableArray()
         };
         console.log("Waiting execution ", execution);
         // we want to be in the by-id hash before we notify
@@ -160,7 +165,6 @@ define(['commons/streams', 'commons/events', 'commons/utils'], function(streams,
     requestExecution: requestExecution,
     cancelExecution: cancelExecution,
     legacySubscribeLog: legacySubscribeLog,
-    executions: executions,
-    tasks: tasks
+    executions: executions
   };
 })
