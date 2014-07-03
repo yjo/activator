@@ -72,12 +72,21 @@ class ActivatorLauncher extends AppMain {
     openDocs()
 
     System.err.println(s"""| Did not detect an ${SCRIPT_NAME} project in this directory.
+                           | - ${SCRIPT_NAME}
+                           | Load an existing project (has to be executed from the project directory)
+                           | or print this help message if no project is found
                            |
-                           | There are three ways to run ${SCRIPT_NAME}:
+                           | Sub-commands
+                           | - ${SCRIPT_NAME} ui
+                           | Open the project in the UI if executed from an existing project
+                           | directory, otherwise open a project-creation UI.
                            |
-                           | 1. Recommended: try `${SCRIPT_NAME} ui` to create a project in the UI
-                           | 2. Use `${SCRIPT_NAME} new` to create a project on the command line
-                           | 3. Load an existing project by re-running ${SCRIPT_NAME} in a project directory
+                           | - ${SCRIPT_NAME} new [project-name] [template-name]
+                           | Create a new project, prompting for project-name if missing and helping you
+                           | find a template if template-name is not provided.
+                           |
+                           | - ${SCRIPT_NAME} list-templates
+                           | Fetch the latest template list and print it to the console.
                            |""".stripMargin)
     Exit(1)
   }

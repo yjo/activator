@@ -1,3 +1,5 @@
+import java.io.FileInputStream
+
 import sbt._
 import Keys._
 
@@ -29,31 +31,44 @@ object offline {
   def runofflinetests(templateRepo: File, localIvyRepo: File, launcher: File, log: sbt.Logger): Unit = {
     val results = 
       for {
-        project <- findTestDirs(templateRepo)
-        name = "[" + project.getName + "]"
-        // TODO - Log here.
-        result = runTest(localIvyRepo, project, launcher, log) 
+        projectInfo <- findTestDirs(templateRepo)
+        name = "[" + projectInfo._2 + ", " + projectInfo._1.name + "]"
+        _ = log.info("Running test for template: " + name)
+        result = runTest(localIvyRepo, projectInfo._1, launcher, log)
       } yield name -> result
-    // TODO - Recap failrues!  
+    // TODO - Recap failures!
     if(results exists (_._2 != true)) {
-      val fcount = results.filterNot(_._2).length
-      log.info("[OFFLINETEST] " + fcount + " failures in " + results.length + " tests...")
+      val failureCount = results.filterNot(_._2).length
+      log.info("[OFFLINETEST] " + failureCount + " failures in " + results.length + " tests...")
       for((name, result) <- results) {
-        log.info(" [OFFLINETEST] "+name+" - " + (if(result) "SUCCESS" else "FAILURE"))
+        log.info(" [OFFLINETEST] " + name + " - " + (if (result) "SUCCESS" else "FAILURE"))
       }
-      sys.error("Tests were unsucessful")
+      sys.error("Tests were unsuccessful")
     } else {
       log.info("[OFFLINETEST] " + results.length + " tests successful.")
     }
     ()
   }
-  
-  
-  def findTestDirs(root: File): Seq[File] = {
+
+  def findTestDirs(root: File): Seq[(File, String)] = {
+    // extract the template name from the activator.properties file
+    def extractTemplateName(file: File): String = {
+      val fis = new FileInputStream(file.getAbsolutePath)
+      try {
+        val properties = new java.util.Properties
+        properties.load(fis)
+        properties.getProperty("name")
+      } finally {
+        fis.close()
+      }
+    }
+
     for {
       dir <- (root.***).get
       if (dir / "project/build.properties").exists
-    } yield dir
+      if (dir / "activator.properties").exists
+      projectName = extractTemplateName((dir / "activator.properties").getAbsoluteFile)
+    } yield (dir, projectName)
   }
   
   def runTest(localIvyRepo: File, template: File, launcher: File, log: sbt.Logger): Boolean = {

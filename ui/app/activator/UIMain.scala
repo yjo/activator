@@ -49,8 +49,8 @@ object PidDetector {
       } return true
       false
     } catch {
-      // TODO - What kind of process failure exceptions do we have to ignore?
-      case e: Exception => // Ignore
+      case e: Exception =>
+        System.err.println("Failed to determine whether Activator is running already; will try to run it a second time but it may fail.")
         false
     }
   private def findProcessLinux(pid: String): Boolean =
