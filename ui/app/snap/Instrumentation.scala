@@ -4,6 +4,7 @@
 package snap
 
 import java.io._
+import java.util.concurrent.TimeUnit
 
 import activator.properties.ActivatorProperties
 import akka.util.Timeout
@@ -69,7 +70,7 @@ object NewRelic {
       Config(downloadUrlTemplate = config.getString("download-template"),
         version = config.getString("version"),
         sha = config.getString("checksum"),
-        timeout = Timeout(config.getMilliseconds("timeout").intValue.millis),
+        timeout = Timeout(config.getDuration("timeout", TimeUnit.MILLISECONDS).intValue.millis),
         extractRootTemplate = config.getString("extract-root-template"))
     }
   }
@@ -238,7 +239,7 @@ object AppDynamics {
       val config = configRoot.getConfig("appdynamics")
       Config(loginUrl = config.getString("login-url"),
         downloadUrlTemplate = config.getString("download-template"),
-        timeout = Timeout(config.getMilliseconds("timeout").intValue.millis),
+        timeout = Timeout(config.getDuration("timeout", TimeUnit.MILLISECONDS).intValue.millis),
         extractRootTemplate = config.getString("extract-root-template"))
     }
   }
