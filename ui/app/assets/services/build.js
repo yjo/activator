@@ -638,10 +638,11 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
         task.task = 'echo:' + task.task;
       }
 
+      var baseParams = (typeof task.params == 'undefined' ? {} : task.params);
       if (build.run.instrumentation() == "newRelic") {
-        task.params = {instrumentation: build.run.instrumentation()};
+        task.params = $.extend(baseParams, {instrumentation: build.run.instrumentation()});
       } else if (build.run.instrumentation() == "appDynamics") {
-        task.params = {
+        task.params = $.extend(baseParams,{
           instrumentation: build.run.instrumentation(),
           applicationName: app.name(),
           nodeName: appdynamics.nodeName(),
@@ -651,7 +652,7 @@ define(['lib/knockout/knockout', 'commons/settings', 'services/log', 'commons/ut
           sslEnabled: appdynamics.sslEnabled(),
           accountName: appdynamics.accountName(),
           accessKey: appdynamics.accessKey()
-        };
+        });
       }
 
       debug && console.log("launching " + task.task + " task");
