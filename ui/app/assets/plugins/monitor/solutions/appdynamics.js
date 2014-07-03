@@ -32,7 +32,7 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
           return !appdynamics.validPassword.test(key);
         }, self);
         self.downloading.subscribe(function(value) {
-          console.log("downloading: "+value);
+          debug && console.log("downloading: "+value);
         });
         self.provisionObserver = function(value) {
           var message = "";
@@ -84,37 +84,37 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
         };
         self.saveNodeName = function (newValue) {
           if (appdynamics.validNodeName.test(newValue)) {
-            console.log("saving nodeName: "+newValue);
+            debug && console.log("saving nodeName: "+newValue);
             appdynamics.nodeName(newValue);
           }
         };
         self.saveTierName = function (newValue) {
           if (appdynamics.validTierName.test(newValue)) {
-            console.log("saving tierName: "+newValue);
+            debug && console.log("saving tierName: "+newValue);
             appdynamics.tierName(newValue);
           }
         };
         self.saveHostName = function (newValue) {
           if (appdynamics.validHostName.test(newValue)) {
-            console.log("saving hostName: "+newValue);
+            debug && console.log("saving hostName: "+newValue);
             appdynamics.hostName(newValue);
           }
         };
         self.savePort = function (newValue) {
           if (appdynamics.validPort.test(newValue)) {
-            console.log("saving port: "+newValue);
+            debug && console.log("saving port: "+newValue);
             appdynamics.port(newValue);
           }
         };
         self.saveAccountName = function (newValue) {
           if (appdynamics.validAccountName.test(newValue)) {
-            console.log("saving accountName: "+newValue);
+            debug && console.log("saving accountName: "+newValue);
             appdynamics.accountName(newValue);
           }
         };
         self.saveAccessKey = function (newValue) {
           if (appdynamics.validAccessKey.test(newValue)) {
-            console.log("saving accessKey: "+newValue);
+            debug && console.log("saving accessKey: "+newValue);
             appdynamics.accessKey(newValue);
           }
         };

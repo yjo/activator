@@ -25,7 +25,7 @@ define(['services/build', 'services/newrelic', 'services/appdynamics', 'text!./r
     }, self);
     self.currentMonitoringOption = ko.observable("inspect");
     self.currentMonitoringOption.subscribe(function (newOption) {
-      console.log("run instrumentation changed to: "+newOption);
+      debug && console.log("run instrumentation changed to: "+newOption);
       build.run.instrumentation(newOption);
       build.restartTask('run');
     });

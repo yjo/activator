@@ -29,7 +29,7 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
       }, self);
       self.enableProject = function(key,name) {
         var message = nrMessageWith("enable",{key: key, name: name});
-        console.log("message: "+JSON.stringify(message,null,2));
+        debug && console.log("message: "+JSON.stringify(message,null,2));
         streams.send(message);
       };
       self.observeProvision = function(observable) {
@@ -52,19 +52,19 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
         },
         handler: function (event) {
           if (event.type == "availableResponse") {
-            console.log("setting available to: " + event.result);
+            debug && console.log("setting available to: " + event.result);
             self.available(event.result);
           }
           if (event.type == "provisioned") {
-            console.log("New Relic provisioned");
+            debug && console.log("New Relic provisioned");
             streams.send(nrMessage("available"));
           }
           if (event.type == "isProjectEnabledResponse") {
-            console.log("Setting isProjectEnabled to: " + event.result);
+            debug && console.log("Setting isProjectEnabled to: " + event.result);
             self.isProjectEnabled(event.result);
           }
           if (event.type == "projectEnabled") {
-            console.log("Project enabled for New Relic");
+            debug && console.log("Project enabled for New Relic");
             self.checkIsProjectEnabled();
           }
         }

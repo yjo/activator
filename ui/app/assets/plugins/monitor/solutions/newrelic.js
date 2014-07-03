@@ -30,7 +30,7 @@ define(['commons/utils', 'commons/widget', 'services/newrelic', 'text!./newrelic
         self.provisionDownloadSubscription = ko.observable(null);
         self.downloading = ko.observable("");
         self.downloading.subscribe(function(value) {
-          console.log("downloading: "+value);
+          debug && console.log("downloading: "+value);
         });
         self.provisionObserver = function(value) {
           var message = "";

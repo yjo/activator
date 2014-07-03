@@ -80,13 +80,13 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
         },
         handler: function (event) {
           if (event.type == "availableResponse") {
-            console.log("setting available to: " + event.result);
+            debug && console.log("setting available to: " + event.result);
             self.available(event.result);
           } else if (event.type == "provisioned") {
-            console.log("AppDynamics provisioned");
+            debug && console.log("AppDynamics provisioned");
             streams.send(adMessage("available"));
           } else if (event.type == "deprovisioned") {
-            console.log("AppDynamics de-provisioned");
+            debug && console.log("AppDynamics de-provisioned");
             streams.send(adMessage("available"));
           }
         }
@@ -99,7 +99,7 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
         });
       };
       self.onStreamOpen(function (event) {
-        console.log("Making initial request to check AD availability");
+        debug && console.log("Making initial request to check AD availability");
         streams.send(adMessage("available"));
       });
       self.provision = function(username,password) {

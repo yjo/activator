@@ -667,7 +667,6 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
 
       {
         case x: Status =>
-          println(s"Status: $x")
           state = underlying.onMessage(state, x, sender, self, context)
       }
     }
@@ -724,7 +723,6 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
 
     def handleAppDynamicsRequest(in: AppDynamicsRequest.Request): Unit = {
       import monitor.AppDynamics._
-      println(s"processing request $in")
       in match {
         case x @ AppDynamicsRequest.Provision(username, password) =>
           val sink = context.actorOf(Props(new ProvisioningSink(ProvisioningSinkState(), log => new ProvisioningSinkUnderlying(log, produce))))

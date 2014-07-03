@@ -267,11 +267,8 @@ object AppDynamics {
     }
   }
 
-  def hasAppDynamics(source: File): Boolean = {
-    val result = source.exists() && source.isDirectory && source.listFiles().nonEmpty
-    println(s"Checking $source - result: $result")
-    result
-  }
+  def hasAppDynamics(source: File): Boolean =
+    source.exists() && source.isDirectory && source.listFiles().nonEmpty
 
   def deprovision(target: File): Unit = FileHelper.deleteAll(target)
 
