@@ -31,9 +31,10 @@ define(function() {
 
       !!plugin.route && plugin.route(metaInfo, breadcrumb);
     }, function(){
-      // TODO : send back a 404
+      // Need to log something because supplying this function swallows exceptions!
+      console.log("*** Could not load stuff for: ",metaInfo);
     });
-  }
+  };
 
   var parseUrl = function(url) {
     if (!url) url = "welcome"; // Default plugin
@@ -45,14 +46,14 @@ define(function() {
       pluginUrl: "plugins/" + plugin + "/" + plugin,
       parameters: url.split(/\/+/).slice(1)
     }
-  }
+  };
 
   // This will redirect without adding a new state in browser history
   var redirect = function(hash) {
     if (history.replaceState != null) {
       return history.replaceState(null, null, '#' + hash);
     }
-  }
+  };
 
   return {
     current: current,

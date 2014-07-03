@@ -6,6 +6,7 @@
   Third-party monitoring disables the local inspector.
 </section>
 <section class="activate">
+  <p>You must provide some configuration information in order to use AppDynamics.  Items in red are not properly configured.</p>
   <div class="row">
     <span class="label">Collector host name:</span><input type="text" id="hostName" data-bind="value: hostName, valueUpdate: 'input', css: {error: hostNameInvalid() }"/>
   </div>
@@ -27,6 +28,17 @@
   <div class="row">
     <span class="label">Tier name:</span><input type="text" id="tierName" data-bind="value: tierName, valueUpdate: 'input',  css: {error: tierNameInvalid() }"/>
   </div>
+  <!-- ko ifnot: configured -->
+  <section class="warning">
+    AppDynamics is not properly configured.  Please correct items marked in red.
+  </section>
+  <!-- /ko -->
+  <!-- ko if: configured -->
+  <section>
+    <h2>AppDynamics is properly configured!</h2>
+    <p>You can change these values at any time.</p>
+  </section>
+  <!-- /ko -->
   <!-- ko if: needProvision -->
   <h2>Get the AppDynamics Agent</h2>
   <p>The AppDynamics Agent collects data about your application.  This data is sent to AppDynamics for analysis.</p>
@@ -44,10 +56,8 @@
   </p>
   <!-- /ko -->
   <!-- ko ifnot: needProvision-->
-  <h2>You're ready to go!</h2>
-  <p>
-    The AppDynamics Agent has been downloaded and your key configured.  You may enable AppDynamics for from the <a href="#run">run</a> tab.
-  </p>
+  <h2>The AppDynamics tracing agent has been downloaded!</h2>
+  <p>You may enable AppDynamics for from the <a href="#run">run</a> tab.</p>
   <p><button data-bind="click: deprovisionAppDynamics">Re-download agent</button></p>
   <!-- /ko -->
 </section>

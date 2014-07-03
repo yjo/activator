@@ -21,20 +21,20 @@ define([
   var toggle = function() {
     navigationOpened(!navigationOpened());
     sneak(navigationOpened());
-  }
+  };
   var sneakOn = function() {
     if (!navigationOpened()) {
       sneak(true);
     }
-  }
+  };
   var sneakShow = function() {
     clearTimeout(sneakTimer);
-  }
+  };
   var sneakHide = function() {
     sneakTimer = setTimeout(function(){
       sneak(false);
     }, 500);
-  }
+  };
 
   // Export to UI
   var NavigationState = {

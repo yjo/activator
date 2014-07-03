@@ -25,7 +25,6 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
       };
       self.hasPlay = ko.computed(function() {
         self.isProjectEnabled("unknown");
-        self.checkIsProjectEnabled();
         return build.app.hasPlay();
       }, self);
       self.enableProject = function(key,name) {
@@ -70,8 +69,18 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
           }
         }
       });
-      console.log("Making initial request to check NR availability");
-      streams.send(nrMessage("available"));
+      self.onStreamOpen = function (handler) {
+        streams.subscribe(function (event) {
+          if (event.type == 'SourcesMayHaveChanged') {
+            handler(event);
+          }
+        });
+      };
+      self.onStreamOpen(function (event) {
+        console.log("Making initial request to check NR availability");
+        streams.send(nrMessage("available"));
+        self.checkIsProjectEnabled();
+      });
       self.licenseKey = licenseKey;
       self.provision = function() {
         streams.send(nrMessage("provision"))

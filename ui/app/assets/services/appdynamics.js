@@ -59,7 +59,7 @@ define(['commons/utils', 'commons/streams', 'commons/settings', 'services/build'
         self.validAccountName.test(self.accountName()) &&
         self.validAccessKey.test(self.accessKey()) &&
         self.validHostName.test(self.hostName()));
-      });
+      }, self);
       self.observeProvision = function(observable) {
         return streams.subscribe({
           filter: function(event) {

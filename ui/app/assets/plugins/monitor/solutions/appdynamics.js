@@ -158,6 +158,15 @@ define(['commons/utils', 'commons/widget', 'services/appdynamics', 'text!./appdy
         self.accessKeyInvalid = ko.computed(function () {
           return (!appdynamics.validAccessKey.test(self.accessKey()));
         },self);
+
+        self.configured = ko.computed(function () {
+          return (appdynamics.validNodeName.test(self.nodeName()) &&
+          appdynamics.validTierName.test(self.tierName()) &&
+          appdynamics.validPort.test(self.port()) &&
+          appdynamics.validAccountName.test(self.accountName()) &&
+          appdynamics.validAccessKey.test(self.accessKey()) &&
+          appdynamics.validHostName.test(self.hostName()));
+        }, self);
       }
     });
 

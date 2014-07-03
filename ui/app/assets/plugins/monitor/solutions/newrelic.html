@@ -10,8 +10,11 @@
   <!-- ko if: needProvision -->
   <h2>Get the New Relic Agent</h2>
   <p>The New Relic Agent collects data about your application.  This data is sent to New Relic for analysis.</p>
+  <section class="warning">
+    New Relic monitoring is only available for Play applications.
+  </section>
   <p>
-    <button class="button big install" data-bind="click: provisionNewRelic">Install</button>
+    <button class="button big install" data-bind="click: provisionNewRelic">Download</button>
     <span data-bind="visible: downloading"><span data-bind="text: downloading"></span></span>
   </p>
   <h2>Enter your licence key</h2>
