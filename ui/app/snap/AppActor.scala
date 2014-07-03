@@ -267,13 +267,17 @@ object InspectRequest {
   def unapply(in: JsValue): Option[InspectRequest] = Json.fromJson[InspectRequest](in).asOpt
 }
 
-sealed abstract class InstrumentationRequestType(val tag: InstrumentationTag) {
-  def name: String = tag.name
+sealed abstract class InstrumentationRequestType(val name: String) {
+  def tag: InstrumentationTag
 }
 
 object InstrumentationRequestTypes {
-  case object Inspect extends InstrumentationRequestType(Instrumentations.InspectTag)
-  case object NewRelic extends InstrumentationRequestType(Instrumentations.NewRelicTag)
+  case object Inspect extends InstrumentationRequestType(Instrumentations.inspectName) {
+    final val tag: InstrumentationTag = snap.Inspect.tag
+  }
+  case object NewRelic extends InstrumentationRequestType(Instrumentations.newRelicName) {
+    final val tag: InstrumentationTag = snap.NewRelic.Tag
+  }
   case class AppDynamics(applicationName: String,
     nodeName: String,
     tierName: String,
@@ -281,13 +285,15 @@ object InstrumentationRequestTypes {
     accessKey: String,
     hostName: String,
     port: Int,
-    sslEnabled: Boolean) extends InstrumentationRequestType(Instrumentations.AppDynamicsTag)
+    sslEnabled: Boolean) extends InstrumentationRequestType(Instrumentations.appDynamicsName) {
+    final val tag: InstrumentationTag = snap.AppDynamics.Tag(applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled)
+  }
 
   def fromParams(params: Map[String, Any]): InstrumentationRequestType =
-    params.get("instrumentation").asInstanceOf[Option[String]].map(Instrumentations.validate).getOrElse(Instrumentations.InspectTag) match {
-      case Instrumentations.InspectTag => InstrumentationRequestTypes.Inspect
-      case Instrumentations.NewRelicTag => InstrumentationRequestTypes.NewRelic
-      case Instrumentations.AppDynamicsTag =>
+    params.get("instrumentation").asInstanceOf[Option[String]].getOrElse(Instrumentations.inspectName) match {
+      case Instrumentations.inspectName => InstrumentationRequestTypes.Inspect
+      case Instrumentations.newRelicName => InstrumentationRequestTypes.NewRelic
+      case Instrumentations.appDynamicsName =>
         (for {
           applicationName <- params.get("applicationName").asInstanceOf[Option[String]]
           nodeName <- params.get("nodeName").asInstanceOf[Option[String]]
@@ -298,7 +304,6 @@ object InstrumentationRequestTypes {
           port <- params.get("port").asInstanceOf[Option[BigDecimal]].map(_.intValue())
           sslEnabled <- params.get("sslEnabled").asInstanceOf[Option[Boolean]]
         } yield {
-          println(s"****** InstrumentationRequestTypes.AppDynamics($applicationName, $nodeName, $tierName, $accountName, $accessKey, $hostName, $port, $sslEnabled)")
           InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled)
         }).getOrElse {
           throw new InstrumentationRequestException(s"Invalid request for AppDynamics instrumentation.  Request must include: 'applicationName', 'nodeName', 'tierName', 'accountName', 'accessKey', 'hostName', 'port', and 'sslEnabled'.  Got: $params")
@@ -355,7 +360,7 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
 
   def addInstrumentedSbtPool(tag: InstrumentationTag, factory: SbtProcessFactory): Unit = {
     tag match {
-      case Instrumentations.InspectTag =>
+      case Inspect.Tag =>
       case i =>
         instrumentedSbtPools.get(i).foreach(_ ! PoisonPill)
         instrumentedSbtPools += (i -> context.actorOf(Props(new ChildPool(factory)), name = s"sbt-pool-${i.name}-${poolCounter.getAndIncrement()}"))
@@ -363,7 +368,7 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
   }
 
   def getSbtPoolFor(tag: InstrumentationTag): Option[ActorRef] = tag match {
-    case Instrumentations.InspectTag => Some(uninstrumentedSbts)
+    case Inspect.Tag => Some(uninstrumentedSbts)
     case i => instrumentedSbtPools.get(i)
   }
 
@@ -431,22 +436,20 @@ class AppActor(val config: AppConfig, val sbtProcessLauncher: SbtProcessLauncher
           case None =>
             instrumentation match {
               case InstrumentationRequestTypes.Inspect =>
-              case InstrumentationRequestTypes.NewRelic =>
+              case x @ InstrumentationRequestTypes.NewRelic =>
                 val realitiveToRoot = FileHelper.relativeTo(config.location)_
                 val nrConfigFile = realitiveToRoot("conf/newrelic.yml")
                 val nrJar = realitiveToRoot("lib/newrelic.jar")
                 val inst = NewRelic(nrConfigFile, nrJar)
                 val processFactory = new DefaultSbtProcessFactory(location, sbtProcessLauncher, inst.jvmArgs)
-                addInstrumentedSbtPool(Instrumentations.NewRelicTag, processFactory)
+                addInstrumentedSbtPool(x.tag, processFactory)
                 self.tell(originalMessage, originalSender)
-              case InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled) =>
-                println(s"**** provisioning InstrumentationRequestTypes.AppDynamics($applicationName, $nodeName, $tierName)")
+              case x @ InstrumentationRequestTypes.AppDynamics(applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled) =>
                 val relativeToActivator = FileHelper.relativeTo(Instrumentation.activatorHome)_
                 val adJar = relativeToActivator("monitoring/appdynamics/javaagent.jar")
-                println(s"**** adJar: $adJar")
                 val inst = AppDynamics(adJar, applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled)
                 val processFactory = new DefaultSbtProcessFactory(location, sbtProcessLauncher, inst.jvmArgs)
-                addInstrumentedSbtPool(Instrumentations.AppDynamicsTag, processFactory)
+                addInstrumentedSbtPool(x.tag, processFactory)
                 self.tell(originalMessage, originalSender)
             }
         }

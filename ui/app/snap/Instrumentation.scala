@@ -12,26 +12,33 @@ import com.typesafe.config.{ Config => TSConfig }
 
 import scala.concurrent.duration._
 
-sealed abstract class InstrumentationTag(val name: String)
+sealed trait InstrumentationTag {
+  def name: String
+}
 
-sealed abstract class Instrumentation(val tag: InstrumentationTag) {
-  def name: String = tag.name
+sealed abstract class Instrumentation(val name: String) {
   def jvmArgs: Seq[String]
+  def tag: InstrumentationTag
 }
 
 object Instrumentation {
   lazy val activatorHome: File = new File(ActivatorProperties.ACTIVATOR_HOME_FILENAME)
 }
 
-case object Inspect extends Instrumentation(Instrumentations.InspectTag) {
+case object Inspect extends Instrumentation(Instrumentations.inspectName) { self =>
+  case object Tag extends InstrumentationTag {
+    final val name: String = self.name
+  }
   def jvmArgs: Seq[String] = Seq.empty[String]
+  val tag: InstrumentationTag = Tag
 }
 
-case class NewRelic(configFile: File, agentJar: File, environment: String = "development") extends Instrumentation(Instrumentations.NewRelicTag) {
+case class NewRelic(configFile: File, agentJar: File, environment: String = "development") extends Instrumentation(Instrumentations.newRelicName) {
   def jvmArgs: Seq[String] = Seq(
     s"-javaagent:${agentJar.getPath}",
     s"-Dnewrelic.config.file=${configFile.getPath}",
     s"-Dnewrelic.environment=$environment")
+  val tag: InstrumentationTag = NewRelic.Tag
 }
 
 case class AppDynamics(agentJar: File,
@@ -42,7 +49,7 @@ case class AppDynamics(agentJar: File,
   accessKey: String,
   hostName: String,
   port: Int,
-  sslEnabled: Boolean) extends Instrumentation(Instrumentations.AppDynamicsTag) {
+  sslEnabled: Boolean) extends Instrumentation(Instrumentations.appDynamicsName) {
   def jvmArgs: Seq[String] = Seq(
     s"-javaagent:${agentJar.getPath}",
     s"-Dappdynamics.agent.tierName=${tierName}",
@@ -54,12 +61,17 @@ case class AppDynamics(agentJar: File,
     s"-Dappdynamics.controller.hostName=$hostName",
     s"-Dappdynamics.controller.port=$port",
     s"-Dappdynamics.controller.ssl.enabled=$sslEnabled")
+  def tag: InstrumentationTag = AppDynamics.Tag(applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled)
 }
 
 object NewRelic {
   sealed abstract class CheckResult(val message: String)
   case object MissingConfigFile extends CheckResult("Missing configuration file")
   case object MissingInstrumentationJar extends CheckResult("Missing instrumentation jar")
+
+  case object Tag extends InstrumentationTag {
+    final val name: String = Instrumentations.newRelicName
+  }
 
   final val versionRegex = "\\{version\\}".r
 
@@ -230,6 +242,17 @@ object NewRelic {
 }
 
 object AppDynamics {
+  case class Tag(applicationName: String,
+    nodeName: String,
+    tierName: String,
+    accountName: String,
+    accessKey: String,
+    hostName: String,
+    port: Int,
+    sslEnabled: Boolean) extends InstrumentationTag {
+    final val name: String = s"$tierName-$nodeName-$applicationName-$accountName-$accessKey-$hostName-$port-$sslEnabled"
+  }
+
   sealed abstract class CheckResult(val message: String)
   case object IncompleteProvisioning extends CheckResult("AppDynamics provisioning incomplete")
 
@@ -273,34 +296,22 @@ object Instrumentations {
   import play.api.libs.json._
   import snap.JsonHelper._
 
-  case object InspectTag extends InstrumentationTag("inspect")
-  case object NewRelicTag extends InstrumentationTag("newRelic")
-  case object AppDynamicsTag extends InstrumentationTag("appDynamics")
-
-  def fromString(in: String): InstrumentationTag = in.trim() match {
-    case InspectTag.name => InspectTag
-    case NewRelicTag.name => NewRelicTag
-    case AppDynamicsTag.name => AppDynamicsTag
-  }
+  val inspectName = "inspect"
+  val newRelicName = "newRelic"
+  val appDynamicsName = "appDynamics"
 
   def withMonitoringConfig[T](in: TSConfig)(body: TSConfig => T): T = {
     val c = in.getConfig("activator.monitoring")
     body(c)
   }
 
-  final val allInstrumentations = Set(InspectTag, NewRelicTag, AppDynamicsTag).map(_.name)
-
-  def validate(in: String): InstrumentationTag = {
-    val n = in.trim()
-    if (allInstrumentations(n)) fromString(n)
-    else throw new RuntimeException(s"$n is not a valid instrumentation.  Must be one of: $allInstrumentations")
-  }
+  final val allInstrumentations = Set(inspectName, newRelicName, appDynamicsName)
 
   implicit val inspectWrites: Writes[Inspect.type] =
-    emitTagged("type", InspectTag.name)(_ => Json.obj())
+    emitTagged("type", inspectName)(_ => Json.obj())
 
   implicit val newRelicWrites: Writes[NewRelic] =
-    emitTagged("type", NewRelicTag.name) {
+    emitTagged("type", newRelicName) {
       case NewRelic(configFile, agentJar, environment) =>
         Json.obj("configFile" -> configFile,
           "agentJar" -> agentJar,
@@ -308,7 +319,7 @@ object Instrumentations {
     }
 
   implicit val appDynamicsWrites: Writes[AppDynamics] =
-    emitTagged("type", AppDynamicsTag.name) {
+    emitTagged("type", appDynamicsName) {
       case AppDynamics(agentJar, applicationName, nodeName, tierName, accountName, accessKey, hostName, port, sslEnabled) =>
         Json.obj("agentJar" -> agentJar,
           "applicationName" -> applicationName,
@@ -322,17 +333,17 @@ object Instrumentations {
     }
 
   implicit val inspectReads: Reads[Inspect.type] =
-    extractTagged("type", InspectTag.name)(Reads(_ => JsSuccess(Inspect)))
+    extractTagged("type", inspectName)(Reads(_ => JsSuccess(Inspect)))
 
   implicit val newRelicReads: Reads[NewRelic] =
-    extractTagged("type", NewRelicTag.name) {
+    extractTagged("type", newRelicName) {
       ((__ \ "configFile").read[File] and
         (__ \ "agentJar").read[File] and
         (__ \ "environment").read[String])(NewRelic.apply _)
     }
 
   implicit val appDynamicsReads: Reads[AppDynamics] =
-    extractTagged("type", AppDynamicsTag.name) {
+    extractTagged("type", appDynamicsName) {
       ((__ \ "agentJar").read[File] and
         (__ \ "applicationName").read[String] and
         (__ \ "nodeName").read[String] and
